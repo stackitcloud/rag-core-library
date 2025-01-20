@@ -37,8 +37,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           repository: stackitcloud/rag-core-library
-          path: rag-core-library
-
+          
       - name: Set Docker Image Name
         run: |
           echo "RAG_CORE_LIBRARY_LINTING_DOCKER_IMAGE_NAME=rag-core-lib-lint:${{ needs.SanitizeBranchName.outputs.sanitized_ref }}-${{ github.run_number }}" >> $GITHUB_ENV
