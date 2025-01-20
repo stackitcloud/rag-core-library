@@ -9,3 +9,5 @@ lint:
 test:
 	cd rag-core-lib;make test
 	cd rag-core-api;make test
+	cd admin-api-lib;make test
+	cd extractor-api-lib;make test
