@@ -44,7 +44,6 @@ jobs:
 
       - name: Build lint image
         run: |
-          ls -la
           docker build -t "$RAG_CORE_LIBRARY_LINTING_DOCKER_IMAGE_NAME" --build-arg TEST=0 -f Dockerfile .
 
       - name: Generate lint report
