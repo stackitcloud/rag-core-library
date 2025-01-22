@@ -82,8 +82,24 @@ class InformationPieceMapper:
         InformationPiece
             The converted InformationPiece instance, with metadata converted to key-value pairs
             and type set to the value from metadata or ExternalContentType.TEXT.value (default).
+
+        Raises
+        ------
+        ValueError
+            If the required key `DOCUMENT_URL_KEY` is not found in the metadata.
+            If the required key for content-type `IMAGE` is not found in the metadata when the type is `IMAGE`.
         """
         metadata = InformationPieceMapper._dict2key_value_pair(langchain_document.metadata)
+        if (
+            langchain_document.metadata["type"] == ExternalContentType.IMAGE
+            and InformationPieceMapper.IMAGE_CONTENT_KEY not in langchain_document.metadata.keys()
+        ):
+            raise ValueError(
+                'Required key "%s" for content-type %s not found in metadata.'
+                % (ExternalContentType.IMAGE, InformationPieceMapper.IMAGE_CONTENT_KEY)
+            )
+        if InformationPieceMapper.DOCUMENT_URL_KEY not in langchain_document.metadata.keys():
+            raise ValueError('Required key "%s" not found in metadata.' % InformationPieceMapper.DOCUMENT_URL_KEY)
         return InformationPiece(
             page_content=langchain_document.page_content,
             metadata=metadata,
