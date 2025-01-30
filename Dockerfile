@@ -20,4 +20,11 @@ RUN pip install poetry==1.8.3
 
 WORKDIR /app/${DIRECTORY}
 RUN poetry config virtualenvs.create false
-RUN if [ "$TEST" = "1" ]; then rm ../poetry.lock; rm ../pyproject.toml; poetry install --with dev; else poetry install; fi
+RUN if [ "$TEST" = "1" ]; then \
+    rm ../poetry.lock; \
+    rm ../pyproject.toml; \
+    poetry install --with dev; \
+    echo "export PYTHONPATH=/app/${DIRECTORY}/src:\$PYTHONPATH" >> /etc/profile; \
+    else \
+    poetry install; \
+    fi

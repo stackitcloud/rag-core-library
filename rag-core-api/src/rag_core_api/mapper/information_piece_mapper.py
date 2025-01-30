@@ -51,7 +51,12 @@ class InformationPieceMapper:
             If the required key `DOCUMENT_URL_KEY` is not found in the metadata.
             If the required key for content-type `IMAGE` is not found in the metadata when the type is `IMAGE`.
         """
-        metadata = {x.key: json.loads(x.value) for x in information_piece.metadata}
+        metadata = {}
+        for x in information_piece.metadata:
+            try:
+                metadata[x.key] = json.loads(x.value)
+            except json.JSONDecodeError:
+                metadata[x.key] = x.value
         if InformationPieceMapper.DOCUMENT_URL_KEY not in metadata.keys():
             raise ValueError('Required key "%s" not found in metadata.' % InformationPieceMapper.DOCUMENT_URL_KEY)
         metadata["type"] = InformationPieceMapper.external_content2internal_content(metadata["type"]).value
@@ -175,6 +180,8 @@ class InformationPieceMapper:
             match value:
                 case dict():
                     mapped_item = KeyValuePair(key=key, value=json.dumps(value))
+                case str():
+                    mapped_item = KeyValuePair(key=key, value=value)
                 case _:
                     mapped_item = KeyValuePair(key=key, value=json.dumps(str(value)))
 
