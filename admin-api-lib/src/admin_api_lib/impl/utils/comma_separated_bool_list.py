@@ -16,10 +16,6 @@ class CommaSeparatedBoolList(list):
     """
 
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
     def validate(cls, v: Any, info) -> list[bool]:
         """
         Validate and convert the input into a list of booleans.
@@ -52,3 +48,19 @@ class CommaSeparatedBoolList(list):
         elif isinstance(v, list):
             return [bool(item) for item in v]
         raise ValueError("Not a valid comma separated boolean list")
+
+    @classmethod
+    def __get_validators__(cls):
+        """
+        Get validator functions for Pydantic to use with this data type.
+
+        This method is called by Pydantic during model initialization to collect
+        validator functions for fields using this custom data type.
+
+        Returns
+        -------
+        generator
+            A generator yielding validator functions, specifically `cls.validate`,
+            which will be applied to validate and convert input values.
+        """
+        yield cls.validate

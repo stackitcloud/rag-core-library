@@ -1,6 +1,5 @@
 """
-Comma Separated String List Utility Module
-============================================
+Comma Separated String List Utility Module.
 
 This module provides a custom list type to validate and convert inputs into
 a list of strings. It splits comma separated strings and converts list elements
@@ -22,14 +21,11 @@ class CommaSeparatedStrList(list):
     - If input is a string: splits by commas and strips whitespace.
     - If input is a list: converts all elements to strings.
 
-    Raises:
-    -------
-      ValueError: For invalid input type.
+    Raises
+    ------
+    ValueError
+        For invalid input type.
     """
-
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
 
     @classmethod
     def validate(cls, v: Any, info) -> list[str]:
@@ -60,3 +56,19 @@ class CommaSeparatedStrList(list):
         elif isinstance(v, list):
             return [str(item) for item in v]
         raise ValueError("Not a valid comma separated string list")
+
+    @classmethod
+    def __get_validators__(cls):
+        """
+        Get validator functions for Pydantic to use with this data type.
+
+        This method is called by Pydantic during model initialization to collect
+        validator functions for fields using this custom data type.
+
+        Returns
+        -------
+        generator
+            A generator yielding validator functions, specifically `cls.validate`,
+            which will be applied to validate and convert input values.
+        """
+        yield cls.validate
