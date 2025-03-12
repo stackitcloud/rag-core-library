@@ -13,7 +13,7 @@ from extractor_api_lib.models.information_piece import InformationPiece
 class DefaultConfluenceExtractor(ConfluenceExtractor):
     """Default implementation of the FileExtractor interface."""
 
-    MIN_PAGE_CONTENT_LENGTH = 20
+    MIN_PAGE_CONTENT_LENGTH = 10
 
     def __init__(
         self,

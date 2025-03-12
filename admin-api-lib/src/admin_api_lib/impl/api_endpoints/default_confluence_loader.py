@@ -83,7 +83,6 @@ class DefaultConfluenceLoader(ConfluenceLoader):
         self._extractor_api = extractor_api
         self._rag_api = rag_api
         self._settings = settings
-        self._sanitize_document_name()
         self._key_value_store = key_value_store
         self._information_mapper = information_mapper
         self._information_enhancer = information_enhancer
@@ -156,6 +155,13 @@ class DefaultConfluenceLoader(ConfluenceLoader):
             t.start()
         for t in threads:
             t.join()
+
+    async def _aenhance_langchain_documents(self, documents: list[Document]):
+        try:
+            return await self._information_enhancer.ainvoke(documents)
+        except Exception as e:
+            logger.error("Exception occured while enhancing confluence langchain document %s" % e)
+            raise e
 
     async def _delete_previous_information_pieces(self, index=0):
         try:
