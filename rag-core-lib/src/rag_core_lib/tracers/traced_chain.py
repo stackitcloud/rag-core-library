@@ -64,7 +64,8 @@ class TracedGraph(AsyncChain[RunnableInput, RunnableOutput], ABC):
         config = ensure_config(config)
         session_id = self._get_session_id(config)
         config_with_tracing = self._add_tracing_callback(session_id, config)
-        return await self._inner_chain.ainvoke(chain_input, config=config_with_tracing)
+        async for chunk in self._inner_chain.ainvoke(chain_input, config=config_with_tracing):
+            yield chunk
 
     @abstractmethod
     def _add_tracing_callback(self, session_id: str, config: Optional[RunnableConfig]) -> RunnableConfig:

@@ -26,7 +26,7 @@ from fastapi import (  # noqa: F401
     Security,
     status,
 )
-
+from fastapi.responses import StreamingResponse
 import rag_core_api.impl
 from rag_core_api.apis.rag_api_base import BaseRagApi
 from rag_core_api.models.chat_request import ChatRequest
@@ -94,22 +94,9 @@ async def chat(
     This function creates two asynchronous tasks: one for handling disconnection and one for processing the chat
     request. It waits for either task to complete first and cancels the remaining tasks.
     """
-    disconnect_task = create_task(_disconnected(request))
-    chat_task = create_task(BaseRagApi.subclasses[0]().chat(session_id, chat_request))
-    done, pending = await wait(
-        [disconnect_task, chat_task],
-        return_when=FIRST_COMPLETED,
-    )
-
-    # cancel all remaining tasks
-    for task in pending:
-        task.cancel()
-        with suppress(CancelledError):
-            await task
-    if chat_task in done:
-        return chat_task.result()
-    logger.info("Request got cancelled!")
-    return None
+    #chat_task = create_task(BaseRagApi.subclasses[0]().chat(session_id, chat_request))
+        
+    return StreamingResponse( BaseRagApi.subclasses[0]().chat(session_id, chat_request))
 
 
 @router.post(

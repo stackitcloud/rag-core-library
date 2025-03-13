@@ -12,6 +12,10 @@ from fastapi import HTTPException, status
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.graph import MermaidDrawMethod
 from langgraph.graph import END, START, StateGraph
+
+
+from langgraph.types import StreamWriter
+
 from PIL import Image
 
 from rag_core_api.graph.graph_base import GraphBase
@@ -127,11 +131,12 @@ class DefaultChatGraph(GraphBase):
         - The history is formatted and included in the `AnswerGraphState`.
         """
         if not graph_input.message.strip():
-            return ChatResponse(
+            yield ChatResponse(
                 answer=self._error_messages.empty_message,
                 citations=[],
                 finish_reason=self._error_messages.empty_message,
             )
+            return
 
         history_of_interest = []
         if graph_input.history and graph_input.history.messages:
@@ -154,12 +159,13 @@ class DefaultChatGraph(GraphBase):
             "RECEIVED question: %s",
             state["question"],
         )
+        async for chunk in self._graph.astream(input=state, config=config, stream_mode="custom"):
+            yield chunk
+        #response_state = await self._graph.ainvoke(input=state, config=config)
 
-        response_state = await self._graph.ainvoke(input=state, config=config)
+        #logger.info("GENERATED answer: %s", response_state["response"].answer)
 
-        logger.info("GENERATED answer: %s", response_state["response"].answer)
-
-        return response_state["response"]
+        #return response_state["response"]
 
     def draw_graph(self, relative_dir_path: Optional[str] = None) -> None:
         """
@@ -198,8 +204,12 @@ class DefaultChatGraph(GraphBase):
         rephrased_question = await self._rephrasing_chain.ainvoke(chain_input=state, config=config)
         return {"rephrased_question": rephrased_question}
 
-    async def _generate_node(self, state: dict, config: Optional[RunnableConfig] = None) -> dict:
-        answer_text = await self._answer_generation_chain.ainvoke(state, config)
+    async def _generate_node(self, state: dict, writer: StreamWriter, config: Optional[RunnableConfig] = None) -> dict:
+        writer({"citations": state["information_pieces"]})
+        answer_text = ""
+        async for chunk in self._answer_generation_chain.astream(state, config):
+            answer_text += chunk
+            writer({"answer": chunk})
         chat_response = ChatResponse(
             answer=answer_text,
             citations=state["information_pieces"],

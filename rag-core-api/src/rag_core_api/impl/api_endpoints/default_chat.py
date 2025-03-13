@@ -49,4 +49,5 @@ class DefaultChat(Chat):
             metadata={"session_id": session_id},
         )
 
-        return await self._chat_graph.ainvoke(chat_request, config)
+        async for chunk in  self._chat_graph.ainvoke(chat_request, config):
+            yield chunk

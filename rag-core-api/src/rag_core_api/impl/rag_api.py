@@ -6,6 +6,7 @@ from threading import Thread
 
 from dependency_injector.wiring import Provide, inject
 from fastapi import Depends
+import json
 
 from rag_core_api.api_endpoints.chat import Chat
 from rag_core_api.api_endpoints.information_piece_remover import InformationPieceRemover
@@ -61,7 +62,28 @@ class RagApi(BaseRagApi):
         ChatResponse
             The chat response if the chat task completes successfully.
         """
-        return await chat_endpoint.achat(session_id, chat_request)
+        async for chunk in chat_endpoint.achat(session_id, chat_request):
+            result = ""
+            try:
+                yield json.dumps(chunk)
+                continue
+            except Exception:
+                pass
+            for k, v in chunk.items():
+                try:
+                    yield json.dumps({k:json.dumps(v)})
+                    continue
+                except Exception:
+                    pass
+                try:
+                    res = []
+                    for vv in v:
+                        res.append(vv.to_json())
+                    yield json.dumps({k:res})
+                    a=0
+                except Exception:
+                    pass
+    
 
     @inject
     async def evaluate(
