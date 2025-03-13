@@ -30,7 +30,7 @@ except ImportError:
 
 class ConfluenceParameters(BaseModel):
     """
-    
+
     """ # noqa: E501
     url: StrictStr = Field(description="url of the confluence space.")
     token: StrictStr = Field(description="api key to access confluence.")
@@ -56,7 +56,7 @@ class ConfluenceParameters(BaseModel):
     def to_json(self) -> str:
         """Returns the JSON representation of the model using alias"""
         # TODO: pydantic v2: use .model_dump_json(by_alias=True, exclude_unset=True) instead
-        return json.dumps(self.to_dict())
+        return self.model_dump_json(by_alias=True, exclude_unset=True)
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
