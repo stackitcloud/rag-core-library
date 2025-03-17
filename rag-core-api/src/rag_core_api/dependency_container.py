@@ -133,6 +133,7 @@ class DependencyContainer(DeclarativeContainer):
         QdrantDatabase,
         settings=vector_database_settings,
         embedder=embedder,
+        sparse_embedder=sparse_embedder,
         vectorstore=vectorstore,
     )
 
