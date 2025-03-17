@@ -21,4 +21,3 @@ class SparseEmbedderSettings(BaseSettings):
         case_sensitive = False
 
     model_name: str = Field(default="Qdrant/bm25")
-

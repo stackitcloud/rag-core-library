@@ -3,7 +3,7 @@
 from pydantic_settings import BaseSettings
 from pydantic import Field
 
-from langchain_qdrant import FastEmbedSparse, RetrievalMode
+from langchain_qdrant import RetrievalMode
 
 
 class VectorDatabaseSettings(BaseSettings):

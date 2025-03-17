@@ -112,7 +112,7 @@ class DependencyContainer(DeclarativeContainer):
         ),
     )
 
-    sparse_embedder = Singleton(FastEmbedSparse,**sparse_embedder_settings.model_dump())
+    sparse_embedder = Singleton(FastEmbedSparse, **sparse_embedder_settings.model_dump())
 
     vectordb_client = Singleton(
         qdrant_client.QdrantClient,
