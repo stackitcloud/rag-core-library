@@ -52,6 +52,11 @@ class BaseRagApi:
             The chat response if the chat task completes successfully, otherwise None.
         """
 
+    async def duplicate_collection(
+        self,
+    ) -> None:
+        """Duplicates a vector database collection. It uses the production collection for duplication."""
+
     async def evaluate(
         self,
     ) -> None:

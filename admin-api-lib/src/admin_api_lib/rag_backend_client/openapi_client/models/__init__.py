@@ -2,7 +2,7 @@
 
 # flake8: noqa
 """
-    Stackit RAG
+    STACKIT RAG
 
     The perfect rag solution.
 

@@ -113,6 +113,22 @@ async def chat(
 
 
 @router.post(
+    "/collection/duplicate",
+    responses={
+        201: {"description": "Duplication created successfully."},
+        404: {"description": "No production collection found."},
+        500: {"description": "Internal server error."},
+    },
+    tags=["rag"],
+    summary="Duplicates a vector database collection.",
+    response_model_by_alias=True,
+)
+async def duplicate_collection() -> None:
+    """Duplicates a vector database collection. It uses the production collection for duplication."""
+    return await BaseRagApi.subclasses[0]().duplicate_collection()
+
+
+@router.post(
     "/evaluate",
     responses={
         201: {"description": "Accepted."},
@@ -165,7 +181,7 @@ async def remove_information_piece(
 
 
 @router.post(
-    "/switch_collection",
+    "/collection/switch",
     responses={
         200: {"description": "Collection alias has been successfully switched."},
         404: {"description": "Source or target collection not found."},

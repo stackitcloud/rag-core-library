@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    Stackit RAG
+    STACKIT RAG
 
     The perfect rag solution.
 
