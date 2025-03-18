@@ -28,7 +28,7 @@ class BaseAdminApi:
 
     async def delete_document(
         self,
-        identification: str,
+        identification: StrictStr,
     ) -> None:
         """
         Asynchronously deletes a document based on the provided identification.
