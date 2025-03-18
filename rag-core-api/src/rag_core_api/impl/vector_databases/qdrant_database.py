@@ -1,4 +1,5 @@
 """Module containing the QdrantDatabase class."""
+
 import logging
 
 from langchain_core.documents import Document
@@ -152,27 +153,57 @@ class QdrantDatabase(VectorDatabase):
             for search_result in requested[0]
         ]
 
-    def upload(self, documents: list[Document]) -> None:
+    def upload(self, documents: list[Document], collection_name: str | None = None) -> None:
         """
-        Save the given documents to the Qdrant database.
+        Save the given documents to the Qdrant database. If collection does not exist, it will be created. TODO: check if that is really the case :D
 
         Parameters
         ----------
         documents : list[Document]
             The list of documents to be stored.
+        collection_name : str, optional
+            The name of the collection to store the documents in; uses settings collection if None.
 
         Returns
         -------
         None
         """
+        if not collection_name:
+            collection_name = self._settings.collection_name
         self._vectorstore = self._vectorstore.from_documents(
             documents,
             self._embedder.get_embedder(),
-            collection_name=self._settings.collection_name,
+            collection_name=collection_name,
             location=self._settings.location,
         )
 
-    def delete(self, delete_request: dict) -> None:
+    def delete(self, delete_request: dict, collection_name: str | None = None) -> None:
+        """
+        Delete points from a collection based on the given conditions.
+
+        Parameters
+        ----------
+        delete_request : dict
+            Conditions to match the points to be deleted.
+        collection_name : str, optional
+            The collection name to delete from; uses settings collection if None.
+        """
+        collection_name = collection_name or self._settings.collection_name
+
+        self._vectorstore.client.delete(
+            collection_name=collection_name,
+            points_selector=models.FilterSelector(
+                filter=models.Filter(
+                    must=[
+                        models.FieldCondition(
+                            key=key,
+                            match=models.MatchValue(value=value),
+                        )
+                        for key, value in delete_request.items()
+                    ]
+                )
+            ),
+        )
         """
         Delete all points associated with a specific document from the Qdrant database.
 
@@ -221,3 +252,69 @@ class QdrantDatabase(VectorDatabase):
         for document_id in related_ids:
             result += self.get_specific_document(document_id)
         return result
+
+    def delete_collection(self, collection_name: str) -> None:
+        """
+        Delete a collection from the vector database.
+
+        Parameters
+        ----------
+        collection_name : str
+            The name of the collection to be deleted.
+
+        Returns
+        -------
+        None
+        """
+        self._vectorstore.client.delete_collection(collection_name=collection_name)
+
+    def collection_exists(self, collection_name: str) -> bool:
+        """
+        Check if a collection exists in the vector database.
+
+        Parameters
+        ----------
+        collection_name : str
+            The name of the collection to check.
+
+        Returns
+        -------
+        bool
+            True if the collection exists, False otherwise.
+        """
+        return self._vectorstore.client.collection_exists(collection_name=collection_name)
+
+    def switch_collections(self, collection_name: str):
+        """
+        Switch the collections using aliases.
+
+        Parameters
+        ----------
+        collection_name : str
+            The name of the collection to switch to.
+        """
+        self._vectorstore.client.update_collection_aliases(
+            change_aliases_operations=[
+                models.DeleteAliasOperation(delete_alias=models.DeleteAlias(alias_name="rag-production")),
+                models.CreateAliasOperation(
+                    create_alias=models.CreateAlias(collection_name=collection_name, alias_name="rag-production")
+                ),
+            ]
+        )
+
+    def create_collection_from(self, source_collection_name: str, target_collection_name: str):
+        """
+        Create a new collection from an existing collection.
+
+        Parameters
+        ----------
+        source_collection_name : str
+            The name of the source collection.
+        target_collection_name : str
+            The name of the target collection.
+        """
+        self._vectorstore.client.create_collection(
+            collection_name=target_collection_name,
+            vectors_config=self._vectorstore.client.get_collection(source_collection_name).vectors_config,
+            init_from=models.InitFrom(collection=source_collection_name),
+        )

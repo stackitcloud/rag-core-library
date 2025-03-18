@@ -2,7 +2,7 @@ openapi: 3.0.2
 info:
   contact: {}
   description: The perfect rag solution.
-  title: RAG SIT x Stackit
+  title: Stackit RAG
   version: 1.0.0
 servers:
 - url: /
@@ -95,6 +95,21 @@ paths:
                 type: string
           description: Internal Server Error.
       summary: Upload information pieces for vectordatabase
+      tags:
+      - rag
+  /switch_collection:
+    post:
+      description: 'Remove the production alias from source collection and add that
+        alias to target collection '
+      operationId: switch_collection
+      responses:
+        "200":
+          description: Collection alias has been successfully switched.
+        "404":
+          description: Source or target collection not found.
+        "500":
+          description: Internal server error.
+      summary: Switch production vectordatabase.
       tags:
       - rag
 components:
