@@ -8,6 +8,8 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import Depends
 
 from rag_core_api.api_endpoints.chat import Chat
+from rag_core_api.api_endpoints.collection_duplicator import CollectionDuplicator
+from rag_core_api.api_endpoints.collection_switcher import CollectionSwitcher
 from rag_core_api.api_endpoints.information_piece_remover import InformationPieceRemover
 from rag_core_api.api_endpoints.information_piece_uploader import (
     InformationPiecesUploader,
@@ -62,6 +64,20 @@ class RagApi(BaseRagApi):
             The chat response if the chat task completes successfully.
         """
         return await chat_endpoint.achat(session_id, chat_request)
+
+    @inject
+    async def duplicate_collection(
+        self,
+        collection_duplicator: CollectionDuplicator = Depends(Provide[DependencyContainer.collection_duplicator]),
+    ):
+        await collection_duplicator.aduplicate_collection()
+
+    @inject
+    async def switch_collection(
+        self,
+        collection_switcher: CollectionSwitcher = Depends(Provide[DependencyContainer.collection_switcher]),
+    )->None:
+        await collection_switcher.aswitch_collection()
 
     @inject
     async def evaluate(

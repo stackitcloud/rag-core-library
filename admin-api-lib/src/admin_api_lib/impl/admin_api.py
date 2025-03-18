@@ -105,6 +105,26 @@ class AdminApi(BaseAdminApi):
         await confluence_loader.aload_from_confluence()
 
     @inject
+    async def update_confluence(
+        self,
+        confluence_updater: ConfluenceLoader = Depends(Provide[DependencyContainer.confluence_updater]),
+    ) -> None:
+        """
+        Asynchronously updates the documents related to a Confluence spaces
+
+        Parameters
+        ----------
+        confluence_uploader : ConfluenceLoader
+            The ConfluenceLoader instance to use for updating the documents. This is injected by dependency injection
+            (default is Depends(Provide[DependencyContainer.confluence_updater])).
+
+        Returns
+        -------
+        None
+        """
+        await confluence_updater.aupdate_confluence()
+
+    @inject
     async def document_reference_id_get(
         self,
         identification: str,
