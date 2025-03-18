@@ -28,7 +28,7 @@ class BaseAdminApi:
 
     async def delete_document(
         self,
-        identification: StrictStr,
+        identification: str,
     ) -> None:
         """
         Asynchronously deletes a document based on the provided identification.
@@ -83,6 +83,12 @@ class BaseAdminApi:
         -------
         None
         """
+
+    async def update_confluence(
+        self,
+    ) -> None:
+        """Extracts the confluence space and trigger collection switch in the vector database. The key value store will not be updated during the operations."""
+
 
     async def upload_documents_post(
         self,
