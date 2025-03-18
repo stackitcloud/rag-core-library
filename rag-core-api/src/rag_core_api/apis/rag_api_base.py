@@ -82,6 +82,11 @@ class BaseRagApi:
         None
         """
 
+    async def switch_collection(
+        self,
+    ) -> None:
+        """Remove the production alias from source collection and add that alias to target collection"""
+
     async def upload_information_piece(
         self,
         information_piece: List[InformationPiece],

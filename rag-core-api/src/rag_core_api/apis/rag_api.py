@@ -165,6 +165,22 @@ async def remove_information_piece(
 
 
 @router.post(
+    "/switch_collection",
+    responses={
+        200: {"description": "Collection alias has been successfully switched."},
+        404: {"description": "Source or target collection not found."},
+        500: {"description": "Internal server error."},
+    },
+    tags=["rag"],
+    summary="Switch production vectordatabase.",
+    response_model_by_alias=True,
+)
+async def switch_collection() -> None:
+    """Remove the production alias from source collection and add that alias to target collection"""
+    return await BaseRagApi.subclasses[0]().switch_collection()
+
+
+@router.post(
     "/information_pieces/upload",
     responses={
         201: {"description": "The file was successful uploaded."},

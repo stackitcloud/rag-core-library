@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    RAG SIT x Stackit
+    Stackit RAG
 
     The perfect rag solution.
 
@@ -13,14 +13,13 @@
 
 
 from __future__ import annotations
-
-import json
 import pprint
 import re  # noqa: F401
-from typing import Any, ClassVar, Dict, List, Optional
+import json
+
 
 from pydantic import BaseModel, ConfigDict
-
+from typing import Any, ClassVar, Dict, List, Optional
 from rag_core_api.models.key_value_pair import KeyValuePair
 
 try:
@@ -89,11 +88,9 @@ class DeleteRequest(BaseModel):
 
         _obj = cls.model_validate(
             {
-                "metadata": (
-                    [KeyValuePair.from_dict(_item) for _item in obj.get("metadata")]
-                    if obj.get("metadata") is not None
-                    else None
-                )
+                "metadata": [KeyValuePair.from_dict(_item) for _item in obj.get("metadata")]
+                if obj.get("metadata") is not None
+                else None
             }
         )
         return _obj

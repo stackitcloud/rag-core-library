@@ -21,10 +21,10 @@ case $api_name in
         ;;
     "rag-backend")
         docker run --user $(id -u):$(id -g) --rm -v $PWD:/local openapitools/openapi-generator-cli@sha256:b35aee2d0f6ffadadcdad9d8fc3c46e8d48360c20b5731a5f47c809d51f67a04 generate -i /local/rag-core-api/openapi.yaml -g python-fastapi -o /local/rag-core-api --additional-properties=packageName=rag_core_api,generateSourceCodeOnly=True
-        rm -r rag-core-library/rag-core-api/src/openapi_server
-        cd ./rag-core-library/rag-core-api
+        rm -r rag-core-api/src/openapi_server
+        cd ./rag-core-api
         black .
-        cd ../..
+        cd ..
         docker run --user $(id -u):$(id -g) --rm -v $PWD:/local openapitools/openapi-generator-cli@sha256:b35aee2d0f6ffadadcdad9d8fc3c46e8d48360c20b5731a5f47c809d51f67a04 generate -i /local/rag-core-api/openapi.yaml -g python -o /local/admin-api-lib/src --additional-properties=generateSourceCodeOnly=True,packageName=admin_api_lib.rag_backend_client.openapi_client
         cd ./admin-api-lib
         black .

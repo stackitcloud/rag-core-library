@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    RAG SIT x Stackit
+    Stackit RAG
 
     The perfect rag solution.
 
@@ -12,7 +12,6 @@
 """  # noqa: E501
 
 from typing import Any, Optional
-
 from typing_extensions import Self
 
 

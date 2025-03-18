@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    RAG SIT x Stackit
+    Stackit RAG
 
     The perfect rag solution.
 
@@ -13,34 +13,31 @@
 
 
 import datetime
+from dateutil.parser import parse
+from enum import Enum
 import decimal
 import json
 import mimetypes
 import os
 import re
 import tempfile
-from enum import Enum
-from typing import Dict, List, Optional, Tuple, Union
-from urllib.parse import quote
 
-from dateutil.parser import parse
+from urllib.parse import quote
+from typing import Tuple, Optional, List, Dict, Union
 from pydantic import SecretStr
 
+from admin_api_lib.rag_backend_client.openapi_client.configuration import Configuration
+from admin_api_lib.rag_backend_client.openapi_client.api_response import ApiResponse, T as ApiResponseT
 import admin_api_lib.rag_backend_client.openapi_client.models
 from admin_api_lib.rag_backend_client.openapi_client import rest
-from admin_api_lib.rag_backend_client.openapi_client.api_response import ApiResponse
-from admin_api_lib.rag_backend_client.openapi_client.api_response import (
-    T as ApiResponseT,
-)
-from admin_api_lib.rag_backend_client.openapi_client.configuration import Configuration
 from admin_api_lib.rag_backend_client.openapi_client.exceptions import (
-    ApiException,
     ApiValueError,
+    ApiException,
     BadRequestException,
+    UnauthorizedException,
     ForbiddenException,
     NotFoundException,
     ServiceException,
-    UnauthorizedException,
 )
 
 RequestSerialized = Tuple[str, str, Dict[str, str], Optional[str], List[str]]
