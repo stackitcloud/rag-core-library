@@ -30,6 +30,7 @@ from admin_api_lib.information_enhancer.information_enhancer import InformationE
 from admin_api_lib.models.status import Status
 from admin_api_lib.rag_backend_client.openapi_client.api.rag_api import RagApi
 from admin_api_lib.utils.utils import sanitize_document_name
+from rag_core_api.models.upload_request import UploadRequest
 
 logger = logging.getLogger(__name__)
 
@@ -187,6 +188,6 @@ class DefaultDocumentUploader(DocumentUploader):
             self._information_mapper.document2rag_information_piece(doc) for doc in enhanced_documents
         ]
 
-        self._rag_api.upload_information_piece(rag_information_pieces)
+        self._rag_api.upload_information_piece(UploadRequest(information_pieces=rag_information_pieces))
         self._key_value_store.upsert(filename, Status.READY)
         logger.info("File uploaded successfully: %s", filename)

@@ -28,6 +28,9 @@ from admin_api_lib.information_enhancer.information_enhancer import InformationE
 from admin_api_lib.models.status import Status
 from admin_api_lib.rag_backend_client.openapi_client.api.rag_api import RagApi
 from admin_api_lib.utils.utils import sanitize_document_name
+from admin_api_lib.rag_backend_client.openapi_client.models.upload_request import (
+    UploadRequest,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -178,7 +181,7 @@ class DefaultConfluenceLoader(ConfluenceLoader):
 
     def _upload_information_pieces(self, rag_api_documents, index=0):
         try:
-            self._rag_api.upload_information_piece(rag_api_documents)
+            self._rag_api.upload_information_piece(UploadRequest(information_pieces=rag_api_documents))
             self._key_value_store.upsert(self._settings.document_name[index], Status.READY)
             logger.info("Confluence loaded successfully")
         except Exception as e:

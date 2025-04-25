@@ -32,7 +32,7 @@ from admin_api_lib.utils.utils import sanitize_document_name
 logger = logging.getLogger(__name__)
 
 
-# TODO: revise!!! code not adjusted till now!!!
+# TODO: revise!!! code not adjusted till now!!! ADJUST the upload and delete api calls ;)
 class DefaultConfluenceUpdater(DefaultConfluenceLoader):
     """
     DefaultConfluenceUpdater is responsible for loading content from Confluence asynchronously.
