@@ -1,13 +1,40 @@
-"""Module for the DefaultCollectionDuplicator class."""
+"""DefaultCollectionDuplicator module.
+
+This module provides the DefaultCollectionDuplicator class for duplicating
+alias-tagged collections in a vector database.
+"""
+
 from rag_core_api.api_endpoints.collection_duplicator import CollectionDuplicator
-from rag_core_api.impl.settings.vector_db_settings import VectorDatabaseSettings
 from rag_core_api.vector_databases.vector_database import VectorDatabase
 
 
 class DefaultCollectionDuplicator(CollectionDuplicator):
-    def __init__(self, settings: VectorDatabaseSettings, vector_database: VectorDatabase):
-        self._settings = settings
-        self._vector_database = vector_database
+    """Duplicate an alias-tagged collection.
+
+    Parameters
+    ----------
+    vector_database : VectorDatabase
+        An instance of VectorDatabase to perform duplication operations.
+    """
+
+    def __init__(self, vector_database: VectorDatabase):
+        """Initialize the DefaultCollectionDuplicator.
+
+        Parameters
+        ----------
+        vector_database : VectorDatabase
+            The vector database used for duplication operations.
+        """
+        super().__init__(vector_database)
 
     async def aduplicate_collection(self) -> None:
+        """Duplicate the alias-tagged collection in the vector database.
+
+        This asynchronous method triggers the duplication process for collections
+        identified by alias tags in the vector database.
+
+        Returns
+        -------
+        None
+        """
         self._vector_database.duplicate_alias_tagged_collection()

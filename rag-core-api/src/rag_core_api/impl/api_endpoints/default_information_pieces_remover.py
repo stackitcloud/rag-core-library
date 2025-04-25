@@ -61,7 +61,7 @@ class DefaultInformationPiecesRemover(InformationPieceRemover):
             )
         collection_name = None
         if delete_request.use_latest_collection:
-            collection_name = self._vector_database.get_sorted_collection_names()[0]
+            collection_name = self._vector_database.get_sorted_collection_names()[-1]
         try:
             self._vector_database.delete(metadata, collection_name)
         except Exception as e:

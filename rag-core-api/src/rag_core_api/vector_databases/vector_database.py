@@ -142,3 +142,28 @@ class VectorDatabase(ABC):
         list[str]
             A list of sorted collection names.
         """
+
+    @abstractmethod
+    def switch_collections(self) -> None:
+        """
+        Switch the alias of the current collection to the specified collection.
+
+        Raises
+        ------
+        NotImplementedError
+            If the method is not implemented.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def duplicate_alias_tagged_collection(self) -> None:
+        """
+        Duplicate the alias-tagged collection in the vector database.
+
+        Raises
+        ------
+        NotImplementedError
+            If the method is not implemented.
+        """
+        raise NotImplementedError()
+

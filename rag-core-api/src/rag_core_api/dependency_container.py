@@ -230,8 +230,8 @@ class DependencyContainer(DeclarativeContainer):
     )
 
     chat_endpoint = Singleton(DefaultChat, traced_chat_graph)
-    collection_switcher = Singleton(DefaultCollectionSwitcher)
-    collection_duplicator = Singleton(DefaultCollectionDuplicator)
+    collection_switcher = Singleton(DefaultCollectionSwitcher, vector_database)
+    collection_duplicator = Singleton(DefaultCollectionDuplicator, vector_database)
 
     ragas_llm = (
         Singleton(

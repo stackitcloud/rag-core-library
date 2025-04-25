@@ -292,7 +292,8 @@ class QdrantDatabase(VectorDatabase):
 
     def switch_collections(self, collection_name: str):
         """
-        Switch the collections using aliases.
+        Switch the alias of the current collection to the specified collection.
+
 
         Parameters
         ----------
