@@ -17,12 +17,11 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from typing_extensions import Annotated
 
 from pydantic import Field, StrictStr
-from typing import List
 from typing_extensions import Annotated
 from admin_api_lib.rag_backend_client.openapi_client.models.chat_request import ChatRequest
 from admin_api_lib.rag_backend_client.openapi_client.models.chat_response import ChatResponse
 from admin_api_lib.rag_backend_client.openapi_client.models.delete_request import DeleteRequest
-from admin_api_lib.rag_backend_client.openapi_client.models.information_piece import InformationPiece
+from admin_api_lib.rag_backend_client.openapi_client.models.upload_request import UploadRequest
 
 from admin_api_lib.rag_backend_client.openapi_client.api_client import ApiClient, RequestSerialized
 from admin_api_lib.rag_backend_client.openapi_client.api_response import ApiResponse
@@ -1130,7 +1129,7 @@ class RagApi:
     @validate_call
     def upload_information_piece(
         self,
-        information_piece: List[InformationPiece],
+        upload_request: UploadRequest,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1144,8 +1143,8 @@ class RagApi:
         """Upload information pieces for vectordatabase
 
 
-        :param information_piece: (required)
-        :type information_piece: List[InformationPiece]
+        :param upload_request: (required)
+        :type upload_request: UploadRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1169,7 +1168,7 @@ class RagApi:
         """  # noqa: E501
 
         _param = self._upload_information_piece_serialize(
-            information_piece=information_piece,
+            upload_request=upload_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1191,7 +1190,7 @@ class RagApi:
     @validate_call
     def upload_information_piece_with_http_info(
         self,
-        information_piece: List[InformationPiece],
+        upload_request: UploadRequest,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1205,8 +1204,8 @@ class RagApi:
         """Upload information pieces for vectordatabase
 
 
-        :param information_piece: (required)
-        :type information_piece: List[InformationPiece]
+        :param upload_request: (required)
+        :type upload_request: UploadRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1230,7 +1229,7 @@ class RagApi:
         """  # noqa: E501
 
         _param = self._upload_information_piece_serialize(
-            information_piece=information_piece,
+            upload_request=upload_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1252,7 +1251,7 @@ class RagApi:
     @validate_call
     def upload_information_piece_without_preload_content(
         self,
-        information_piece: List[InformationPiece],
+        upload_request: UploadRequest,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1266,8 +1265,8 @@ class RagApi:
         """Upload information pieces for vectordatabase
 
 
-        :param information_piece: (required)
-        :type information_piece: List[InformationPiece]
+        :param upload_request: (required)
+        :type upload_request: UploadRequest
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1291,7 +1290,7 @@ class RagApi:
         """  # noqa: E501
 
         _param = self._upload_information_piece_serialize(
-            information_piece=information_piece,
+            upload_request=upload_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1308,7 +1307,7 @@ class RagApi:
 
     def _upload_information_piece_serialize(
         self,
-        information_piece,
+        upload_request,
         _request_auth,
         _content_type,
         _headers,
@@ -1316,9 +1315,7 @@ class RagApi:
     ) -> RequestSerialized:
         _host = None
 
-        _collection_formats: Dict[str, str] = {
-            "InformationPiece": "",
-        }
+        _collection_formats: Dict[str, str] = {}
 
         _path_params: Dict[str, str] = {}
         _query_params: List[Tuple[str, str]] = []
@@ -1332,8 +1329,8 @@ class RagApi:
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if information_piece is not None:
-            _body_params = information_piece
+        if upload_request is not None:
+            _body_params = upload_request
 
         # set the HTTP header `Accept`
         if "Accept" not in _header_params:

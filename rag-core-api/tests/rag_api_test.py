@@ -14,8 +14,8 @@ from dependency_injector import providers
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 
-from .mock_environment_variables import mock_environment_variables
-from .mock_logging_directory import mock_logging_config
+from mock_environment_variables import mock_environment_variables
+from mock_logging_directory import mock_logging_config
 
 mock_environment_variables()
 mock_logging_config()

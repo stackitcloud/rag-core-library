@@ -2,11 +2,10 @@
 
 from abc import ABC, abstractmethod
 
-#TODO: add doc strings, revise accordingly
+# TODO: add doc strings, revise accordingly
+
 
 class CollectionDuplicator(ABC):
-
-
     @abstractmethod
     async def aduplicate_collection(self) -> None:
         ...

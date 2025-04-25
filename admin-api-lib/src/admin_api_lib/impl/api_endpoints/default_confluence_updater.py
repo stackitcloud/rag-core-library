@@ -31,7 +31,8 @@ from admin_api_lib.utils.utils import sanitize_document_name
 
 logger = logging.getLogger(__name__)
 
-#TODO: revise!!! code not adjusted till now!!!
+
+# TODO: revise!!! code not adjusted till now!!!
 class DefaultConfluenceUpdater(DefaultConfluenceLoader):
     """
     DefaultConfluenceUpdater is responsible for loading content from Confluence asynchronously.
@@ -92,7 +93,7 @@ class DefaultConfluenceUpdater(DefaultConfluenceLoader):
         self._background_thread = None
         self._document_key = None
 
-    #TODO: rename aupdate_confluence
+    # TODO: rename aupdate_confluence
     async def aload_from_confluence(self) -> None:
         """
         Asynchronously loads content from Confluence using the configured settings.

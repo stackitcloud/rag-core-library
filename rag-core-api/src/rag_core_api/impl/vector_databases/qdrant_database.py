@@ -1,5 +1,6 @@
 """Module containing the QdrantDatabase class."""
 
+from datetime import datetime
 import logging
 
 from langchain_core.documents import Document
@@ -10,6 +11,7 @@ from qdrant_client.models import FieldCondition, Filter, MatchValue
 from rag_core_api.embeddings.embedder import Embedder
 from rag_core_api.impl.settings.vector_db_settings import VectorDatabaseSettings
 from rag_core_api.vector_databases.vector_database import VectorDatabase
+from rag_core_lib.impl.utils.timestamp_creator import create_timestamp
 
 
 logger = logging.getLogger(__name__)
@@ -253,7 +255,7 @@ class QdrantDatabase(VectorDatabase):
             result += self.get_specific_document(document_id)
         return result
 
-    def delete_collection(self, collection_name: str) -> None:
+    def _delete_collection(self, collection_name: str) -> None:
         """
         Delete a collection from the vector database.
 
@@ -268,21 +270,39 @@ class QdrantDatabase(VectorDatabase):
         """
         self._vectorstore.client.delete_collection(collection_name=collection_name)
 
-    def collection_exists(self, collection_name: str) -> bool:
-        """
-        Check if a collection exists in the vector database.
+    def _cleanup_old_collections(self):
+        """Clean up old collections in the vector database."""
+        collectiions = self._client.get_collections()
+        collection_alias_name = self._settings.collection_name
+        collections_names = []
+        for collection in collectiions:
+            if collection.name.beginswith(collection_alias_name):
+                collections_names.append(collection.name)
+        nr_collections = len(collections_names)
 
-        Parameters
-        ----------
-        collection_name : str
-            The name of the collection to check.
+        if nr_collections == 1 or nr_collections < self._settings.collection_history_count:
+            return
 
-        Returns
-        -------
-        bool
-            True if the collection exists, False otherwise.
-        """
-        return self._vectorstore.client.collection_exists(collection_name=collection_name)
+        logging.info(
+            f"""Found {nr_collections} collections, but only {self._settings.collection_history_count} are allowed.
+            Cleaning up..."""
+        )
+
+        # parse ISO timestamp from the end of the collection name
+        def _extract_ts(name: str) -> datetime:
+            ts_part = name.rsplit("_", 1)[-1]
+            return datetime.fromisoformat(ts_part)
+
+        # sort by ascending timestamp
+        sorted_collections = sorted(collections_names, key=_extract_ts)
+
+        while nr_collections > self._settings.collection_history_count:
+            # delete the oldest collection
+            collection_to_delete = sorted_collections[0]
+            self._delete_collection(collection_to_delete)
+            sorted_collections.pop(0)
+            nr_collections = len(sorted_collections)
+            logger.info(f"Deleted collection: {collection_to_delete}")
 
     def switch_collections(self, collection_name: str):
         """
@@ -295,9 +315,11 @@ class QdrantDatabase(VectorDatabase):
         """
         self._vectorstore.client.update_collection_aliases(
             change_aliases_operations=[
-                models.DeleteAliasOperation(delete_alias=models.DeleteAlias(alias_name="rag-production")),
+                models.DeleteAliasOperation(delete_alias=models.DeleteAlias(alias_name=self._settings.collection_name)),
                 models.CreateAliasOperation(
-                    create_alias=models.CreateAlias(collection_name=collection_name, alias_name="rag-production")
+                    create_alias=models.CreateAlias(
+                        collection_name=collection_name, alias_name=self._settings.collection_name
+                    )
                 ),
             ]
         )
@@ -317,4 +339,29 @@ class QdrantDatabase(VectorDatabase):
             collection_name=target_collection_name,
             vectors_config=self._vectorstore.client.get_collection(source_collection_name).vectors_config,
             init_from=models.InitFrom(collection=source_collection_name),
+        )
+
+    def duplicate_alias_tagged_collection(self):
+        """
+        Duplicate the latest collection in the database.
+
+        This method creates a new collection with the same configuration as the latest collection
+        and copies all points from the latest collection to the new one.
+        """
+        aliases = self._vectorstore.client.get_aliases()
+        alias_of_interest = []
+        for alias in aliases:
+            if alias.alias_name == self._settings.collection_name:
+                alias_of_interest.append(alias)
+        if len(alias_of_interest) == 0:
+            raise ValueError(f"Collection with alias {self._settings.collection_name} does not exist.")
+        if len(alias_of_interest) > 1:
+            raise ValueError(f"Multiple collections with alias {self._settings.collection_name} exist.")
+
+        source_collection_name = alias_of_interest[0].collection_name
+        target_collection_name = f"{source_collection_name}_{create_timestamp()}"
+
+        logger.info(f"Duplicating collection {source_collection_name} to {target_collection_name}")
+        self.create_collection_from(
+            source_collection_name=source_collection_name, target_collection_name=target_collection_name
         )

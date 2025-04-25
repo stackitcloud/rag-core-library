@@ -76,7 +76,7 @@ class RagApi(BaseRagApi):
     async def switch_collection(
         self,
         collection_switcher: CollectionSwitcher = Depends(Provide[DependencyContainer.collection_switcher]),
-    )->None:
+    ) -> None:
         await collection_switcher.aswitch_collection()
 
     @inject

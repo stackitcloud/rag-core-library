@@ -17,28 +17,34 @@ import pprint
 import re  # noqa: F401
 import json
 
+
 from pydantic import BaseModel, ConfigDict, Field, StrictBool
 from typing import Any, ClassVar, Dict, List, Optional
-from admin_api_lib.rag_backend_client.openapi_client.models.key_value_pair import KeyValuePair
-from typing import Optional, Set
-from typing_extensions import Self
+from rag_core_api.models.information_piece import InformationPiece
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 
-class DeleteRequest(BaseModel):
-    """ """  # noqa: E501
+class UploadRequest(BaseModel):
+    """
+    The upload request of the information pieces.
+    """  # noqa: E501
 
-    metadata: Optional[List[KeyValuePair]] = None
+    information_pieces: List[InformationPiece] = Field(description="A list of information_pieces.")
     use_latest_collection: Optional[StrictBool] = Field(
         default=None,
         description="Determines if the latest collection is used, or the collection that has the descired alias assigned.",
     )
-    __properties: ClassVar[List[str]] = ["metadata", "use_latest_collection"]
+    __properties: ClassVar[List[str]] = ["information_pieces", "use_latest_collection"]
 
-    model_config = ConfigDict(
-        populate_by_name=True,
-        validate_assignment=True,
-        protected_namespaces=(),
-    )
+    model_config = {
+        "populate_by_name": True,
+        "validate_assignment": True,
+        "protected_namespaces": (),
+    }
 
     def to_str(self) -> str:
         """Returns the string representation of the model using alias"""
@@ -46,12 +52,11 @@ class DeleteRequest(BaseModel):
 
     def to_json(self) -> str:
         """Returns the JSON representation of the model using alias"""
-        # TODO: pydantic v2: use .model_dump_json(by_alias=True, exclude_unset=True) instead
-        return json.dumps(self.to_dict())
+        return self.model_dump_json(by_alias=True, exclude_unset=True)
 
     @classmethod
-    def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of DeleteRequest from a JSON string"""
+    def from_json(cls, json_str: str) -> Self:
+        """Create an instance of UploadRequest from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -64,25 +69,23 @@ class DeleteRequest(BaseModel):
           were set at model initialization. Other fields with value `None`
           are ignored.
         """
-        excluded_fields: Set[str] = set([])
-
         _dict = self.model_dump(
             by_alias=True,
-            exclude=excluded_fields,
+            exclude={},
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each item in metadata (list)
+        # override the default output from pydantic by calling `to_dict()` of each item in information_pieces (list)
         _items = []
-        if self.metadata:
-            for _item_metadata in self.metadata:
-                if _item_metadata:
-                    _items.append(_item_metadata.to_dict())
-            _dict["metadata"] = _items
+        if self.information_pieces:
+            for _item in self.information_pieces:
+                if _item:
+                    _items.append(_item.to_dict())
+            _dict["information_pieces"] = _items
         return _dict
 
     @classmethod
-    def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of DeleteRequest from a dict"""
+    def from_dict(cls, obj: Dict) -> Self:
+        """Create an instance of UploadRequest from a dict"""
         if obj is None:
             return None
 
@@ -91,8 +94,8 @@ class DeleteRequest(BaseModel):
 
         _obj = cls.model_validate(
             {
-                "metadata": [KeyValuePair.from_dict(_item) for _item in obj["metadata"]]
-                if obj.get("metadata") is not None
+                "information_pieces": [InformationPiece.from_dict(_item) for _item in obj.get("information_pieces")]
+                if obj.get("information_pieces") is not None
                 else None,
                 "use_latest_collection": obj.get("use_latest_collection"),
             }

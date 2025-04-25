@@ -18,7 +18,7 @@ import re  # noqa: F401
 import json
 
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, StrictBool
 from typing import Any, ClassVar, Dict, List, Optional
 from rag_core_api.models.key_value_pair import KeyValuePair
 
@@ -32,7 +32,11 @@ class DeleteRequest(BaseModel):
     """ """  # noqa: E501
 
     metadata: Optional[List[KeyValuePair]] = None
-    __properties: ClassVar[List[str]] = ["metadata"]
+    use_latest_collection: Optional[StrictBool] = Field(
+        default=None,
+        description="Determines if the latest collection is used, or the collection that has the descired alias assigned.",
+    )
+    __properties: ClassVar[List[str]] = ["metadata", "use_latest_collection"]
 
     model_config = {
         "populate_by_name": True,
@@ -90,7 +94,8 @@ class DeleteRequest(BaseModel):
             {
                 "metadata": [KeyValuePair.from_dict(_item) for _item in obj.get("metadata")]
                 if obj.get("metadata") is not None
-                else None
+                else None,
+                "use_latest_collection": obj.get("use_latest_collection"),
             }
         )
         return _obj

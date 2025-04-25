@@ -8,7 +8,7 @@ from typing import ClassVar, Dict, List, Tuple  # noqa: F401
 from rag_core_api.models.chat_request import ChatRequest
 from rag_core_api.models.chat_response import ChatResponse
 from rag_core_api.models.delete_request import DeleteRequest
-from rag_core_api.models.information_piece import InformationPiece
+from rag_core_api.models.upload_request import UploadRequest
 
 
 class BaseRagApi:
@@ -94,7 +94,7 @@ class BaseRagApi:
 
     async def upload_information_piece(
         self,
-        information_piece: List[InformationPiece],
+        upload_request: UploadRequest,
     ) -> None:
         """
         Asynchronously uploads information pieces for vectordatabase.

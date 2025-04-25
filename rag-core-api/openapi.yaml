@@ -75,9 +75,7 @@ paths:
         content:
           application/json:
             schema:
-              items:
-                $ref: '#/components/schemas/information_piece'
-              type: array
+              $ref: '#/components/schemas/upload_request'
         required: true
       responses:
         "201":
@@ -199,6 +197,11 @@ components:
             $ref: '#/components/schemas/key_value_pair'
           title: metadata
           type: array
+        use_latest_collection:
+          description: "Determines if the latest collection is used, or the collection\
+            \ that has the descired alias assigned."
+          title: use_latest_collection
+          type: boolean
       title: file_request
       type: object
     chat_request:
@@ -281,4 +284,22 @@ components:
       - page_content
       - type
       title: file
+      type: object
+    upload_request:
+      description: The upload request of the information pieces.
+      properties:
+        information_pieces:
+          description: A list of information_pieces.
+          items:
+            $ref: '#/components/schemas/information_piece'
+          title: information_pieces
+          type: array
+        use_latest_collection:
+          description: "Determines if the latest collection is used, or the collection\
+            \ that has the descired alias assigned."
+          title: use_latest_collection
+          type: boolean
+      required:
+      - information_pieces
+      title: upload_request
       type: object

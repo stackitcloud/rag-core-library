@@ -21,7 +21,6 @@ from fastapi import (  # noqa: F401
     HTTPException,
     Path,
     Query,
-    Request,
     Response,
     Security,
     status,
@@ -32,7 +31,7 @@ from rag_core_api.apis.rag_api_base import BaseRagApi
 from rag_core_api.models.chat_request import ChatRequest
 from rag_core_api.models.chat_response import ChatResponse
 from rag_core_api.models.delete_request import DeleteRequest
-from rag_core_api.models.information_piece import InformationPiece
+from rag_core_api.models.upload_request import UploadRequest
 
 logger = logging.getLogger(__name__)
 
@@ -208,20 +207,18 @@ async def switch_collection() -> None:
     response_model_by_alias=True,
 )
 async def upload_information_piece(
-    information_piece: List[InformationPiece] = Body(None, description=""),
+    upload_request: UploadRequest = Body(None, description=""),
 ) -> None:
     """
-    Asynchronously uploads information pieces for vectordatabase.
-
-    This endpoint allows for the upload of information pieces to the vector database.
+    Asynchronously uploads information pieces to the vector database.
 
     Parameters
     ----------
-    information_piece : List[InformationPiece]
-        A list of information pieces to be uploaded (default None).
+    upload_request : UploadRequest
+        The request payload containing the information pieces to be uploaded (default None).
 
     Returns
     -------
     None
     """
-    return await BaseRagApi.subclasses[0]().upload_information_piece(information_piece)
+    return await BaseRagApi.subclasses[0]().upload_information_piece(upload_request)
