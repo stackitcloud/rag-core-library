@@ -95,7 +95,7 @@ class VectorDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def delete(self, delete_request: dict) -> None:
+    def delete(self, delete_request: dict, collection_name: str) -> None:
         """
         Delete the documents from the vector database.
 
@@ -103,6 +103,8 @@ class VectorDatabase(ABC):
         ----------
         delete_request : dict
             Contains the information required for deleting the documents.
+        collection_name : str, optional
+            The collection name to delete from; uses settings collection if None.
 
         Raises
         ------

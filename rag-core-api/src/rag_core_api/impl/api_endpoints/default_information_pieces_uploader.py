@@ -48,7 +48,7 @@ class DefaultInformationPiecesUploader(InformationPiecesUploader):
         ]
         collection_name = None
         if upload_request.use_latest_collection:
-            collection_name = self._vector_database.get_latest_collection_name()[0]
+            collection_name = self._vector_database.get_sorted_collection_names()[0]
 
         try:
             self._vector_database.upload(langchain_documents, collection_name=collection_name)
