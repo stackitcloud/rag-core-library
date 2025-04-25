@@ -77,13 +77,15 @@ class VectorDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def upload(self, documents: list[Document]):
+    def upload(self, documents: list[Document], collection_name: str | None = None) -> None:
         """Upload the documents to the vector database.
 
         Parameters
         ----------
         documents : list[Document]
             List of documents which will be uploaded.
+        collection_name : str, optional
+            The name of the collection to upload the documents to. If None, the default collection will be used.
 
         Raises
         ------
@@ -125,3 +127,16 @@ class VectorDatabase(ABC):
             If the method is not implemented.
         """
         raise NotImplementedError()
+
+    @abstractmethod
+    def get_sorted_collection_names(self) -> list[str]:
+        """
+        Get sorted collection names based on the timestamp in the collection name.
+
+        List is sorted in ascending order.
+
+        Returns
+        -------
+        list[str]
+            A list of sorted collection names.
+        """

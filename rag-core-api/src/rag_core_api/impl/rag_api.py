@@ -21,6 +21,7 @@ from rag_core_api.models.chat_request import ChatRequest
 from rag_core_api.models.chat_response import ChatResponse
 from rag_core_api.models.delete_request import DeleteRequest
 from rag_core_api.models.information_piece import InformationPiece
+from rag_core_api.models.upload_request import UploadRequest
 
 logger = logging.getLogger(__name__)
 
@@ -134,7 +135,7 @@ class RagApi(BaseRagApi):
     @inject
     async def upload_information_piece(
         self,
-        information_piece: list[InformationPiece],
+        uploade_request: UploadRequest,
         information_pieces_uploader: InformationPiecesUploader = Depends(
             Provide[DependencyContainer.information_pieces_uploader]
         ),
@@ -154,4 +155,4 @@ class RagApi(BaseRagApi):
         -------
         None
         """
-        information_pieces_uploader.upload_information_piece(information_piece)
+        information_pieces_uploader.upload_information_piece(uploade_request)

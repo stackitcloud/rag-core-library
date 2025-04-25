@@ -157,7 +157,7 @@ class QdrantDatabase(VectorDatabase):
 
     def upload(self, documents: list[Document], collection_name: str | None = None) -> None:
         """
-        Save the given documents to the Qdrant database. If collection does not exist, it will be created. TODO: check if that is really the case :D
+        Save the given documents to the Qdrant database. If collection does not exist, it will be created.
 
         Parameters
         ----------
@@ -272,14 +272,8 @@ class QdrantDatabase(VectorDatabase):
 
     def _cleanup_old_collections(self):
         """Clean up old collections in the vector database."""
-        collectiions = self._client.get_collections()
-        collection_alias_name = self._settings.collection_name
-        collections_names = []
-        for collection in collectiions:
-            if collection.name.beginswith(collection_alias_name):
-                collections_names.append(collection.name)
-        nr_collections = len(collections_names)
-
+        sorted_collections = self.get_sorted_collection_names()
+        nr_collections = len(sorted_collections)
         if nr_collections == 1 or nr_collections < self._settings.collection_history_count:
             return
 
@@ -287,14 +281,6 @@ class QdrantDatabase(VectorDatabase):
             f"""Found {nr_collections} collections, but only {self._settings.collection_history_count} are allowed.
             Cleaning up..."""
         )
-
-        # parse ISO timestamp from the end of the collection name
-        def _extract_ts(name: str) -> datetime:
-            ts_part = name.rsplit("_", 1)[-1]
-            return datetime.fromisoformat(ts_part)
-
-        # sort by ascending timestamp
-        sorted_collections = sorted(collections_names, key=_extract_ts)
 
         while nr_collections > self._settings.collection_history_count:
             # delete the oldest collection
@@ -365,3 +351,26 @@ class QdrantDatabase(VectorDatabase):
         self.create_collection_from(
             source_collection_name=source_collection_name, target_collection_name=target_collection_name
         )
+
+    def get_sorted_collection_names(self) -> list[str]:
+        """
+        Get sorted collection names based on the timestamp in the collection name.
+
+        List is sorted in ascending order.
+
+        Returns
+        -------
+        list[str]
+            A list of sorted collection names.
+        """
+        collections = self.get_collections()
+        collection_alias_name = self._settings.collection_name
+        collections_names = []
+        for collection in collections:
+            if collection.name.beginswith(collection_alias_name):
+                collections_names.append(collection.name)
+        if not collections_names:
+            raise ValueError(f"No collections found with alias {collection_alias_name}.")
+        if len(collections_names) == 1:
+            return collections_names
+        return sorted(collections, key=lambda x: datetime.fromisoformat(x.rsplit("_", 1)[-1]))
