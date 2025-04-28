@@ -30,7 +30,7 @@ from admin_api_lib.information_enhancer.information_enhancer import InformationE
 from admin_api_lib.models.status import Status
 from admin_api_lib.rag_backend_client.openapi_client.api.rag_api import RagApi
 from admin_api_lib.utils.utils import sanitize_document_name
-from rag_core_api.models.upload_request import UploadRequest
+from admin_api_lib.rag_backend_client.openapi_client.models.upload_request import UploadRequest
 
 logger = logging.getLogger(__name__)
 

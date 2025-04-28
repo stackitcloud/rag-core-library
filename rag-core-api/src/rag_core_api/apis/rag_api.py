@@ -21,6 +21,7 @@ from fastapi import (  # noqa: F401
     HTTPException,
     Path,
     Query,
+    Request,
     Response,
     Security,
     status,
