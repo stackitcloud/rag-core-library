@@ -107,20 +107,20 @@ class ConfluenceHandler(ABC):
                 status.HTTP_500_INTERNAL_SERVER_ERROR, f"Error loading from Confluence: {str(e)}"
             ) from e
 
-    async def _update_vector_db(self, results:dict) -> None:
+    async def _update_vector_db(self, results:dict, use_latest_collection:bool|None=None) -> None:
         for idx in sorted(results.keys()):
             rag_information_pieces = results[idx]
             await self._delete_previous_information_pieces(
-                index=idx, use_latest_collection=True
+                index=idx, use_latest_collection=use_latest_collection
             )
             self._key_value_store.upsert(
                 self._settings.document_name[idx], Status.UPLOADING
             )
             self._upload_information_pieces(
-                rag_information_pieces, index=idx, use_latest_collection=True
+                rag_information_pieces, index=idx, use_latest_collection=use_latest_collection
             )
 
-    async def _aload_from_confluence(self) -> None:
+    async def _aload_from_confluence(self, use_latest_collection:bool|None=None) -> None:
         threads = []
         results: dict[int, list[Document]] = {}
 
@@ -136,7 +136,7 @@ class ConfluenceHandler(ABC):
         for t in threads:
             t.join()
 
-        self._update_vector_db(results)
+        await self._update_vector_db(results, use_latest_collection=use_latest_collection)
 
 
 

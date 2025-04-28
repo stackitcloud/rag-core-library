@@ -172,12 +172,36 @@ class QdrantDatabase(VectorDatabase):
         """
         if not collection_name:
             collection_name = self._settings.collection_name
+        client = self._vectorstore.client
+        aliases = client.get_aliases()
+        alias_of_interest = []
+        for alias in aliases.aliases:
+            if alias.alias_name == self._settings.collection_name:
+                alias_of_interest.append(alias)
+        true_collection_name = collection_name+f"_{create_timestamp()}" if len(alias_of_interest) == 0 else alias_of_interest[0].collection_name
         self._vectorstore = self._vectorstore.from_documents(
             documents,
             self._embedder.get_embedder(),
-            collection_name=collection_name,
+            collection_name=true_collection_name,
             location=self._settings.location,
         )
+
+        if len(alias_of_interest) == 0:
+            client.update_collection_aliases(
+                change_aliases_operations=[
+                    models.CreateAliasOperation(
+                        create_alias=models.CreateAlias(
+                            collection_name=true_collection_name, alias_name=self._settings.collection_name
+                        )
+                    ),
+                ]
+            )
+
+
+
+
+
+
 
     def delete(self, delete_request: dict, collection_name: str | None = None) -> None:
         """
@@ -192,40 +216,13 @@ class QdrantDatabase(VectorDatabase):
         """
         collection_name = collection_name or self._settings.collection_name
 
-        self._vectorstore.client.delete(
-            collection_name=collection_name,
-            points_selector=models.FilterSelector(
-                filter=models.Filter(
-                    must=[
-                        models.FieldCondition(
-                            key=key,
-                            match=models.MatchValue(value=value),
-                        )
-                        for key, value in delete_request.items()
-                    ]
-                )
-            ),
-        )
-        """
-        Delete all points associated with a specific document from the Qdrant database.
-
-        Parameters
-        ----------
-        delete_request : dict
-            A dictionary containing the conditions to match the points to be deleted. Each key-value pair
-            represents a field and its corresponding value to match.
-
-        Returns
-        -------
-        None
-        """
         filter_conditions = [
-            models.FieldCondition(
-                key=key,
-                match=models.MatchValue(value=value),
-            )
-            for key, value in delete_request.items()
-        ]
+                    models.FieldCondition(
+                        key=key,
+                        match=models.MatchValue(value=value),
+                    )
+                    for key, value in delete_request.items()
+                ]
 
         points_selector = models.FilterSelector(
             filter=models.Filter(
@@ -324,7 +321,7 @@ class QdrantDatabase(VectorDatabase):
         """
         self._vectorstore.client.create_collection(
             collection_name=target_collection_name,
-            vectors_config=self._vectorstore.client.get_collection(source_collection_name).vectors_config,
+            vectors_config=self._vectorstore.client.get_collection(source_collection_name).config.params.vectors,
             init_from=models.InitFrom(collection=source_collection_name),
         )
 
@@ -337,7 +334,7 @@ class QdrantDatabase(VectorDatabase):
         """
         aliases = self._vectorstore.client.get_aliases()
         alias_of_interest = []
-        for alias in aliases:
+        for alias in aliases.aliases:
             if alias.alias_name == self._settings.collection_name:
                 alias_of_interest.append(alias)
         if len(alias_of_interest) == 0:
@@ -346,7 +343,7 @@ class QdrantDatabase(VectorDatabase):
             raise ValueError(f"Multiple collections with alias {self._settings.collection_name} exist.")
 
         source_collection_name = alias_of_interest[0].collection_name
-        target_collection_name = f"{source_collection_name}_{create_timestamp()}"
+        target_collection_name = f"{alias_of_interest[0].alias_name}_{create_timestamp()}"
 
         logger.info(f"Duplicating collection {source_collection_name} to {target_collection_name}")
         self.create_collection_from(

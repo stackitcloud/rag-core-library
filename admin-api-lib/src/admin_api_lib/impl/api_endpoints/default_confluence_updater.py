@@ -110,10 +110,10 @@ class DefaultConfluenceUpdater(ConfluenceUpdater, ConfluenceHandler):
             raise HTTPException(
                 status.HTTP_423_LOCKED, "Confluence loader is locked... Please wait for the current load to finish."
             )
-        self._background_thread = Thread(target=lambda: run(self._aload_from_confluence()))
+        self._background_thread = Thread(target=lambda: run(self._aload_from_confluence(use_latest_collection=True)))
         self._background_thread.start()
 
-    async def _aload_from_confluence(self) -> None:
+    async def _aload_from_confluence(self,use_latest_collection:bool|None=None) -> None:
 
         threads = []
         results: dict[int, list[Document]] = {}
