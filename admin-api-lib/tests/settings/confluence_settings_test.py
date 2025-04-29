@@ -4,9 +4,20 @@ from admin_api_lib.impl.utils.comma_separated_str_list import CommaSeparatedStrL
 from admin_api_lib.impl.utils.comma_separated_bool_list import CommaSeparatedBoolList
 
 
-def test_default_values():
+def test_default_values(monkeypatch):
+    for var in (
+        "CONFLUENCE_URL",
+        "CONFLUENCE_TOKEN",
+        "CONFLUENCE_SPACE_KEY",
+        "CONFLUENCE_DOCUMENT_NAME",
+        "CONFLUENCE_VERIFY_SSL",
+        "CONFLUENCE_INCLUDE_ATTACHMENTS",
+        "CONFLUENCE_KEEP_MARKDOWN_FORMAT",
+        "CONFLUENCE_KEEP_NEWLINES",
+    ):
+        monkeypatch.delenv(var, raising=False)
     # When no settings are provided, all lists default to empty lists.
-    settings = ConfluenceSettings()
+    settings = ConfluenceSettings(_env_file=None)
     assert settings.url == CommaSeparatedStrList()
     assert settings.token == CommaSeparatedStrList()
     assert settings.space_key == CommaSeparatedStrList()

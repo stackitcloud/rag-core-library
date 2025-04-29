@@ -172,8 +172,8 @@ class QdrantDatabase(VectorDatabase):
         """
         if not collection_name:
             collection_name = self._settings.collection_name
-        client = self._vectorstore.client
-        aliases = client.get_aliases()
+
+        aliases = self._vectorstore.client.get_aliases()
         alias_of_interest = []
         for alias in aliases.aliases:
             if alias.alias_name == self._settings.collection_name:
@@ -187,7 +187,7 @@ class QdrantDatabase(VectorDatabase):
         )
 
         if len(alias_of_interest) == 0:
-            client.update_collection_aliases(
+            self._vectorstore.client.update_collection_aliases(
                 change_aliases_operations=[
                     models.CreateAliasOperation(
                         create_alias=models.CreateAlias(
@@ -297,6 +297,13 @@ class QdrantDatabase(VectorDatabase):
         collection_name : str
             The name of the collection to switch to.
         """
+        aliases = self._vectorstore.client.get_aliases().aliases
+        for alias in aliases:
+            if alias.alias_name==self._settings.collection_name:
+                if alias.collection_name == collection_name:
+                    logger.warning("Nothings needs to be done, alias already set for the collection!")
+                break
+
         self._vectorstore.client.update_collection_aliases(
             change_aliases_operations=[
                 models.DeleteAliasOperation(delete_alias=models.DeleteAlias(alias_name=self._settings.collection_name)),
@@ -365,10 +372,13 @@ class QdrantDatabase(VectorDatabase):
         collection_alias_name = self._settings.collection_name
         collections_names = []
         for collection in collections:
-            if collection.name.beginswith(collection_alias_name):
+            if collection.name.startswith(collection_alias_name):
                 collections_names.append(collection.name)
         if not collections_names:
             raise ValueError(f"No collections found with alias {collection_alias_name}.")
         if len(collections_names) == 1:
             return collections_names
-        return sorted(collections, key=lambda x: datetime.fromisoformat(x.rsplit("_", 1)[-1]))
+        return sorted(
+            collections_names,
+            key=lambda x: datetime.strptime(x.rsplit("_", 1)[-1], "%Y%m%d%H%M%S")
+        )
