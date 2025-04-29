@@ -81,7 +81,7 @@ def vector_database(qdrant_client: QdrantClient)->VectorDatabase:
     embedder = FakeEmbeddings(**embedder_settings.model_dump())
     vectorstore = QdrantVectorStore(qdrant_client, settings.collection_name, embedding=embedder)
 
-    return QdrantDatabase(settings=settings, embedder=embedder, vectorstore=vectorstore)
+    return QdrantDatabase(settings=settings, embedder=embedder, sparse_embedder=embedder, vectorstore=vectorstore)
 
 
 
