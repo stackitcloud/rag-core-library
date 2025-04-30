@@ -20,7 +20,6 @@ from rag_core_api.evaluator.evaluator import Evaluator
 from rag_core_api.models.chat_request import ChatRequest
 from rag_core_api.models.chat_response import ChatResponse
 from rag_core_api.models.delete_request import DeleteRequest
-from rag_core_api.models.information_piece import InformationPiece
 from rag_core_api.models.upload_request import UploadRequest
 
 logger = logging.getLogger(__name__)

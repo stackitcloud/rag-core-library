@@ -1,5 +1,6 @@
 from datetime import datetime
 
+
 def create_timestamp() -> str:
     """
     Create a timestamp string in the format YYYYMMDDHHMMSS.

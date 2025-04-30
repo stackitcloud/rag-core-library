@@ -34,7 +34,5 @@ class VectorDatabaseSettings(BaseSettings):
     collection_name: str = Field()
     location: str = Field()
     collection_history_count: int = Field(default=1, ge=1)
-    validate_collection_config: bool = Field(
-        default=False
-    )
+    validate_collection_config: bool = Field(default=False)
     retrieval_mode: RetrievalMode = Field(default=RetrievalMode.HYBRID)

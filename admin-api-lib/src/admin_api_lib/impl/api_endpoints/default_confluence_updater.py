@@ -26,9 +26,7 @@ from admin_api_lib.impl.mapper.informationpiece2document import (
 )
 from admin_api_lib.impl.settings.confluence_settings import ConfluenceSettings
 from admin_api_lib.information_enhancer.information_enhancer import InformationEnhancer
-from admin_api_lib.models.status import Status
 from admin_api_lib.rag_backend_client.openapi_client.api.rag_api import RagApi
-from admin_api_lib.utils.utils import sanitize_document_name
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +79,7 @@ class DefaultConfluenceUpdater(ConfluenceUpdater, ConfluenceHandler):
             information_enhancer=information_enhancer,
             chunker=chunker,
             document_deleter=document_deleter,
-            settings_mapper=settings_mapper
+            settings_mapper=settings_mapper,
         )
         self._background_thread: threading.Thread = None
 
@@ -112,8 +110,7 @@ class DefaultConfluenceUpdater(ConfluenceUpdater, ConfluenceHandler):
         self._background_thread = Thread(target=lambda: run(self._aload_from_confluence(use_latest_collection=True)))
         self._background_thread.start()
 
-    async def _aload_from_confluence(self,use_latest_collection:bool|None=None) -> None:
-
+    async def _aload_from_confluence(self, use_latest_collection: bool | None = None) -> None:
         threads = []
         results: dict[int, list[Document]] = {}
 
@@ -132,4 +129,3 @@ class DefaultConfluenceUpdater(ConfluenceUpdater, ConfluenceHandler):
         self._rag_api.duplicate_collection()
         await self._update_vector_db(results, use_latest_collection=use_latest_collection)
         self._rag_api.switch_collection()
-

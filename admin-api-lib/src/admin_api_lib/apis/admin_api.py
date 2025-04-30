@@ -137,7 +137,7 @@ async def load_confluence_post() -> None:
     response_model_by_alias=True,
 )
 async def update_confluence() -> None:
-    """Extracts the confluence space and trigger collection switch in the vector database. The key value store will not be updated during the operations."""
+    """Extracts the confluence space and trigger collection switch in the vector database."""
     return await BaseAdminApi.subclasses[0]().update_confluence()
 
 

@@ -1,6 +1,5 @@
 """Module for the DefaultConfluenceLoader class."""
 
-from abc import ABC
 import logging
 from asyncio import run
 import threading
@@ -34,8 +33,7 @@ from admin_api_lib.rag_backend_client.openapi_client.models.upload_request impor
 logger = logging.getLogger(__name__)
 
 
-class ConfluenceHandler(ABC):
-
+class ConfluenceHandler:
     def __init__(
         self,
         extractor_api: ExtractorApi,
@@ -49,7 +47,7 @@ class ConfluenceHandler(ABC):
         settings_mapper: ConfluenceSettingsMapper,
     ):
         """
-        Initialize the DefaultConfluenceLoader with the provided dependencies.
+        Initialize the ConfluenceHandler with the provided dependencies.
 
         Parameters
         ----------
@@ -82,7 +80,6 @@ class ConfluenceHandler(ABC):
         self._document_deleter = document_deleter
         self._settings_mapper = settings_mapper
 
-
     async def _process_confluence(self, index):
         logger.info("Loading from Confluence %s", self._settings.url[index])
         self._sanitize_document_name(index=index)
@@ -91,15 +88,10 @@ class ConfluenceHandler(ABC):
         try:
             self._key_value_store.upsert(self._settings.document_name[index], Status.PROCESSING)
             information_pieces = self._extractor_api.extract_from_confluence_post(params)
-            documents = [
-                self._information_mapper.extractor_information_piece2document(x) for x in information_pieces
-            ]
+            documents = [self._information_mapper.extractor_information_piece2document(x) for x in information_pieces]
             documents = await self._aenhance_langchain_documents(documents)
             chunked_documents = self._chunker.chunk(documents)
-            return [
-                self._information_mapper.document2rag_information_piece(doc)
-                for doc in chunked_documents
-            ]
+            return [self._information_mapper.document2rag_information_piece(doc) for doc in chunked_documents]
         except Exception as e:
             self._key_value_store.upsert(self._settings.document_name[index], Status.ERROR)
             logger.error("Error while loading from Confluence: %s", str(e))
@@ -107,20 +99,16 @@ class ConfluenceHandler(ABC):
                 status.HTTP_500_INTERNAL_SERVER_ERROR, f"Error loading from Confluence: {str(e)}"
             ) from e
 
-    async def _update_vector_db(self, results:dict, use_latest_collection:bool|None=None) -> None:
+    async def _update_vector_db(self, results: dict, use_latest_collection: bool | None = None) -> None:
         for idx in sorted(results.keys()):
             rag_information_pieces = results[idx]
-            await self._delete_previous_information_pieces(
-                index=idx, use_latest_collection=use_latest_collection
-            )
-            self._key_value_store.upsert(
-                self._settings.document_name[idx], Status.UPLOADING
-            )
+            await self._delete_previous_information_pieces(index=idx, use_latest_collection=use_latest_collection)
+            self._key_value_store.upsert(self._settings.document_name[idx], Status.UPLOADING)
             self._upload_information_pieces(
                 rag_information_pieces, index=idx, use_latest_collection=use_latest_collection
             )
 
-    async def _aload_from_confluence(self, use_latest_collection:bool|None=None) -> None:
+    async def _aload_from_confluence(self, use_latest_collection: bool | None = None) -> None:
         threads = []
         results: dict[int, list[Document]] = {}
 
@@ -138,8 +126,6 @@ class ConfluenceHandler(ABC):
 
         await self._update_vector_db(results, use_latest_collection=use_latest_collection)
 
-
-
     async def _aenhance_langchain_documents(self, documents: list[Document]):
         try:
             return await self._information_enhancer.ainvoke(documents)
@@ -147,9 +133,11 @@ class ConfluenceHandler(ABC):
             logger.error("Exception occured while enhancing confluence langchain document %s" % e)
             raise e
 
-    async def _delete_previous_information_pieces(self, index=0, use_latest_collection:bool|None=None):
+    async def _delete_previous_information_pieces(self, index=0, use_latest_collection: bool | None = None):
         try:
-            await self._document_deleter.adelete_document(self._settings.document_name[index], use_latest_collection=use_latest_collection)
+            await self._document_deleter.adelete_document(
+                self._settings.document_name[index], use_latest_collection=use_latest_collection
+            )
         except HTTPException as e:
             logger.error(
                 (
@@ -160,9 +148,11 @@ class ConfluenceHandler(ABC):
                 e,
             )
 
-    def _upload_information_pieces(self, rag_api_documents, index=0, use_latest_collection:bool|None=None):
+    def _upload_information_pieces(self, rag_api_documents, index=0, use_latest_collection: bool | None = None):
         try:
-            self._rag_api.upload_information_piece(UploadRequest(information_pieces=rag_api_documents, use_latest_collection=use_latest_collection))
+            self._rag_api.upload_information_piece(
+                UploadRequest(information_pieces=rag_api_documents, use_latest_collection=use_latest_collection)
+            )
             self._key_value_store.upsert(self._settings.document_name[index], Status.READY)
             logger.info("Confluence loaded successfully")
         except Exception as e:

@@ -180,7 +180,11 @@ class QdrantDatabase(VectorDatabase):
         for alias in aliases.aliases:
             if alias.alias_name == self._settings.collection_name:
                 alias_of_interest.append(alias)
-        true_collection_name = collection_name+f"_{create_timestamp()}" if len(alias_of_interest) == 0 else alias_of_interest[0].collection_name
+        true_collection_name = (
+            collection_name + f"_{create_timestamp()}"
+            if len(alias_of_interest) == 0
+            else alias_of_interest[0].collection_name
+        )
         self._vectorstore = self._vectorstore.from_documents(
             documents,
             collection_name=true_collection_name,
@@ -201,12 +205,6 @@ class QdrantDatabase(VectorDatabase):
                 ]
             )
 
-
-
-
-
-
-
     def delete(self, delete_request: dict, collection_name: str | None = None) -> None:
         """
         Delete points from a collection based on the given conditions.
@@ -221,12 +219,12 @@ class QdrantDatabase(VectorDatabase):
         collection_name = collection_name or self._settings.collection_name
 
         filter_conditions = [
-                    models.FieldCondition(
-                        key=key,
-                        match=models.MatchValue(value=value),
-                    )
-                    for key, value in delete_request.items()
-                ]
+            models.FieldCondition(
+                key=key,
+                match=models.MatchValue(value=value),
+            )
+            for key, value in delete_request.items()
+        ]
 
         points_selector = models.FilterSelector(
             filter=models.Filter(
@@ -250,47 +248,6 @@ class QdrantDatabase(VectorDatabase):
         """
         return self._vectorstore.client.get_collections().collections
 
-    def _get_related(self, related_ids: list[str]) -> list[Document]:
-        result = []
-        for document_id in related_ids:
-            result += self.get_specific_document(document_id)
-        return result
-
-    def _delete_collection(self, collection_name: str) -> None:
-        """
-        Delete a collection from the vector database.
-
-        Parameters
-        ----------
-        collection_name : str
-            The name of the collection to be deleted.
-
-        Returns
-        -------
-        None
-        """
-        self._vectorstore.client.delete_collection(collection_name=collection_name)
-
-    def _cleanup_old_collections(self):
-        """Clean up old collections in the vector database."""
-        sorted_collections = self.get_sorted_collection_names()
-        nr_collections = len(sorted_collections)
-        if nr_collections == 1 or nr_collections < self._settings.collection_history_count:
-            return
-
-        logging.info(
-            f"""Found {nr_collections} collections, but only {self._settings.collection_history_count} are allowed.
-            Cleaning up..."""
-        )
-
-        while nr_collections > self._settings.collection_history_count:
-            # delete the oldest collection
-            collection_to_delete = sorted_collections[0]
-            self._delete_collection(collection_to_delete)
-            sorted_collections.pop(0)
-            nr_collections = len(sorted_collections)
-            logger.info(f"Deleted collection: {collection_to_delete}")
-
     def switch_collections(self, collection_name: str):
         """
         Switch the alias of the current collection to the specified collection.
@@ -303,7 +260,7 @@ class QdrantDatabase(VectorDatabase):
         """
         aliases = self._vectorstore.client.get_aliases().aliases
         for alias in aliases:
-            if alias.alias_name==self._settings.collection_name:
+            if alias.alias_name == self._settings.collection_name:
                 if alias.collection_name == collection_name:
                     logger.warning("Nothings needs to be done, alias already set for the collection!")
                 break
@@ -335,10 +292,11 @@ class QdrantDatabase(VectorDatabase):
         self._vectorstore.client.create_collection(
             collection_name=target_collection_name,
             vectors_config=self._vectorstore.client.get_collection(source_collection_name).config.params.vectors,
-            sparse_vectors_config=self._vectorstore.client.get_collection(source_collection_name).config.params.sparse_vectors,
+            sparse_vectors_config=self._vectorstore.client.get_collection(
+                source_collection_name
+            ).config.params.sparse_vectors,
             init_from=models.InitFrom(collection=source_collection_name),
         )
-
 
     def duplicate_alias_tagged_collection(self):
         """
@@ -386,7 +344,45 @@ class QdrantDatabase(VectorDatabase):
             raise ValueError(f"No collections found with alias {collection_alias_name}.")
         if len(collections_names) == 1:
             return collections_names
-        return sorted(
-            collections_names,
-            key=lambda x: datetime.strptime(x.rsplit("_", 1)[-1], "%Y%m%d%H%M%S")
+        return sorted(collections_names, key=lambda x: datetime.strptime(x.rsplit("_", 1)[-1], "%Y%m%d%H%M%S"))
+
+    def _get_related(self, related_ids: list[str]) -> list[Document]:
+        result = []
+        for document_id in related_ids:
+            result += self.get_specific_document(document_id)
+        return result
+
+    def _delete_collection(self, collection_name: str) -> None:
+        """
+        Delete a collection from the vector database.
+
+        Parameters
+        ----------
+        collection_name : str
+            The name of the collection to be deleted.
+
+        Returns
+        -------
+        None
+        """
+        self._vectorstore.client.delete_collection(collection_name=collection_name)
+
+    def _cleanup_old_collections(self):
+        """Clean up old collections in the vector database."""
+        sorted_collections = self.get_sorted_collection_names()
+        nr_collections = len(sorted_collections)
+        if nr_collections == 1 or nr_collections < self._settings.collection_history_count:
+            return
+
+        logging.info(
+            f"""Found {nr_collections} collections, but only {self._settings.collection_history_count} are allowed.
+            Cleaning up..."""
         )
+
+        while nr_collections > self._settings.collection_history_count:
+            # delete the oldest collection
+            collection_to_delete = sorted_collections[0]
+            self._delete_collection(collection_to_delete)
+            sorted_collections.pop(0)
+            nr_collections = len(sorted_collections)
+            logger.info(f"Deleted collection: {collection_to_delete}")

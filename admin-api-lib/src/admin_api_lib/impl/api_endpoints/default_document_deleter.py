@@ -41,7 +41,7 @@ class DefaultDocumentDeleter(DocumentDeleter):
         self._rag_api = rag_api
         self._key_value_store = key_value_store
 
-    async def adelete_document(self, identification: str, use_latest_collection:bool|None=None) -> None:
+    async def adelete_document(self, identification: str, use_latest_collection: bool | None = None) -> None:
         """
         Asynchronously delete a document identified by the given identification string.
 
@@ -72,7 +72,10 @@ class DefaultDocumentDeleter(DocumentDeleter):
             error_messages += f"Error while deleting {identification} from file storage\n {str(e)}\n"
         try:
             self._rag_api.remove_information_piece(
-                DeleteRequest(metadata=[KeyValuePair(key="document", value=json.dumps(identification))],use_latest_collection=use_latest_collection)  # type: ignore[arg-type]
+                DeleteRequest(
+                    metadata=[KeyValuePair(key="document", value=json.dumps(identification))],
+                    use_latest_collection=use_latest_collection,
+                )  # type: ignore[arg-type]
             )
             logger.info("Deleted information pieces belonging to %s from rag.", identification)
         except Exception as e:

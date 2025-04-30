@@ -44,7 +44,8 @@ class DefaultInformationPiecesUploader(InformationPiecesUploader):
         None
         """
         langchain_documents = [
-            InformationPieceMapper.information_piece2langchain_document(document) for document in upload_request.information_pieces
+            InformationPieceMapper.information_piece2langchain_document(document)
+            for document in upload_request.information_pieces
         ]
         collection_name = None
         if upload_request.use_latest_collection:

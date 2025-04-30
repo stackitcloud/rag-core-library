@@ -33,4 +33,3 @@ class DefaultCollectionSwitcher(CollectionSwitcher):
         """
         collection_name = self._vector_database.get_sorted_collection_names()[-1]
         self._vector_database.switch_collections(collection_name)
-

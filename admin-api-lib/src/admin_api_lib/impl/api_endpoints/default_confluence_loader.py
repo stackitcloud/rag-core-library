@@ -6,7 +6,6 @@ from threading import Thread
 import threading
 
 from fastapi import HTTPException, status
-from langchain_core.documents import Document
 
 from admin_api_lib.api_endpoints.confluence_loader import ConfluenceLoader
 from admin_api_lib.api_endpoints.document_deleter import DocumentDeleter
@@ -26,12 +25,7 @@ from admin_api_lib.impl.mapper.informationpiece2document import (
 )
 from admin_api_lib.impl.settings.confluence_settings import ConfluenceSettings
 from admin_api_lib.information_enhancer.information_enhancer import InformationEnhancer
-from admin_api_lib.models.status import Status
 from admin_api_lib.rag_backend_client.openapi_client.api.rag_api import RagApi
-from admin_api_lib.utils.utils import sanitize_document_name
-from admin_api_lib.rag_backend_client.openapi_client.models.upload_request import (
-    UploadRequest,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +78,7 @@ class DefaultConfluenceLoader(ConfluenceLoader, ConfluenceHandler):
             information_enhancer=information_enhancer,
             chunker=chunker,
             document_deleter=document_deleter,
-            settings_mapper=settings_mapper
+            settings_mapper=settings_mapper,
         )
         self._background_thread: threading.Thread = None
 

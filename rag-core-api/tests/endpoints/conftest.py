@@ -19,6 +19,7 @@ from mock_environment_variables import mock_environment_variables
 
 mock_environment_variables()
 
+
 @pytest.fixture
 def qdrant_client() -> QdrantClient:
     """
@@ -72,10 +73,11 @@ def qdrant_client() -> QdrantClient:
         ],
     )
 
-    yield client
+    return client
+
 
 @pytest.fixture
-def vector_database(qdrant_client: QdrantClient)->VectorDatabase:
+def vector_database(qdrant_client: QdrantClient) -> VectorDatabase:
     settings = VectorDatabaseSettings()
     embedder_settings = FakeEmbedderSettings()
     embedder = FakeEmbeddings(**embedder_settings.model_dump())
@@ -84,7 +86,6 @@ def vector_database(qdrant_client: QdrantClient)->VectorDatabase:
     return QdrantDatabase(settings=settings, embedder=embedder, sparse_embedder=embedder, vectorstore=vectorstore)
 
 
-
 @pytest.fixture
-def collection_duplicator(vector_database:VectorDatabase)->CollectionDuplicator:
+def collection_duplicator(vector_database: VectorDatabase) -> CollectionDuplicator:
     return DefaultCollectionDuplicator(vector_database=vector_database)

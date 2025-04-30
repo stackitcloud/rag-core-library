@@ -41,4 +41,4 @@ def mock_environment_variables() -> None:
     os.environ["RETRIEVER_SUMMARY_K_DOCUMENTS"] = "10"
     os.environ["RETRIEVER_IMAGE_THRESHOLD"] = "0.0"
     os.environ["RETRIEVER_IMAGE_K_DOCUMENTS"] = "10"
-    os.environ["FAKE_EMBEDDER_SIZE"]="3"
+    os.environ["FAKE_EMBEDDER_SIZE"] = "3"

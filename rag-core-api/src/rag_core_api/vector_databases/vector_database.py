@@ -169,4 +169,3 @@ class VectorDatabase(ABC):
             If the method is not implemented.
         """
         raise NotImplementedError()
-
