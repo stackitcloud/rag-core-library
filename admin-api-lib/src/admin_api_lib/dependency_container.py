@@ -177,7 +177,7 @@ class DependencyContainer(DeclarativeContainer):
         document_deleter=document_deleter,
         settings_mapper=confluence_settings_mapper,
     )
-    confluence_updater = Singleton(  # TODO: adjust accordingly
+    confluence_updater = Singleton(
         DefaultConfluenceUpdater,
         extractor_api=document_extractor,
         rag_api=rag_api,
