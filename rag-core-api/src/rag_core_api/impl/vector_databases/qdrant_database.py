@@ -319,6 +319,8 @@ class QdrantDatabase(VectorDatabase):
             ]
         )
 
+        self._cleanup_old_collections()
+
     def create_collection_from(self, source_collection_name: str, target_collection_name: str):
         """
         Create a new collection from an existing collection.
@@ -333,8 +335,10 @@ class QdrantDatabase(VectorDatabase):
         self._vectorstore.client.create_collection(
             collection_name=target_collection_name,
             vectors_config=self._vectorstore.client.get_collection(source_collection_name).config.params.vectors,
+            sparse_vectors_config=self._vectorstore.client.get_collection(source_collection_name).config.params.sparse_vectors,
             init_from=models.InitFrom(collection=source_collection_name),
         )
+
 
     def duplicate_alias_tagged_collection(self):
         """

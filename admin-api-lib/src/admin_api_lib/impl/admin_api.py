@@ -6,6 +6,7 @@ from dependency_injector.wiring import Provide, inject
 from fastapi import Depends, Request, Response, UploadFile
 
 from admin_api_lib.api_endpoints.confluence_loader import ConfluenceLoader
+from admin_api_lib.api_endpoints.confluence_updater import ConfluenceUpdater
 from admin_api_lib.api_endpoints.document_deleter import DocumentDeleter
 from admin_api_lib.api_endpoints.document_reference_retriever import (
     DocumentReferenceRetriever,
@@ -107,7 +108,7 @@ class AdminApi(BaseAdminApi):
     @inject
     async def update_confluence(
         self,
-        confluence_updater: ConfluenceLoader = Depends(Provide[DependencyContainer.confluence_updater]),
+        confluence_updater: ConfluenceUpdater = Depends(Provide[DependencyContainer.confluence_updater]),
     ) -> None:
         """
         Asynchronously updates the documents related to a Confluence spaces
@@ -122,7 +123,7 @@ class AdminApi(BaseAdminApi):
         -------
         None
         """
-        await confluence_updater.aupdate_confluence()
+        await confluence_updater.aupdate_from_confluence()
 
     @inject
     async def document_reference_id_get(

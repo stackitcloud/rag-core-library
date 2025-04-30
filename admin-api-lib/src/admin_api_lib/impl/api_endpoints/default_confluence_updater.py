@@ -33,7 +33,6 @@ from admin_api_lib.utils.utils import sanitize_document_name
 logger = logging.getLogger(__name__)
 
 
-# TODO: revise!!! code not adjusted till now!!! ADJUST the upload and delete api calls ;)
 class DefaultConfluenceUpdater(ConfluenceUpdater, ConfluenceHandler):
     """DefaultConfluenceUpdater is responsible for loading content from Confluence asynchronously."""
 
@@ -130,7 +129,7 @@ class DefaultConfluenceUpdater(ConfluenceUpdater, ConfluenceHandler):
         for t in threads:
             t.join()
 
-        await self._rag_api.duplicate_collection()
-        self._update_vector_db(results)
-        await self._rag_api.switch_collection()
+        self._rag_api.duplicate_collection()
+        await self._update_vector_db(results, use_latest_collection=use_latest_collection)
+        self._rag_api.switch_collection()
 

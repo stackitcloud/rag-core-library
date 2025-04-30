@@ -29,6 +29,10 @@ async def test_aswitch_collection(collection_duplicator:CollectionDuplicator, co
     aliases_new = qdrant_client.get_aliases().aliases
 
     assert aliases_old[0].collection_name!=aliases_new[0].collection_name
+    collections = qdrant_client.get_collections().collections
+    assert len(collections)==1
+
+
 
 
 @pytest.mark.asyncio
