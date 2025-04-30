@@ -134,7 +134,7 @@ class RagApi(BaseRagApi):
     @inject
     async def upload_information_piece(
         self,
-        uploade_request: UploadRequest,
+        upload_request: UploadRequest,
         information_pieces_uploader: InformationPiecesUploader = Depends(
             Provide[DependencyContainer.information_pieces_uploader]
         ),
@@ -154,4 +154,4 @@ class RagApi(BaseRagApi):
         -------
         None
         """
-        information_pieces_uploader.upload_information_piece(uploade_request)
+        information_pieces_uploader.upload_information_piece(upload_request)

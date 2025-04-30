@@ -52,6 +52,6 @@ class DefaultConfluenceExtractor(ConfluenceExtractor):
         confluence_loader_parameters["confluence_kwargs"] = confluence_kwargs
         # Drop the document_name parameter as it is not used by the ConfluenceLoader
         confluence_loader_parameters.pop("document_name", None)
-        document_loader = ConfluenceLoader(**confluence_loader_parameters, max_pages=3)
+        document_loader = ConfluenceLoader(**confluence_loader_parameters)
         documents = document_loader.load()
         return [self.mapper.map_document2informationpiece(x) for x in documents]
