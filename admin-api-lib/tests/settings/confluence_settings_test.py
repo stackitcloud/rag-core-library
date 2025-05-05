@@ -14,6 +14,7 @@ def test_default_values(monkeypatch):
         "CONFLUENCE_INCLUDE_ATTACHMENTS",
         "CONFLUENCE_KEEP_MARKDOWN_FORMAT",
         "CONFLUENCE_KEEP_NEWLINES",
+        "CONFLUENCE_MAX_PAGES",
     ):
         monkeypatch.delenv(var, raising=False)
     # When no settings are provided, all lists default to empty lists.
@@ -27,6 +28,7 @@ def test_default_values(monkeypatch):
     assert settings.include_attachments == CommaSeparatedBoolList()
     assert settings.keep_markdown_format == CommaSeparatedBoolList()
     assert settings.keep_newlines == CommaSeparatedBoolList()
+    assert settings.max_pages == CommaSeparatedStrList()
 
 
 def test_valid_initialization_matching_lengths():
@@ -39,6 +41,7 @@ def test_valid_initialization_matching_lengths():
     include_attachments = "False, True"
     keep_markdown_format = "True, True"
     keep_newlines = "False, False"
+    max_pages = "10, 20"
 
     settings = ConfluenceSettings(
         url=urls,
@@ -49,6 +52,7 @@ def test_valid_initialization_matching_lengths():
         include_attachments=include_attachments,
         keep_markdown_format=keep_markdown_format,
         keep_newlines=keep_newlines,
+        max_pages=max_pages,
     )
 
     # Verify that the comma separated lists have been properly parsed.
@@ -60,6 +64,7 @@ def test_valid_initialization_matching_lengths():
     assert settings.include_attachments == CommaSeparatedBoolList([False, True])
     assert settings.keep_markdown_format == CommaSeparatedBoolList([True, True])
     assert settings.keep_newlines == CommaSeparatedBoolList([False, False])
+    assert settings.max_pages == CommaSeparatedStrList(["10", "20"])
 
 
 def test_mismatched_list_lengths():

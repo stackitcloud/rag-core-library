@@ -164,6 +164,10 @@ components:
             $ref: '#/components/schemas/key_value_pair'
           title: confluence_kwargs
           type: array
+        max_pages:
+          description: Defines the maximum number of pages extracted.
+          title: max_pages
+          type: integer
       required:
       - document_name
       - space_key
