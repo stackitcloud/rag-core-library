@@ -172,19 +172,15 @@ class QdrantDatabase(VectorDatabase):
         -------
         None
         """
-        if not collection_name:
-            collection_name = self._settings.collection_name
 
-        aliases = self._vectorstore.client.get_aliases()
-        alias_of_interest = []
-        for alias in aliases.aliases:
-            if alias.alias_name == self._settings.collection_name:
-                alias_of_interest.append(alias)
-        true_collection_name = (
-            collection_name + f"_{create_timestamp()}"
-            if len(alias_of_interest) == 0
-            else alias_of_interest[0].collection_name
-        )
+        alias_of_interest = self._get_aliases_of_interest()
+        if collection_name:
+            true_collection_name = collection_name
+        elif not len(alias_of_interest):
+            true_collection_name = self._settings.collection_name + f"_{create_timestamp()}"
+        else:
+            true_collection_name = alias_of_interest[0].collection_name
+
         self._vectorstore = self._vectorstore.from_documents(
             documents,
             collection_name=true_collection_name,
@@ -205,6 +201,7 @@ class QdrantDatabase(VectorDatabase):
                 ]
             )
 
+
     def delete(self, delete_request: dict, collection_name: str | None = None) -> None:
         """
         Delete points from a collection based on the given conditions.
@@ -216,7 +213,12 @@ class QdrantDatabase(VectorDatabase):
         collection_name : str, optional
             The collection name to delete from; uses settings collection if None.
         """
-        collection_name = collection_name or self._settings.collection_name
+        alias_of_interest = self._get_aliases_of_interest()
+        if collection_name:
+            true_collection_name = collection_name
+        elif len(alias_of_interest):
+            true_collection_name = alias_of_interest[0].collection_name
+        else: raise ValueError(f"Collection with alias {self._settings.collection_name} does not exist.")
 
         filter_conditions = [
             models.FieldCondition(
@@ -233,7 +235,7 @@ class QdrantDatabase(VectorDatabase):
         )
 
         self._vectorstore.client.delete(
-            collection_name=self._settings.collection_name,
+            collection_name=true_collection_name,
             points_selector=points_selector,
         )
 
@@ -345,6 +347,14 @@ class QdrantDatabase(VectorDatabase):
         if len(collections_names) == 1:
             return collections_names
         return sorted(collections_names, key=lambda x: datetime.strptime(x.rsplit("_", 1)[-1], "%Y%m%d%H%M%S"))
+
+    def _get_aliases_of_interest(self)->list:
+        aliases = self._vectorstore.client.get_aliases()
+        alias_of_interest = []
+        for alias in aliases.aliases:
+            if alias.alias_name == self._settings.collection_name:
+                alias_of_interest.append(alias)
+        return alias_of_interest
 
     def _get_related(self, related_ids: list[str]) -> list[Document]:
         result = []
