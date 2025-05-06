@@ -80,13 +80,15 @@ class VectorDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def upload(self, documents: list[Document]):
+    def upload(self, documents: list[Document], collection_name: str | None = None) -> None:
         """Upload the documents to the vector database.
 
         Parameters
         ----------
         documents : list[Document]
             List of documents which will be uploaded.
+        collection_name : str, optional
+            The name of the collection to upload the documents to. If None, the default collection will be used.
 
         Raises
         ------
@@ -96,7 +98,7 @@ class VectorDatabase(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def delete(self, delete_request: dict) -> None:
+    def delete(self, delete_request: dict, collection_name: str) -> None:
         """
         Delete the documents from the vector database.
 
@@ -104,6 +106,8 @@ class VectorDatabase(ABC):
         ----------
         delete_request : dict
             Contains the information required for deleting the documents.
+        collection_name : str, optional
+            The collection name to delete from; uses settings collection if None.
 
         Raises
         ------
@@ -121,6 +125,43 @@ class VectorDatabase(ABC):
         -------
         list[str]
             List of all collection names.
+
+        Raises
+        ------
+        NotImplementedError
+            If the method is not implemented.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_sorted_collection_names(self) -> list[str]:
+        """
+        Get sorted collection names based on the timestamp in the collection name.
+
+        List is sorted in ascending order.
+
+        Returns
+        -------
+        list[str]
+            A list of sorted collection names.
+        """
+
+    @abstractmethod
+    def switch_collections(self) -> None:
+        """
+        Switch the alias of the current collection to the specified collection.
+
+        Raises
+        ------
+        NotImplementedError
+            If the method is not implemented.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def duplicate_alias_tagged_collection(self) -> None:
+        """
+        Duplicate the alias-tagged collection in the vector database.
 
         Raises
         ------

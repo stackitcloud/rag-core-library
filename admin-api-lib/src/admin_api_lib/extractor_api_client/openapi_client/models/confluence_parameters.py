@@ -19,7 +19,7 @@ import pprint
 import re  # noqa: F401
 from typing import Any, ClassVar, Dict, List, Optional, Set
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr, StrictInt
 from typing import Any, ClassVar, Dict, List, Optional
 from admin_api_lib.extractor_api_client.openapi_client.models.key_value_pair import KeyValuePair
 from typing import Optional, Set
@@ -49,6 +49,7 @@ class ConfluenceParameters(BaseModel):
     confluence_kwargs: Optional[List[KeyValuePair]] = Field(
         default=None, description="Additional kwargs like verify_ssl"
     )
+    max_pages: Optional[StrictInt] = Field(default=None, description="Defines the maximum number of pages extracted.")
     __properties: ClassVar[List[str]] = [
         "url",
         "token",
@@ -58,6 +59,7 @@ class ConfluenceParameters(BaseModel):
         "keep_newlines",
         "document_name",
         "confluence_kwargs",
+        "max_pages",
     ]
 
     model_config = ConfigDict(
@@ -130,6 +132,7 @@ class ConfluenceParameters(BaseModel):
                 "confluence_kwargs": [KeyValuePair.from_dict(_item) for _item in obj["confluence_kwargs"]]
                 if obj.get("confluence_kwargs") is not None
                 else None,
+                "max_pages": obj.get("max_pages"),
             }
         )
         return _obj

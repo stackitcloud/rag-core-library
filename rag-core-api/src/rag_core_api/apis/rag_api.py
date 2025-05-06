@@ -32,7 +32,7 @@ from rag_core_api.apis.rag_api_base import BaseRagApi
 from rag_core_api.models.chat_request import ChatRequest
 from rag_core_api.models.chat_response import ChatResponse
 from rag_core_api.models.delete_request import DeleteRequest
-from rag_core_api.models.information_piece import InformationPiece
+from rag_core_api.models.upload_request import UploadRequest
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +113,22 @@ async def chat(
 
 
 @router.post(
+    "/collection/duplicate",
+    responses={
+        201: {"description": "Duplication created successfully."},
+        404: {"description": "No production collection found."},
+        500: {"description": "Internal server error."},
+    },
+    tags=["rag"],
+    summary="Duplicates a vector database collection.",
+    response_model_by_alias=True,
+)
+async def duplicate_collection() -> None:
+    """Duplicates a vector database collection. It uses the production collection for duplication."""
+    return await BaseRagApi.subclasses[0]().duplicate_collection()
+
+
+@router.post(
     "/evaluate",
     responses={
         201: {"description": "Accepted."},
@@ -165,6 +181,22 @@ async def remove_information_piece(
 
 
 @router.post(
+    "/collection/switch",
+    responses={
+        200: {"description": "Collection alias has been successfully switched."},
+        404: {"description": "Source or target collection not found."},
+        500: {"description": "Internal server error."},
+    },
+    tags=["rag"],
+    summary="Switch production vectordatabase.",
+    response_model_by_alias=True,
+)
+async def switch_collection() -> None:
+    """Remove the production alias from source collection and add that alias to target collection"""
+    return await BaseRagApi.subclasses[0]().switch_collection()
+
+
+@router.post(
     "/information_pieces/upload",
     responses={
         201: {"description": "The file was successful uploaded."},
@@ -176,20 +208,18 @@ async def remove_information_piece(
     response_model_by_alias=True,
 )
 async def upload_information_piece(
-    information_piece: List[InformationPiece] = Body(None, description=""),
+    upload_request: UploadRequest = Body(None, description=""),
 ) -> None:
     """
-    Asynchronously uploads information pieces for vectordatabase.
-
-    This endpoint allows for the upload of information pieces to the vector database.
+    Asynchronously uploads information pieces to the vector database.
 
     Parameters
     ----------
-    information_piece : List[InformationPiece]
-        A list of information pieces to be uploaded (default None).
+    upload_request : UploadRequest
+        The request payload containing the information pieces to be uploaded (default None).
 
     Returns
     -------
     None
     """
-    return await BaseRagApi.subclasses[0]().upload_information_piece(information_piece)
+    return await BaseRagApi.subclasses[0]().upload_information_piece(upload_request)

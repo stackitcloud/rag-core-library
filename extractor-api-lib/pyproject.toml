@@ -62,7 +62,7 @@ known_local_folder = ["extractor_api_lib", "rag_core_lib"]
 max-line-length = 120
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.12"
+python = ">=3.11,<3.13"
 wheel = "^0.42.0"
 botocore = "^1.34.45"
 fasttext = {git = "https://github.com/cfculhane/fastText", rev = "main"}

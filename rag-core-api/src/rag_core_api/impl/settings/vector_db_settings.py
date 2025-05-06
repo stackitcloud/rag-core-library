@@ -13,9 +13,16 @@ class VectorDatabaseSettings(BaseSettings):
     Attributes
     ----------
     collection_name : str
-        The name of the collection.
-    url : str
-        The URL of the vector database.
+        The alias name of the collection.
+    location : str
+        The location of the vector database.
+    collection_history_count : int
+        Number of collections to keep in history (if updates are enabled, otherwise ignored).
+        The number must be greater than or equal to 1.
+    validate_collection_config : bool
+        If true and collection does not exist, an error will be raised.
+    retrieval_mode : RetrievalMode
+        The mode used for retrieving documents (e.g., EMBEDDING, HYBRID).
     """
 
     class Config:
@@ -26,7 +33,6 @@ class VectorDatabaseSettings(BaseSettings):
 
     collection_name: str = Field()
     location: str = Field()
-    validate_collection_config: bool = Field(
-        default=False
-    )  # if true and collection does not exist, an error will be raised
+    collection_history_count: int = Field(default=1, ge=1)
+    validate_collection_config: bool = Field(default=False)
     retrieval_mode: RetrievalMode = Field(default=RetrievalMode.HYBRID)

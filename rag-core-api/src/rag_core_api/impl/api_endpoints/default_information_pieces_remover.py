@@ -59,8 +59,11 @@ class DefaultInformationPiecesRemover(InformationPieceRemover):
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="No search parameters found.",
             )
+        collection_name = None
+        if delete_request.use_latest_collection:
+            collection_name = self._vector_database.get_sorted_collection_names()[-1]
         try:
-            self._vector_database.delete(metadata)
+            self._vector_database.delete(metadata, collection_name)
         except Exception as e:
             logger.error("Error while deleting from vector db: %s", e)
             raise HTTPException(

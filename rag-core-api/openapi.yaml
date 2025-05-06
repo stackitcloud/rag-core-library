@@ -2,7 +2,7 @@ openapi: 3.0.2
 info:
   contact: {}
   description: The perfect rag solution.
-  title: RAG SIT x Stackit
+  title: STACKIT RAG
   version: 1.0.0
 servers:
 - url: /
@@ -75,9 +75,7 @@ paths:
         content:
           application/json:
             schema:
-              items:
-                $ref: '#/components/schemas/information_piece'
-              type: array
+              $ref: '#/components/schemas/upload_request'
         required: true
       responses:
         "201":
@@ -95,6 +93,36 @@ paths:
                 type: string
           description: Internal Server Error.
       summary: Upload information pieces for vectordatabase
+      tags:
+      - rag
+  /collection/switch:
+    post:
+      description: 'Remove the production alias from source collection and add that
+        alias to target collection '
+      operationId: switch_collection
+      responses:
+        "200":
+          description: Collection alias has been successfully switched.
+        "404":
+          description: Source or target collection not found.
+        "500":
+          description: Internal server error.
+      summary: Switch production vectordatabase.
+      tags:
+      - rag
+  /collection/duplicate:
+    post:
+      description: Duplicates a vector database collection. It uses the production
+        collection for duplication.
+      operationId: duplicate_collection
+      responses:
+        "201":
+          description: Duplication created successfully.
+        "404":
+          description: No production collection found.
+        "500":
+          description: Internal server error.
+      summary: Duplicates a vector database collection.
       tags:
       - rag
 components:
@@ -169,6 +197,11 @@ components:
             $ref: '#/components/schemas/key_value_pair'
           title: metadata
           type: array
+        use_latest_collection:
+          description: "Determines if the latest collection is used, or the collection\
+            \ that has the descired alias assigned."
+          title: use_latest_collection
+          type: boolean
       title: file_request
       type: object
     chat_request:
@@ -251,4 +284,22 @@ components:
       - page_content
       - type
       title: file
+      type: object
+    upload_request:
+      description: The upload request of the information pieces.
+      properties:
+        information_pieces:
+          description: A list of information_pieces.
+          items:
+            $ref: '#/components/schemas/information_piece'
+          title: information_pieces
+          type: array
+        use_latest_collection:
+          description: "Determines if the latest collection is used, or the collection\
+            \ that has the descired alias assigned."
+          title: use_latest_collection
+          type: boolean
+      required:
+      - information_pieces
+      title: upload_request
       type: object

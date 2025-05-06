@@ -17,7 +17,7 @@ langchain-qdrant = "^0.1.0"
 dependency-injector = "^4.41.0"
 fastapi = "^0.111.0"
 requests-oauthlib = "^2.0.0"
-qdrant-client = "^1.9.1"
+qdrant-client = "^1.14.2"
 deprecated = "^1.2.14"
 datasets = "^2.18.0"
 ragas = "^0.2.6"
@@ -28,7 +28,8 @@ langgraph = "^0.2.23"
 pillow = "^11.0.0"
 langchain-ollama = "^0.2.0"
 pytest-asyncio = "^0.25.0"
-langchain-community = "0.3.19"
+pytest-env = "^1.1.5"
+langchain-community = "0.3.22"
 fastembed = "^0.6.0"
 
 [tool.poetry.group.dev.dependencies]
@@ -82,7 +83,7 @@ per-file-ignores = """
   ./src/rag_core_api/dependency_container.py: CCE002,CCE001,
   ./src/rag_core_api/apis/rag_api_base.py: WOT001,
   ./tests/rag_api_test.py: E402,S101,S105,I252,D409,
-  ./tests/*: S101,S105,I252,D409,
+  ./tests/*: S101,S105,I252,D409,E402,
 """
 
 [tool.black]

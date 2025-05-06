@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    RAG SIT x Stackit
+    STACKIT RAG
 
     The perfect rag solution.
 
@@ -13,14 +13,13 @@
 
 
 from __future__ import annotations
-
-import json
 import pprint
 import re  # noqa: F401
-from typing import Any, ClassVar, Dict, List
+import json
+
 
 from pydantic import BaseModel, ConfigDict
-
+from typing import Any, ClassVar, Dict, List
 from rag_core_api.models.chat_history_message import ChatHistoryMessage
 
 try:
@@ -89,11 +88,9 @@ class ChatHistory(BaseModel):
 
         _obj = cls.model_validate(
             {
-                "messages": (
-                    [ChatHistoryMessage.from_dict(_item) for _item in obj.get("messages")]
-                    if obj.get("messages") is not None
-                    else None
-                )
+                "messages": [ChatHistoryMessage.from_dict(_item) for _item in obj.get("messages")]
+                if obj.get("messages") is not None
+                else None
             }
         )
         return _obj

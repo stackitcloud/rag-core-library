@@ -84,6 +84,11 @@ class BaseAdminApi:
         None
         """
 
+    async def update_confluence(
+        self,
+    ) -> None:
+        """Extracts the confluence space and trigger collection switch in the vector database. The key value store will not be updated during the operations."""
+
     async def upload_documents_post(
         self,
         body: UploadFile,

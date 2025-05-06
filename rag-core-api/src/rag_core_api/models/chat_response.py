@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    RAG SIT x Stackit
+    STACKIT RAG
 
     The perfect rag solution.
 
@@ -13,14 +13,13 @@
 
 
 from __future__ import annotations
-
-import json
 import pprint
 import re  # noqa: F401
-from typing import Any, ClassVar, Dict, List
+import json
+
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
-
+from typing import Any, ClassVar, Dict, List
 from rag_core_api.models.information_piece import InformationPiece
 
 try:
@@ -93,11 +92,9 @@ class ChatResponse(BaseModel):
             {
                 "answer": obj.get("answer"),
                 "finish_reason": obj.get("finish_reason"),
-                "citations": (
-                    [SourceDocument.from_dict(_item) for _item in obj.get("citations")]
-                    if obj.get("citations") is not None
-                    else None
-                ),
+                "citations": [InformationPiece.from_dict(_item) for _item in obj.get("citations")]
+                if obj.get("citations") is not None
+                else None,
             }
         )
         return _obj

@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from rag_core_api.models.information_piece import InformationPiece
+from rag_core_api.models.upload_request import UploadRequest
 
 
 class InformationPiecesUploader(ABC):
@@ -12,14 +12,15 @@ class InformationPiecesUploader(ABC):
     """
 
     @abstractmethod
-    def upload_information_piece(self, information_piece: list[InformationPiece]) -> None:
+    def upload_information_piece(self, upload_request: UploadRequest) -> None:
         """
         Abstract method to upload a list of information pieces.
 
         Parameters
         ----------
-        information_piece : list[InformationPiece]
-            A list of InformationPiece objects to be uploaded.
+        upload_request : UploadRequest
+            The upload request containing a list of InformationPiece objects to be uploaded and a boolean value,
+            determining if the latest collection, or the one with the desired alias should be used.
 
         Returns
         -------

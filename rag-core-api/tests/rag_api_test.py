@@ -2,7 +2,7 @@
 
 import os
 import json
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator
 import uuid
 from sys import maxsize
 
@@ -14,12 +14,14 @@ from dependency_injector import providers
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 
-from .mock_environment_variables import mock_environment_variables
-from .mock_logging_directory import mock_logging_config
+from mock_environment_variables import mock_environment_variables
+from mock_logging_directory import mock_logging_config
+from rag_core_lib.impl.utils.timestamp_creator import create_timestamp
 
 mock_environment_variables()
 mock_logging_config()
 
+from rag_core_api.models.upload_request import UploadRequest
 from src.rag_core_api.main import app
 from src.rag_core_api.models.chat_request import ChatRequest
 from src.rag_core_api.models.chat_history import ChatHistory
@@ -43,7 +45,8 @@ async def adjusted_app() -> AsyncGenerator[FastAPI, None]:
     FastAPI
         The application instance with the in-memory vector database configured.
     """
-    collection_name = os.environ.get("VECTOR_DB_COLLECTION_NAME")
+    collection_alias = os.environ.get("VECTOR_DB_COLLECTION_NAME")
+    collection_name = f"{collection_alias}_{create_timestamp()}"
     with app.container.vectordb_client.override(
         providers.Singleton(QdrantClient, os.environ.get("VECTOR_DB_LOCATION"))
     ):
@@ -52,6 +55,16 @@ async def adjusted_app() -> AsyncGenerator[FastAPI, None]:
             client.create_collection(
                 collection_name=collection_name,
                 vectors_config=models.VectorParams(size=FakeEmbedderSettings().size, distance=models.Distance.COSINE),
+            )
+            client.update_collection_aliases(
+                change_aliases_operations=[
+                    models.CreateAliasOperation(
+                        create_alias=models.CreateAlias(
+                            alias_name=collection_alias,
+                            collection_name=collection_name,
+                        )
+                    )
+                ],
             )
         yield app
         # Clean up
@@ -78,123 +91,138 @@ async def api_client(adjusted_app: FastAPI) -> AsyncGenerator[AsyncClient, None]
         yield client
 
 
-def _create_information_pieces() -> list[dict]:
-    return [
-        InformationPiece(
-            page_content="The capital of Germany is Berlin.",
-            type=ContentType.TEXT,
-            metadata=[
-                KeyValuePair(key="document_url", value=json.dumps("http://example.com/mydoc1.xml")).model_dump(),
-                KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
-                KeyValuePair(key="related", value=json.dumps([])).model_dump(),
-                KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
-            ],
-        ).model_dump(),
-        InformationPiece(
-            page_content="The Eiffel Tower is located in Paris, France.",
-            type=ContentType.TEXT,
-            metadata=[
-                KeyValuePair(key="document_url", value=json.dumps("http://example.com/eiffel_tower.xml")).model_dump(),
-                KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
-                KeyValuePair(key="related", value=json.dumps([])).model_dump(),
-                KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
-            ],
-        ).model_dump(),
-        InformationPiece(
-            page_content="Mount Everest is the highest mountain in the world.",
-            type=ContentType.TEXT,
-            metadata=[
-                KeyValuePair(key="document_url", value=json.dumps("http://example.com/mount_everest.xml")).model_dump(),
-                KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
-                KeyValuePair(key="related", value=json.dumps([])).model_dump(),
-                KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
-            ],
-        ).model_dump(),
-        InformationPiece(
-            page_content="The Amazon Rainforest produces 20% of the world's oxygen.",
-            type=ContentType.TEXT,
-            metadata=[
-                KeyValuePair(
-                    key="document_url", value=json.dumps("http://example.com/amazon_rainforest.xml")
-                ).model_dump(),
-                KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
-                KeyValuePair(key="related", value=json.dumps([])).model_dump(),
-                KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
-            ],
-        ).model_dump(),
-        InformationPiece(
-            page_content="The Great Wall of China is over 13,000 miles long.",
-            type=ContentType.TEXT,
-            metadata=[
-                KeyValuePair(key="document_url", value=json.dumps("http://example.com/great_wall.xml")).model_dump(),
-                KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
-                KeyValuePair(key="related", value=json.dumps([])).model_dump(),
-                KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
-            ],
-        ).model_dump(),
-        InformationPiece(
-            page_content="The Sahara Desert is the largest hot desert in the world.",
-            type=ContentType.TEXT,
-            metadata=[
-                KeyValuePair(key="document_url", value=json.dumps("http://example.com/sahara_desert.xml")).model_dump(),
-                KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
-                KeyValuePair(key="related", value=json.dumps([])).model_dump(),
-                KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
-            ],
-        ).model_dump(),
-        InformationPiece(
-            page_content="The Mona Lisa was painted by Leonardo da Vinci.",
-            type=ContentType.TEXT,
-            metadata=[
-                KeyValuePair(key="document_url", value=json.dumps("http://example.com/mona_lisa.xml")).model_dump(),
-                KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
-                KeyValuePair(key="related", value=json.dumps([])).model_dump(),
-                KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
-            ],
-        ).model_dump(),
-        InformationPiece(
-            page_content="The Pacific Ocean is the largest ocean on Earth.",
-            type=ContentType.TEXT,
-            metadata=[
-                KeyValuePair(key="document_url", value=json.dumps("http://example.com/pacific_ocean.xml")).model_dump(),
-                KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
-                KeyValuePair(key="related", value=json.dumps([])).model_dump(),
-                KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
-            ],
-        ).model_dump(),
-        InformationPiece(
-            page_content="The Colosseum is located in Rome, Italy.",
-            type=ContentType.TEXT,
-            metadata=[
-                KeyValuePair(key="document_url", value=json.dumps("http://example.com/colosseum.xml")).model_dump(),
-                KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
-                KeyValuePair(key="related", value=json.dumps([])).model_dump(),
-                KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
-            ],
-        ).model_dump(),
-        InformationPiece(
-            page_content="The speed of light is approximately 299,792 kilometers per second.",
-            type=ContentType.TEXT,
-            metadata=[
-                KeyValuePair(
-                    key="document_url", value=json.dumps("http://example.com/speed_of_light.xml")
-                ).model_dump(),
-                KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
-                KeyValuePair(key="related", value=json.dumps([])).model_dump(),
-                KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
-            ],
-        ).model_dump(),
-        InformationPiece(
-            page_content="The human brain contains approximately 86 billion neurons.",
-            type=ContentType.TEXT,
-            metadata=[
-                KeyValuePair(key="document_url", value=json.dumps("http://example.com/human_brain.xml")).model_dump(),
-                KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
-                KeyValuePair(key="related", value=json.dumps([])).model_dump(),
-                KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
-            ],
-        ).model_dump(),
-    ]
+@pytest.fixture
+def upload_request() -> dict[str, Any]:
+    return UploadRequest(
+        information_pieces=[
+            InformationPiece(
+                page_content="The capital of Germany is Berlin.",
+                type=ContentType.TEXT,
+                metadata=[
+                    KeyValuePair(key="document_url", value=json.dumps("http://example.com/mydoc1.xml")).model_dump(),
+                    KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
+                    KeyValuePair(key="related", value=json.dumps([])).model_dump(),
+                    KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
+                ],
+            ).model_dump(),
+            InformationPiece(
+                page_content="The Eiffel Tower is located in Paris, France.",
+                type=ContentType.TEXT,
+                metadata=[
+                    KeyValuePair(
+                        key="document_url", value=json.dumps("http://example.com/eiffel_tower.xml")
+                    ).model_dump(),
+                    KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
+                    KeyValuePair(key="related", value=json.dumps([])).model_dump(),
+                    KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
+                ],
+            ).model_dump(),
+            InformationPiece(
+                page_content="Mount Everest is the highest mountain in the world.",
+                type=ContentType.TEXT,
+                metadata=[
+                    KeyValuePair(
+                        key="document_url", value=json.dumps("http://example.com/mount_everest.xml")
+                    ).model_dump(),
+                    KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
+                    KeyValuePair(key="related", value=json.dumps([])).model_dump(),
+                    KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
+                ],
+            ).model_dump(),
+            InformationPiece(
+                page_content="The Amazon Rainforest produces 20% of the world's oxygen.",
+                type=ContentType.TEXT,
+                metadata=[
+                    KeyValuePair(
+                        key="document_url", value=json.dumps("http://example.com/amazon_rainforest.xml")
+                    ).model_dump(),
+                    KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
+                    KeyValuePair(key="related", value=json.dumps([])).model_dump(),
+                    KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
+                ],
+            ).model_dump(),
+            InformationPiece(
+                page_content="The Great Wall of China is over 13,000 miles long.",
+                type=ContentType.TEXT,
+                metadata=[
+                    KeyValuePair(
+                        key="document_url", value=json.dumps("http://example.com/great_wall.xml")
+                    ).model_dump(),
+                    KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
+                    KeyValuePair(key="related", value=json.dumps([])).model_dump(),
+                    KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
+                ],
+            ).model_dump(),
+            InformationPiece(
+                page_content="The Sahara Desert is the largest hot desert in the world.",
+                type=ContentType.TEXT,
+                metadata=[
+                    KeyValuePair(
+                        key="document_url", value=json.dumps("http://example.com/sahara_desert.xml")
+                    ).model_dump(),
+                    KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
+                    KeyValuePair(key="related", value=json.dumps([])).model_dump(),
+                    KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
+                ],
+            ).model_dump(),
+            InformationPiece(
+                page_content="The Mona Lisa was painted by Leonardo da Vinci.",
+                type=ContentType.TEXT,
+                metadata=[
+                    KeyValuePair(key="document_url", value=json.dumps("http://example.com/mona_lisa.xml")).model_dump(),
+                    KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
+                    KeyValuePair(key="related", value=json.dumps([])).model_dump(),
+                    KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
+                ],
+            ).model_dump(),
+            InformationPiece(
+                page_content="The Pacific Ocean is the largest ocean on Earth.",
+                type=ContentType.TEXT,
+                metadata=[
+                    KeyValuePair(
+                        key="document_url", value=json.dumps("http://example.com/pacific_ocean.xml")
+                    ).model_dump(),
+                    KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
+                    KeyValuePair(key="related", value=json.dumps([])).model_dump(),
+                    KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
+                ],
+            ).model_dump(),
+            InformationPiece(
+                page_content="The Colosseum is located in Rome, Italy.",
+                type=ContentType.TEXT,
+                metadata=[
+                    KeyValuePair(key="document_url", value=json.dumps("http://example.com/colosseum.xml")).model_dump(),
+                    KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
+                    KeyValuePair(key="related", value=json.dumps([])).model_dump(),
+                    KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
+                ],
+            ).model_dump(),
+            InformationPiece(
+                page_content="The speed of light is approximately 299,792 kilometers per second.",
+                type=ContentType.TEXT,
+                metadata=[
+                    KeyValuePair(
+                        key="document_url", value=json.dumps("http://example.com/speed_of_light.xml")
+                    ).model_dump(),
+                    KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
+                    KeyValuePair(key="related", value=json.dumps([])).model_dump(),
+                    KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
+                ],
+            ).model_dump(),
+            InformationPiece(
+                page_content="The human brain contains approximately 86 billion neurons.",
+                type=ContentType.TEXT,
+                metadata=[
+                    KeyValuePair(
+                        key="document_url", value=json.dumps("http://example.com/human_brain.xml")
+                    ).model_dump(),
+                    KeyValuePair(key="type", value=json.dumps("TEXT")).model_dump(),
+                    KeyValuePair(key="related", value=json.dumps([])).model_dump(),
+                    KeyValuePair(key="id", value=json.dumps(uuid.uuid4().hex)).model_dump(),
+                ],
+            ).model_dump(),
+        ]
+    ).model_dump()
 
 
 def _create_chat_requests() -> list[dict]:
@@ -261,7 +289,7 @@ def _create_chat_requests() -> list[dict]:
 
 
 @pytest.mark.asyncio
-async def test_chat(api_client: AsyncClient):
+async def test_chat(api_client: AsyncClient, upload_request: dict[str, Any]):
     """Test the chat endpoint functionality.
 
     This test verifies the chat endpoint behavior by uploading information pieces and sending
@@ -272,9 +300,7 @@ async def test_chat(api_client: AsyncClient):
     api_client : AsyncClient
         The test client for making HTTP requests.
     """
-    information_pieces = _create_information_pieces()
-
-    response = await api_client.post("/information_pieces/upload", json=information_pieces)
+    response = await api_client.post("/information_pieces/upload", json=upload_request)
     response.raise_for_status()
 
     _session_id = "test-session"
@@ -305,7 +331,7 @@ async def _delete_document(api_client: AsyncClient, metadata: list[dict]) -> Res
 
 
 @pytest.mark.asyncio
-async def test_delete_document(api_client: AsyncClient):
+async def test_delete_document(api_client: AsyncClient, upload_request: dict[str, Any]):
     """
     Test the document deletion functionality of the API.
 
@@ -324,19 +350,27 @@ async def test_delete_document(api_client: AsyncClient):
         If any test assertions fail
     """
     # Upload test information pieces
-    information_pieces = _create_information_pieces()
-    response = await api_client.post("/information_pieces/upload", json=information_pieces)
+    response = await api_client.post("/information_pieces/upload", json=upload_request)
     response.raise_for_status()
 
     # Verify initial upload
-    collection_name = os.environ.get("VECTOR_DB_COLLECTION_NAME")
     app_container = api_client._transport.app.container
     vectordb_client = app_container.vector_database()._vectorstore.client
+    true_collection_name = vectordb_client.get_collections().collections[0].name
+    collection_name = os.environ.get("VECTOR_DB_COLLECTION_NAME")
+    vectordb_client.update_collection_aliases(
+        change_aliases_operations=[
+            models.CreateAliasOperation(
+                create_alias=models.CreateAlias(collection_name=true_collection_name, alias_name=collection_name)
+            ),
+        ]
+    )
     initial_points = vectordb_client.scroll(collection_name=collection_name, limit=maxsize)[0]
+    information_pieces = UploadRequest(**upload_request).information_pieces
     assert len(initial_points) == len(information_pieces)
 
     # Test deleting single document by id
-    delete_id = information_pieces[-1]["metadata"][-1]["value"]
+    delete_id = information_pieces[-1].metadata[-1].value
     response = await _delete_document(api_client, [{"key": "id", "value": delete_id}])
     assert response.status_code == 200
     remaining_points = vectordb_client.scroll(collection_name=collection_name, limit=maxsize)[0]
@@ -350,12 +384,11 @@ async def test_delete_document(api_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_chat_empty_message(api_client: AsyncClient):
+async def test_chat_empty_message(api_client: AsyncClient, upload_request: dict[str, Any]):
     """Verify the chat endpoint behavior when an empty message is sent."""
     # TODO: this should return an error message, it should be not possible to send an empty message
-    information_pieces = _create_information_pieces()
 
-    response = await api_client.post("/information_pieces/upload", json=information_pieces)
+    response = await api_client.post("/information_pieces/upload", json=upload_request)
     response.raise_for_status()
 
     _session_id = "test-session"
@@ -376,7 +409,7 @@ async def test_chat_empty_message(api_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_chat_only_whitespace_character_message(api_client: AsyncClient):
+async def test_chat_only_whitespace_character_message(api_client: AsyncClient, upload_request: dict[str, Any]):
     """Verify the chat endpoint behavior when a message with only whitespace characters is sent.
 
     Parameters
@@ -386,9 +419,7 @@ async def test_chat_only_whitespace_character_message(api_client: AsyncClient):
     """
     # TODO: this should return an error message, it should be not possible to send a message
     # with only whitespace characters
-    information_pieces = _create_information_pieces()
-
-    response = await api_client.post("/information_pieces/upload", json=information_pieces)
+    response = await api_client.post("/information_pieces/upload", json=upload_request)
     response.raise_for_status()
 
     _session_id = "test-session"
@@ -460,7 +491,9 @@ async def test_chat_with_summary_only_type(api_client: AsyncClient):
         ).model_dump()
     ]
 
-    response = await api_client.post("/information_pieces/upload", json=information_pieces)
+    upload_request = UploadRequest(information_pieces=information_pieces).model_dump()
+
+    response = await api_client.post("/information_pieces/upload", json=upload_request)
     response.raise_for_status()
 
     _session_id = "test-session"
@@ -475,7 +508,7 @@ async def test_chat_with_summary_only_type(api_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_upload_documents(api_client: AsyncClient):
+async def test_upload_documents(api_client: AsyncClient, upload_request: dict[str, Any]):
     """Verify the document upload functionality of the API.
 
     Parameters
@@ -495,20 +528,22 @@ async def test_upload_documents(api_client: AsyncClient):
             ],
         ).model_dump()
     ]
-    response = await api_client.post("/information_pieces/upload", json=information_pieces)
+    tmp_upload_request = UploadRequest(information_pieces=information_pieces).model_dump()
+    response = await api_client.post("/information_pieces/upload", json=tmp_upload_request)
     response.raise_for_status()
 
-    collection_name = os.environ.get("VECTOR_DB_COLLECTION_NAME")
     app_container = api_client._transport.app.container
     vectordb_client = app_container.vector_database()._vectorstore.client
+    collection_name = vectordb_client.get_collections().collections[0].name
     number_of_documents = len(vectordb_client.scroll(collection_name=collection_name, limit=maxsize)[0])
     assert number_of_documents == 1
 
-    information_pieces = _create_information_pieces()
-    response = await api_client.post("/information_pieces/upload", json=information_pieces)
+    response = await api_client.post("/information_pieces/upload", json=upload_request)
     app_container = api_client._transport.app.container
     vectordb_client = app_container.vector_database()._vectorstore.client
+    collection_name = vectordb_client.get_collections().collections[0].name
     number_of_documents = len(vectordb_client.scroll(collection_name=collection_name, limit=maxsize)[0])
     # NOTE: its not asserted to be of length len(information_pieces)+1 because in case of in memory database,
     # overwriting the vectorstore leads to overwriting the contents in the collection.
+    information_pieces = UploadRequest(**upload_request).information_pieces
     assert number_of_documents == len(information_pieces)

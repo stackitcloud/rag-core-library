@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    RAG SIT x Stackit
+    STACKIT RAG
 
     The perfect rag solution.
 
@@ -13,21 +13,16 @@
 
 
 from __future__ import annotations
-
-import json
 import pprint
 import re  # noqa: F401
-from typing import Any, ClassVar, Dict, List, Optional, Set
+import json
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from typing import Any, ClassVar, Dict, List
+from admin_api_lib.rag_backend_client.openapi_client.models.content_type import ContentType
+from admin_api_lib.rag_backend_client.openapi_client.models.key_value_pair import KeyValuePair
+from typing import Optional, Set
 from typing_extensions import Self
-
-from admin_api_lib.rag_backend_client.openapi_client.models.content_type import (
-    ContentType,
-)
-from admin_api_lib.rag_backend_client.openapi_client.models.key_value_pair import (
-    KeyValuePair,
-)
 
 
 class InformationPiece(BaseModel):
@@ -98,11 +93,9 @@ class InformationPiece(BaseModel):
 
         _obj = cls.model_validate(
             {
-                "metadata": (
-                    [KeyValuePair.from_dict(_item) for _item in obj["metadata"]]
-                    if obj.get("metadata") is not None
-                    else None
-                ),
+                "metadata": [KeyValuePair.from_dict(_item) for _item in obj["metadata"]]
+                if obj.get("metadata") is not None
+                else None,
                 "page_content": obj.get("page_content"),
                 "type": obj.get("type"),
             }

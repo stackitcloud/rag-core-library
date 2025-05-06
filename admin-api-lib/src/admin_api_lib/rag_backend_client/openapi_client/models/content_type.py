@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    RAG SIT x Stackit
+    STACKIT RAG
 
     The perfect rag solution.
 
@@ -13,10 +13,8 @@
 
 
 from __future__ import annotations
-
 import json
 from enum import Enum
-
 from typing_extensions import Self
 
 

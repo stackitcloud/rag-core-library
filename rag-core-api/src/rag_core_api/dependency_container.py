@@ -24,6 +24,8 @@ from rag_core_api.impl.answer_generation_chains.answer_generation_chain import (
 )
 from rag_core_api.impl.answer_generation_chains.rephrasing_chain import RephrasingChain
 from rag_core_api.impl.api_endpoints.default_chat import DefaultChat
+from rag_core_api.impl.api_endpoints.default_collection_duplicator import DefaultCollectionDuplicator
+from rag_core_api.impl.api_endpoints.default_collection_switcher import DefaultCollectionSwitcher
 from rag_core_api.impl.api_endpoints.default_information_pieces_remover import (
     DefaultInformationPiecesRemover,
 )
@@ -236,6 +238,8 @@ class DependencyContainer(DeclarativeContainer):
     )
 
     chat_endpoint = Singleton(DefaultChat, traced_chat_graph)
+    collection_switcher = Singleton(DefaultCollectionSwitcher, vector_database)
+    collection_duplicator = Singleton(DefaultCollectionDuplicator, vector_database)
 
     ragas_llm = (
         Singleton(

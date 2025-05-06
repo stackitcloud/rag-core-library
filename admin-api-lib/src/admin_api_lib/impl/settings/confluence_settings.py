@@ -32,6 +32,8 @@ class ConfluenceSettings(BaseSettings):
         Determines if markdown formatting is maintained.
     keep_newlines : CommaSeparatedBoolList, optional
         Indicates whether newlines are preserved.
+    max_pages : CommaSeparatedStrList, optional
+        List of maximum number of pages to retrieve per Confluence space.
     """
 
     class Config:
@@ -48,6 +50,7 @@ class ConfluenceSettings(BaseSettings):
     include_attachments: Optional[CommaSeparatedBoolList] = Field(default_factory=CommaSeparatedBoolList)
     keep_markdown_format: Optional[CommaSeparatedBoolList] = Field(default_factory=CommaSeparatedBoolList)
     keep_newlines: Optional[CommaSeparatedBoolList] = Field(default_factory=CommaSeparatedBoolList)
+    max_pages: Optional[CommaSeparatedStrList] = Field(default_factory=CommaSeparatedStrList)
 
     @model_validator(mode="after")
     def check_lists_length_consistency(cls, values):
@@ -81,6 +84,7 @@ class ConfluenceSettings(BaseSettings):
             "include_attachments",
             "keep_markdown_format",
             "keep_newlines",
+            "max_pages",
         ]
 
         lengths = {}
@@ -89,7 +93,14 @@ class ConfluenceSettings(BaseSettings):
             if value is not None:
                 lengths[key] = len(value)
         # If there is more than one list with values, ensure they have the same length
-        optional_keys = ["document_name", "verify_ssl", "include_attachments", "keep_markdown_format", "keep_newlines"]
+        optional_keys = [
+            "document_name",
+            "verify_ssl",
+            "include_attachments",
+            "keep_markdown_format",
+            "keep_newlines",
+            "max_pages",
+        ]
         if lengths:
             # Use the first encountered length as reference
             ref_length = next(iter(lengths.values()))
@@ -103,6 +114,22 @@ class ConfluenceSettings(BaseSettings):
         urls = getattr(values, "url", None)
         if urls and len(urls) > 0:
             n = len(urls)
+            # Existing code for other parameters...
+
+            # Add handling for max_pages
+            try:
+                max_pages = getattr(values, "max_pages", None)
+                if not max_pages or len(max_pages) == 0:
+                    values.max_pages = CommaSeparatedStrList(["0"] * n)  # 0 means no limit
+                elif len(max_pages) != n:
+                    raise ValueError("max_pages list length mismatch")
+            except ValueError as e:
+                logger.error(f"Error setting max_pages: {e}")
+                logger.warning("Setting max_pages to default values")
+                max_pages = getattr(values, "max_pages", [])
+                values.max_pages = CommaSeparatedStrList(max_pages + ["0"] * (n - len(max_pages)))
+
+            # Rest of the existing parameter handlers...
             try:
                 document_name = getattr(values, "document_name", None)
                 if not document_name or len(document_name) == 0:

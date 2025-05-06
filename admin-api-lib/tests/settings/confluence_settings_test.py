@@ -4,9 +4,21 @@ from admin_api_lib.impl.utils.comma_separated_str_list import CommaSeparatedStrL
 from admin_api_lib.impl.utils.comma_separated_bool_list import CommaSeparatedBoolList
 
 
-def test_default_values():
+def test_default_values(monkeypatch):
+    for var in (
+        "CONFLUENCE_URL",
+        "CONFLUENCE_TOKEN",
+        "CONFLUENCE_SPACE_KEY",
+        "CONFLUENCE_DOCUMENT_NAME",
+        "CONFLUENCE_VERIFY_SSL",
+        "CONFLUENCE_INCLUDE_ATTACHMENTS",
+        "CONFLUENCE_KEEP_MARKDOWN_FORMAT",
+        "CONFLUENCE_KEEP_NEWLINES",
+        "CONFLUENCE_MAX_PAGES",
+    ):
+        monkeypatch.delenv(var, raising=False)
     # When no settings are provided, all lists default to empty lists.
-    settings = ConfluenceSettings()
+    settings = ConfluenceSettings(_env_file=None)
     assert settings.url == CommaSeparatedStrList()
     assert settings.token == CommaSeparatedStrList()
     assert settings.space_key == CommaSeparatedStrList()
@@ -16,6 +28,7 @@ def test_default_values():
     assert settings.include_attachments == CommaSeparatedBoolList()
     assert settings.keep_markdown_format == CommaSeparatedBoolList()
     assert settings.keep_newlines == CommaSeparatedBoolList()
+    assert settings.max_pages == CommaSeparatedStrList()
 
 
 def test_valid_initialization_matching_lengths():
@@ -28,6 +41,7 @@ def test_valid_initialization_matching_lengths():
     include_attachments = "False, True"
     keep_markdown_format = "True, True"
     keep_newlines = "False, False"
+    max_pages = "10, 20"
 
     settings = ConfluenceSettings(
         url=urls,
@@ -38,6 +52,7 @@ def test_valid_initialization_matching_lengths():
         include_attachments=include_attachments,
         keep_markdown_format=keep_markdown_format,
         keep_newlines=keep_newlines,
+        max_pages=max_pages,
     )
 
     # Verify that the comma separated lists have been properly parsed.
@@ -49,6 +64,7 @@ def test_valid_initialization_matching_lengths():
     assert settings.include_attachments == CommaSeparatedBoolList([False, True])
     assert settings.keep_markdown_format == CommaSeparatedBoolList([True, True])
     assert settings.keep_newlines == CommaSeparatedBoolList([False, False])
+    assert settings.max_pages == CommaSeparatedStrList(["10", "20"])
 
 
 def test_mismatched_list_lengths():

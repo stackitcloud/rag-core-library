@@ -21,6 +21,7 @@ from admin_api_lib.extractor_api_client.openapi_client.configuration import (
 from admin_api_lib.impl.api_endpoints.default_confluence_loader import (
     DefaultConfluenceLoader,
 )
+from admin_api_lib.impl.api_endpoints.default_confluence_updater import DefaultConfluenceUpdater
 from admin_api_lib.impl.api_endpoints.default_document_deleter import (
     DefaultDocumentDeleter,
 )
@@ -166,6 +167,18 @@ class DependencyContainer(DeclarativeContainer):
     documents_status_retriever = Singleton(DefaultDocumentsStatusRetriever, key_value_store=key_value_store)
     confluence_loader = Singleton(
         DefaultConfluenceLoader,
+        extractor_api=document_extractor,
+        rag_api=rag_api,
+        key_value_store=key_value_store,
+        settings=confluence_settings,
+        information_enhancer=information_enhancer,
+        information_mapper=information_mapper,
+        chunker=chunker,
+        document_deleter=document_deleter,
+        settings_mapper=confluence_settings_mapper,
+    )
+    confluence_updater = Singleton(
+        DefaultConfluenceUpdater,
         extractor_api=document_extractor,
         rag_api=rag_api,
         key_value_store=key_value_store,

@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-    RAG SIT x Stackit
+    STACKIT RAG
 
     The perfect rag solution.
 
@@ -13,14 +13,14 @@
 
 
 import copy
-import http.client as httplib
 import logging
+from logging import FileHandler
 import multiprocessing
 import sys
-from logging import FileHandler
 from typing import Optional
-
 import urllib3
+
+import http.client as httplib
 
 JSON_SCHEMA_VALIDATION_KEYWORDS = {
     "multipleOf",

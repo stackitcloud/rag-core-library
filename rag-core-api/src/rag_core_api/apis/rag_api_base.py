@@ -8,7 +8,7 @@ from typing import ClassVar, Dict, List, Tuple  # noqa: F401
 from rag_core_api.models.chat_request import ChatRequest
 from rag_core_api.models.chat_response import ChatResponse
 from rag_core_api.models.delete_request import DeleteRequest
-from rag_core_api.models.information_piece import InformationPiece
+from rag_core_api.models.upload_request import UploadRequest
 
 
 class BaseRagApi:
@@ -52,6 +52,11 @@ class BaseRagApi:
             The chat response if the chat task completes successfully, otherwise None.
         """
 
+    async def duplicate_collection(
+        self,
+    ) -> None:
+        """Duplicates a vector database collection. It uses the production collection for duplication."""
+
     async def evaluate(
         self,
     ) -> None:
@@ -82,9 +87,14 @@ class BaseRagApi:
         None
         """
 
+    async def switch_collection(
+        self,
+    ) -> None:
+        """Remove the production alias from source collection and add that alias to target collection"""
+
     async def upload_information_piece(
         self,
-        information_piece: List[InformationPiece],
+        upload_request: UploadRequest,
     ) -> None:
         """
         Asynchronously uploads information pieces for vectordatabase.
