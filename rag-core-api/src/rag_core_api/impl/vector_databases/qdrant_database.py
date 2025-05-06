@@ -201,7 +201,6 @@ class QdrantDatabase(VectorDatabase):
                 ]
             )
 
-
     def delete(self, delete_request: dict, collection_name: str | None = None) -> None:
         """
         Delete points from a collection based on the given conditions.
@@ -218,7 +217,8 @@ class QdrantDatabase(VectorDatabase):
             true_collection_name = collection_name
         elif len(alias_of_interest):
             true_collection_name = alias_of_interest[0].collection_name
-        else: raise ValueError(f"Collection with alias {self._settings.collection_name} does not exist.")
+        else:
+            raise ValueError(f"Collection with alias {self._settings.collection_name} does not exist.")
 
         filter_conditions = [
             models.FieldCondition(
@@ -348,7 +348,7 @@ class QdrantDatabase(VectorDatabase):
             return collections_names
         return sorted(collections_names, key=lambda x: datetime.strptime(x.rsplit("_", 1)[-1], "%Y%m%d%H%M%S"))
 
-    def _get_aliases_of_interest(self)->list:
+    def _get_aliases_of_interest(self) -> list:
         aliases = self._vectorstore.client.get_aliases()
         alias_of_interest = []
         for alias in aliases.aliases:

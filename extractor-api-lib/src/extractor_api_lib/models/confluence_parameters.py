@@ -18,7 +18,7 @@ import re  # noqa: F401
 import json
 
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr, StrictInt
 from typing import Any, ClassVar, Dict, List, Optional
 from extractor_api_lib.models.key_value_pair import KeyValuePair
 
@@ -34,13 +34,35 @@ class ConfluenceParameters(BaseModel):
     url: StrictStr = Field(description="url of the confluence space.")
     token: StrictStr = Field(description="api key to access confluence.")
     space_key: StrictStr = Field(description="the space key of the confluence pages.")
-    include_attachments: Optional[StrictBool] = Field(default=False, description="whether to include file attachments (e.g., images, documents) in the parsed content. Default is `false`.")
-    keep_markdown_format: Optional[StrictBool] = Field(default=True, description="whether to preserve markdown formatting in the output. Default is `true`.")
-    keep_newlines: Optional[StrictBool] = Field(default=True, description="whether to retain newline characters in the output for better readability. Default is `true`.")
-    document_name: StrictStr = Field(description="The name that will be used to store the confluence db in the key value db and the vectordatabase (metadata.document).")
-    confluence_kwargs: Optional[List[KeyValuePair]] = Field(default=None, description="Additional kwargs like verify_ssl")
+    include_attachments: Optional[StrictBool] = Field(
+        default=False,
+        description="whether to include file attachments (e.g., images, documents) in the parsed content. Default is `false`.",
+    )
+    keep_markdown_format: Optional[StrictBool] = Field(
+        default=True, description="whether to preserve markdown formatting in the output. Default is `true`."
+    )
+    keep_newlines: Optional[StrictBool] = Field(
+        default=True,
+        description="whether to retain newline characters in the output for better readability. Default is `true`.",
+    )
+    document_name: StrictStr = Field(
+        description="The name that will be used to store the confluence db in the key value db and the vectordatabase (metadata.document)."
+    )
+    confluence_kwargs: Optional[List[KeyValuePair]] = Field(
+        default=None, description="Additional kwargs like verify_ssl"
+    )
     max_pages: Optional[StrictInt] = Field(default=None, description="Defines the maximum number of pages extracted.")
-    __properties: ClassVar[List[str]] = ["url", "token", "space_key", "include_attachments", "keep_markdown_format", "keep_newlines", "document_name", "confluence_kwargs", "max_pages"]
+    __properties: ClassVar[List[str]] = [
+        "url",
+        "token",
+        "space_key",
+        "include_attachments",
+        "keep_markdown_format",
+        "keep_newlines",
+        "document_name",
+        "confluence_kwargs",
+        "max_pages",
+    ]
 
     model_config = {
         "populate_by_name": True,
@@ -94,15 +116,23 @@ class ConfluenceParameters(BaseModel):
         if not isinstance(obj, dict):
             return cls.model_validate(obj)
 
-        _obj = cls.model_validate({
-            "url": obj.get("url"),
-            "token": obj.get("token"),
-            "space_key": obj.get("space_key"),
-            "include_attachments": obj.get("include_attachments") if obj.get("include_attachments") is not None else False,
-            "keep_markdown_format": obj.get("keep_markdown_format") if obj.get("keep_markdown_format") is not None else True,
-            "keep_newlines": obj.get("keep_newlines") if obj.get("keep_newlines") is not None else True,
-            "document_name": obj.get("document_name"),
-            "confluence_kwargs": [KeyValuePair.from_dict(_item) for _item in obj.get("confluence_kwargs")] if obj.get("confluence_kwargs") is not None else None,
-            "max_pages": obj.get("max_pages")
-        })
+        _obj = cls.model_validate(
+            {
+                "url": obj.get("url"),
+                "token": obj.get("token"),
+                "space_key": obj.get("space_key"),
+                "include_attachments": obj.get("include_attachments")
+                if obj.get("include_attachments") is not None
+                else False,
+                "keep_markdown_format": obj.get("keep_markdown_format")
+                if obj.get("keep_markdown_format") is not None
+                else True,
+                "keep_newlines": obj.get("keep_newlines") if obj.get("keep_newlines") is not None else True,
+                "document_name": obj.get("document_name"),
+                "confluence_kwargs": [KeyValuePair.from_dict(_item) for _item in obj.get("confluence_kwargs")]
+                if obj.get("confluence_kwargs") is not None
+                else None,
+                "max_pages": obj.get("max_pages"),
+            }
+        )
         return _obj

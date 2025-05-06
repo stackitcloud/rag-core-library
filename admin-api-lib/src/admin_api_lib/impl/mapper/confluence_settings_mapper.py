@@ -33,5 +33,5 @@ class ConfluenceSettingsMapper:
             keep_newlines=settings.keep_newlines[index],
             document_name=settings.document_name[index],
             confluence_kwargs=[{"key": "verify_ssl", "value": settings.verify_ssl[index]}],
-            max_pages=[int(max_page) for max_page in settings.max_pages[index]],
+            max_pages=int(settings.max_pages[index]),
         )

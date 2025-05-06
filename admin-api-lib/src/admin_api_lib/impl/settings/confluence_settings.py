@@ -52,7 +52,6 @@ class ConfluenceSettings(BaseSettings):
     keep_newlines: Optional[CommaSeparatedBoolList] = Field(default_factory=CommaSeparatedBoolList)
     max_pages: Optional[CommaSeparatedStrList] = Field(default_factory=CommaSeparatedStrList)
 
-
     @model_validator(mode="after")
     def check_lists_length_consistency(cls, values):
         """
@@ -94,7 +93,14 @@ class ConfluenceSettings(BaseSettings):
             if value is not None:
                 lengths[key] = len(value)
         # If there is more than one list with values, ensure they have the same length
-        optional_keys = ["document_name", "verify_ssl", "include_attachments", "keep_markdown_format", "keep_newlines", "max_pages"]
+        optional_keys = [
+            "document_name",
+            "verify_ssl",
+            "include_attachments",
+            "keep_markdown_format",
+            "keep_newlines",
+            "max_pages",
+        ]
         if lengths:
             # Use the first encountered length as reference
             ref_length = next(iter(lengths.values()))
