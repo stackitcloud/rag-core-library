@@ -201,7 +201,7 @@ class DefaultChatGraph(GraphBase):
     async def _determine_language_node(self, state: dict, config: Optional[RunnableConfig] = None) -> dict:
         question = state["question"]
         question_language = langdetect.detect(question)
-        logger.debug("Detected langauge for question \"%s\": %s",question, question_language)
+        logger.debug('Detected langauge for question "%s": %s', question, question_language)
         return {"language": question_language}
 
     async def _rephrase_node(self, state: dict, config: Optional[RunnableConfig] = None) -> dict:
@@ -273,9 +273,11 @@ class DefaultChatGraph(GraphBase):
     def _wire_graph(self):
         self._state_graph.add_edge(START, GraphNodeNames.REPHRASE)
         self._state_graph.add_edge(START, GraphNodeNames.DETERMINE_LANGUAGE)
-        self._state_graph.add_edge([GraphNodeNames.REPHRASE, GraphNodeNames.DETERMINE_LANGUAGE], GraphNodeNames.RETRIEVE)
+        self._state_graph.add_edge(
+            [GraphNodeNames.REPHRASE, GraphNodeNames.DETERMINE_LANGUAGE], GraphNodeNames.RETRIEVE
+        )
         self._state_graph.add_conditional_edges(
-            GraphNodeNames.RETRIEVE , self._docs_retrieved_edge, [GraphNodeNames.GENERATE, GraphNodeNames.ERROR_NODE]
+            GraphNodeNames.RETRIEVE, self._docs_retrieved_edge, [GraphNodeNames.GENERATE, GraphNodeNames.ERROR_NODE]
         )
         self._state_graph.add_edge(GraphNodeNames.GENERATE, END)
         self._state_graph.add_edge(GraphNodeNames.ERROR_NODE, END)

@@ -42,7 +42,7 @@ class AnswerGraphState(TypedDict):
     question: str
     language: str
     rephrased_question: str
-    history: str    
+    history: str
     information_pieces: Annotated[list[InformationPiece], operator.add]
     langchain_documents: Annotated[list[Document], operator.add]
     answer_text: str | None
