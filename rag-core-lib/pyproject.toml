@@ -10,7 +10,7 @@ authors = ["STACKIT GmbH & Co. KG"]
 packages = [{ include = "rag_core_lib", from = "src" }]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.13"
 langchain = "^0.3.25"
 langchain-community = "0.3.23"
 flashrank = "^0.2.10"

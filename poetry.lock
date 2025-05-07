@@ -763,5 +763,5 @@ pbr = ">=2.0.0"
 
 [metadata]
 lock-version = "2.1"
-python-versions = "^3.11"
-content-hash = "18dbe262dd9b882eec8c7efb3e686f79a16264f447ed089358d85237e52e83fd"
+python-versions = "^3.13"
+content-hash = "b8c76039873e191433a28871f301473ff295be933062ab52809316ddb25910c2"

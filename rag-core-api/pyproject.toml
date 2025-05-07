@@ -10,7 +10,7 @@ authors = ["STACKIT Data and AI Consulting <data-ai-consulting@stackit.cloud>"]
 packages = [{ include = "rag_core_api", from = "src" }]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.13"
 rag-core-lib = { path = "../rag-core-lib", develop = true}
 uvicorn = "^0.34.2"
 langchain-qdrant = "^0.2.0"
