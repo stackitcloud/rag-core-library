@@ -1,5 +1,6 @@
 """Module for the DependencyContainer class."""
 
+from admin_api_lib.impl.api_endpoints.default_source_uploader import DefaultSourceUploader
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import (  # noqa: WOT001
     Configuration,
@@ -164,23 +165,12 @@ class DependencyContainer(DeclarativeContainer):
         DefaultDocumentDeleter, rag_api=rag_api, file_service=file_service, key_value_store=key_value_store
     )
     documents_status_retriever = Singleton(DefaultDocumentsStatusRetriever, key_value_store=key_value_store)
-    confluence_loader = Singleton(
-        DefaultConfluenceLoader,
-        extractor_api=document_extractor,
-        rag_api=rag_api,
-        key_value_store=key_value_store,
-        settings=confluence_settings,
-        information_enhancer=information_enhancer,
-        information_mapper=information_mapper,
-        chunker=chunker,
-        document_deleter=document_deleter,
-        settings_mapper=confluence_settings_mapper,
-    )
+    
     document_reference_retriever = Singleton(DefaultDocumentReferenceRetriever, file_service=file_service)
-    document_uploader = Singleton(
-        DefaultDocumentUploader,
-        document_extractor=document_extractor,
-        file_service=file_service,
+
+    source_uploader = Singleton(
+        DefaultSourceUploader,
+        extractor_api=document_extractor,
         rag_api=rag_api,
         information_enhancer=information_enhancer,
         information_mapper=information_mapper,

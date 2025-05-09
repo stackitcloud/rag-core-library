@@ -1,8 +1,10 @@
-from dataclasses import Field
-from typing_extensions import Annotated
 from abc import ABC, abstractmethod
+from typing import Optional
 
-from admin_api_lib.models.upload_source import UploadSource
+from pydantic import StrictStr
+from fastapi import UploadFile
+
+from admin_api_lib.models.key_value_pair import KeyValuePair
 
 
 class SourceUploader(ABC):
@@ -10,5 +12,9 @@ class SourceUploader(ABC):
     @abstractmethod
     async def upload_source(
         self,
-        upload_source: Annotated[UploadSource, Field(description="The source to upload.")],
+        base_url: str,
+        type: StrictStr,
+        name: StrictStr,
+        file: Optional[UploadFile],
+        kwargs: Optional[list[KeyValuePair]],
     ) -> None: ...

@@ -99,6 +99,7 @@ async def document_reference_id_get(
         raise HTTPException(status_code=500, detail="Not implemented")
     return await BaseAdminApi.subclasses[0]().document_reference_id_get(identification)
 
+
 @router.get(
     "/all_documents_status",
     responses={
@@ -116,7 +117,7 @@ async def get_all_documents_status() -> List[DocumentStatus]:
     -------
     list[DocumentStatus]
         A list containing the status of all documents.
-    """    
+    """
     if not BaseAdminApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
     return await BaseAdminApi.subclasses[0]().get_all_documents_status()

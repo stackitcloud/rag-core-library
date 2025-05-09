@@ -1,7 +1,14 @@
 """Module containing the implementation of the Admin API."""
 
+from dataclasses import Field
 import logging
+from typing import List, Optional
+from typing_extensions import Annotated
+from pydantic import Field, StrictBytes, StrictStr
 
+from admin_api_lib.api_endpoints.source_uploader import SourceUploader
+from admin_api_lib.models.key_value_pair import KeyValuePair
+from admin_api_lib.models.upload_source import UploadSource
 from dependency_injector.wiring import Provide, inject
 from fastapi import Depends, Request, Response, UploadFile
 
@@ -85,24 +92,16 @@ class AdminApi(BaseAdminApi):
         return await document_status_retriever.aget_all_documents_status()
 
     @inject
-    async def load_confluence_post(
+    async def upload_source(
         self,
-        confluence_loader: ConfluenceLoader = Depends(Provide[DependencyContainer.confluence_loader]),
+        type: StrictStr,
+        name: StrictStr,
+        file: Optional[UploadFile],
+        kwargs: Optional[List[KeyValuePair]],
+        request: Request,
+        source_uploader: SourceUploader = Depends(Provide[DependencyContainer.source_uploader]),
     ) -> None:
-        """
-        Asynchronously loads a Confluence space using the provided ConfluenceLoader.
-
-        Parameters
-        ----------
-        confluence_loader : ConfluenceLoader
-            The ConfluenceLoader instance to use for loading the post. This is injected by dependency injection
-            (default is Depends(Provide[DependencyContainer.confluence_loader])).
-
-        Returns
-        -------
-        None
-        """
-        await confluence_loader.aload_from_confluence()
+        await source_uploader.upload_source(str(request.base_url), type, name, file, kwargs)
 
     @inject
     async def document_reference_id_get(
@@ -129,28 +128,3 @@ class AdminApi(BaseAdminApi):
             The document in binary form.
         """
         return await document_reference_retriever.adocument_reference_id_get(identification)
-
-    @inject
-    async def upload_documents_post(
-        self,
-        body: UploadFile,
-        request: Request,
-        document_uploader: DocumentUploader = Depends(Provide[DependencyContainer.document_uploader]),
-    ) -> None:
-        """
-        Handle the POST request to upload documents.
-
-        Parameters
-        ----------
-        body : UploadFile
-            The file to be uploaded.
-        request : Request
-            The request object containing metadata about the request.
-        document_uploader : DocumentUploader, optional
-            The document uploader dependency, by default provided by DependencyContainer.
-
-        Returns
-        -------
-        None
-        """
-        await document_uploader.aupload_documents_post(body, request)

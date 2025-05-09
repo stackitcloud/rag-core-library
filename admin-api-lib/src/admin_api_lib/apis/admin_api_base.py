@@ -52,7 +52,6 @@ class BaseAdminApi:
             The response object containing the document reference details.
         """
 
-
     async def get_all_documents_status(
         self,
     ) -> list[DocumentStatus]:
