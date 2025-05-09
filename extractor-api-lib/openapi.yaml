@@ -5,7 +5,7 @@ info:
 servers:
 - url: /
 paths:
-  /extract_from_file:
+  /extract:
     post:
       operationId: extract_from_file_post
       requestBody:
@@ -29,47 +29,8 @@ paths:
           description: Something somewhere went terribly wrong.
       tags:
       - extractor
-  /extract_from_confluence:
-    post:
-      operationId: extract_from_confluence_post
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/confluence_parameters'
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                items:
-                  $ref: '#/components/schemas/information_piece'
-                type: array
-          description: ok
-        "404":
-          description: not found
-        "422":
-          description: unprocessable entity
-        "500":
-          description: internal server error
-      tags:
-      - extractor
 components:
   schemas:
-    extraction_request:
-      description: ""
-      example:
-        path_on_s3: path on s3
-      properties:
-        path_on_s3:
-          description: ""
-          title: PathOnS3
-          type: string
-      required:
-      - path_on_s3
-      title: ExtractionRequest
-      type: object
     key_value_pair:
       description: ""
       example:
@@ -120,54 +81,25 @@ components:
       - type
       title: InformationPiece
       type: object
-    confluence_parameters:
+    extraction_request:
       description: ""
       properties:
-        url:
-          description: url of the confluence space.
-          title: url
+        file:
+          description: ""
+          format: binary
+          title: file
           type: string
-        token:
-          description: api key to access confluence.
-          title: token
+        type:
+          description: ""
+          title: type
           type: string
-        space_key:
-          description: the space key of the confluence pages.
-          title: space_key
-          type: string
-        include_attachments:
-          default: false
-          description: "whether to include file attachments (e.g., images, documents)\
-            \ in the parsed content. Default is `false`."
-          title: include_attachments
-          type: boolean
-        keep_markdown_format:
-          default: true
-          description: whether to preserve markdown formatting in the output. Default
-            is `true`.
-          title: keep_markdown_format
-          type: boolean
-        keep_newlines:
-          default: true
-          description: whether to retain newline characters in the output for better
-            readability. Default is `true`.
-          title: keep_newlines
-          type: boolean
-        document_name:
-          description: The name that will be used to store the confluence db in the
-            key value db and the vectordatabase (metadata.document).
-          title: document_name
-          type: string
-        confluence_kwargs:
-          description: Additional kwargs like verify_ssl
+        kwargs:
+          description: ""
           items:
             $ref: '#/components/schemas/key_value_pair'
-          title: confluence_kwargs
+          title: kwargs
           type: array
       required:
-      - document_name
-      - space_key
-      - token
-      - url
-      title: confluence_parameters
+      - type
+      title: extraction_request
       type: object

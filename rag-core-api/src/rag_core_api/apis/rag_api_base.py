@@ -2,9 +2,11 @@
 
 # coding: utf-8
 # flake8: noqa: D105
-
 from typing import ClassVar, Dict, List, Tuple  # noqa: F401
 
+from pydantic import Field, StrictStr
+from typing import Any, List
+from typing_extensions import Annotated
 from rag_core_api.models.chat_request import ChatRequest
 from rag_core_api.models.chat_response import ChatResponse
 from rag_core_api.models.delete_request import DeleteRequest
@@ -22,17 +24,15 @@ class BaseRagApi:
     subclasses : ClassVar[Tuple]
         A tuple that holds all subclasses of BaseRagApi.
     """
-
     subclasses: ClassVar[Tuple] = ()
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         BaseRagApi.subclasses = BaseRagApi.subclasses + (cls,)
-
     async def chat(
         self,
-        session_id: str,
-        chat_request: ChatRequest,
+        session_id: StrictStr,
+        chat_request: Annotated[ChatRequest, Field(description="Chat with RAG.")],
     ) -> ChatResponse:
         """
         Asynchronously handles the chat endpoint for the RAG API.
@@ -52,6 +52,7 @@ class BaseRagApi:
             The chat response if the chat task completes successfully, otherwise None.
         """
 
+
     async def evaluate(
         self,
     ) -> None:
@@ -62,6 +63,7 @@ class BaseRagApi:
         -------
         None
         """
+
 
     async def remove_information_piece(
         self,
@@ -81,6 +83,7 @@ class BaseRagApi:
         -------
         None
         """
+
 
     async def upload_information_piece(
         self,

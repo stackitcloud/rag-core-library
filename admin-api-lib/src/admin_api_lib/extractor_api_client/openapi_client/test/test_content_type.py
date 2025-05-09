@@ -1,6 +1,5 @@
 # coding: utf-8
 
-# flake8: noqa
 """
     extractor-api-lib
 
@@ -13,8 +12,22 @@
 """  # noqa: E501
 
 
-# import models into model package
+import unittest
+
 from admin_api_lib.extractor_api_client.openapi_client.models.content_type import ContentType
-from admin_api_lib.extractor_api_client.openapi_client.models.extraction_request import ExtractionRequest
-from admin_api_lib.extractor_api_client.openapi_client.models.information_piece import InformationPiece
-from admin_api_lib.extractor_api_client.openapi_client.models.key_value_pair import KeyValuePair
+
+class TestContentType(unittest.TestCase):
+    """ContentType unit test stubs"""
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def testContentType(self):
+        """Test ContentType"""
+        # inst = ContentType()
+
+if __name__ == '__main__':
+    unittest.main()

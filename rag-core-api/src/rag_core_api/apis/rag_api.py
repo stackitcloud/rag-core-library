@@ -3,16 +3,16 @@
 # coding: utf-8
 # flake8: noqa: D105
 
+from typing import Dict, List  # noqa: F401
 import importlib
-import logging
 import pkgutil
-from asyncio import FIRST_COMPLETED, CancelledError, create_task, sleep, wait
-from contextlib import suppress
-from typing import Any, Awaitable, List  # noqa: F401
+
+from rag_core_api.apis.rag_api_base import BaseRagApi
+import openapi_server.impl
 
 from fastapi import (  # noqa: F401
     APIRouter,
-    BackgroundTasks,
+        BackgroundTasks,
     Body,
     Cookie,
     Depends,
@@ -21,7 +21,7 @@ from fastapi import (  # noqa: F401
     HTTPException,
     Path,
     Query,
-    Request,
+        Request,
     Response,
     Security,
     status,
@@ -29,10 +29,15 @@ from fastapi import (  # noqa: F401
 
 import rag_core_api.impl
 from rag_core_api.apis.rag_api_base import BaseRagApi
+from rag_core_api.models.extra_models import TokenModel  # noqa: F401
+from pydantic import Field, StrictStr
+from typing import Any, List
+from typing_extensions import Annotated
 from rag_core_api.models.chat_request import ChatRequest
 from rag_core_api.models.chat_response import ChatResponse
 from rag_core_api.models.delete_request import DeleteRequest
 from rag_core_api.models.information_piece import InformationPiece
+
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +57,6 @@ async def _disconnected(request: Request) -> None:
         except CancelledError:
             break
 
-
 @router.post(
     "/chat/{session_id}",
     responses={
@@ -64,8 +68,8 @@ async def _disconnected(request: Request) -> None:
 )
 async def chat(
     request: Request,
-    session_id: str = Path(..., description=""),
-    chat_request: ChatRequest = Body(None, description="Chat with RAG."),
+    session_id: StrictStr = Path(..., description=""),
+    chat_request: Annotated[ChatRequest, Field(description="Chat with RAG.")] = Body(None, description="Chat with RAG."),
 ) -> ChatResponse | None:
     """
     Asynchronously handles the chat endpoint for the RAG API.
@@ -121,7 +125,8 @@ async def chat(
     tags=["rag"],
     response_model_by_alias=True,
 )
-async def evaluate() -> None:
+async def evaluate(
+) -> None:
     """
     Asynchronously evaluate the RAG.
 
@@ -129,6 +134,8 @@ async def evaluate() -> None:
     -------
     None
     """
+    if not BaseRagApi.subclasses:
+        raise HTTPException(status_code=500, detail="Not implemented")
     return await BaseRagApi.subclasses[0]().evaluate()
 
 
@@ -160,7 +167,9 @@ async def remove_information_piece(
     Returns
     -------
     None
-    """
+    """    
+    if not BaseRagApi.subclasses:
+        raise HTTPException(status_code=500, detail="Not implemented")
     return await BaseRagApi.subclasses[0]().remove_information_piece(delete_request)
 
 
@@ -191,5 +200,7 @@ async def upload_information_piece(
     Returns
     -------
     None
-    """
+    """    
+    if not BaseRagApi.subclasses:
+        raise HTTPException(status_code=500, detail="Not implemented")
     return await BaseRagApi.subclasses[0]().upload_information_piece(information_piece)

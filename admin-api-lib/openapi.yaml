@@ -47,29 +47,6 @@ paths:
           description: Internal server error
       tags:
       - admin
-  /upload_documents:
-    post:
-      description: Uploads user selected pdf documents.
-      operationId: upload_documents_post
-      requestBody:
-        content:
-          application/pdf:
-            schema:
-              format: binary
-              type: string
-        description: The PDF document to upload.
-        required: true
-      responses:
-        "200":
-          description: ok
-        "400":
-          description: Bad request
-        "422":
-          description: If no text has been extracted from the file.
-        "500":
-          description: Internal server error
-      tags:
-      - admin
   /delete_document/{identification}:
     delete:
       operationId: delete_document
@@ -104,22 +81,28 @@ paths:
           description: Internal server error
       tags:
       - admin
-  /load_confluence:
+  /upload_source:
     post:
+      description: Uploads user selected pdf documents.
+      operationId: upload_source
+      requestBody:
+        content:
+          application/pdf:
+            schema:
+              $ref: '#/components/schemas/upload_source'
+        description: The PDF document to upload.
+        required: true
       responses:
         "200":
-          description: Loading from confluence is successful
-        "423":
-          description: "if the confluence loader is already processing a request,\
-            \ no further requests are possible. The user needs to wait, till the preliminary\
-            \ request finished processing."
+          description: ok
+        "400":
+          description: Bad request
+        "422":
+          description: If no text has been extracted from the file.
         "500":
-          description: Internal Server Error
-        "501":
-          description: The confluence loader is not set up
+          description: Internal server error
       tags:
       - admin
-    summary: Loading confluence to the vector db
 components:
   schemas:
     status:
@@ -147,4 +130,40 @@ components:
       - name
       - status
       title: document_status
+      type: object
+    upload_source:
+      description: ""
+      properties:
+        file:
+          description: ""
+          format: binary
+          title: file
+          type: string
+        type:
+          description: ""
+          title: type
+          type: string
+        kwargs:
+          description: ""
+          items:
+            $ref: '#/components/schemas/key_value_pair'
+          title: kwargs
+          type: array
+      required:
+      - type
+      title: upload_source
+      type: object
+    key_value_pair:
+      description: ""
+      example:
+        value: value
+        key: key
+      properties:
+        key:
+          description: ""
+          title: Key
+        value:
+          description: ""
+          title: Value
+      title: MetaInformationPiece
       type: object

@@ -1,13 +1,14 @@
-"""Module for the base AdminApi interface."""
-
 # coding: utf-8
-# flake8: noqa: D105
 
-from typing import ClassVar, Tuple  # noqa: F401
+from typing import ClassVar, Dict, List, Tuple  # noqa: F401
 
+from pydantic import Field, StrictBytes, StrictStr
+from typing import Any, List, Tuple, Union
+from typing_extensions import Annotated
 from fastapi import Request, Response, UploadFile
 
 from admin_api_lib.models.document_status import DocumentStatus
+from admin_api_lib.models.upload_source import UploadSource
 
 
 class BaseAdminApi:
@@ -28,7 +29,7 @@ class BaseAdminApi:
 
     async def delete_document(
         self,
-        identification: str,
+        identification: StrictStr,
     ) -> None:
         """
         Asynchronously deletes a document based on the provided identification.
@@ -42,6 +43,7 @@ class BaseAdminApi:
         -------
         None
         """
+
 
     async def document_reference_id_get(
         self,
@@ -61,6 +63,7 @@ class BaseAdminApi:
             The response object containing the document reference details.
         """
 
+
     async def get_all_documents_status(
         self,
     ) -> list[DocumentStatus]:
@@ -73,33 +76,9 @@ class BaseAdminApi:
             A list containing the status of all documents.
         """
 
-    async def load_confluence_post(
+
+    async def upload_source(
         self,
+        upload_source: Annotated[UploadSource, Field(description="The PDF document to upload.")],
     ) -> None:
-        """
-        Asynchronously loads a Confluence space.
-
-        Returns
-        -------
-        None
-        """
-
-    async def upload_documents_post(
-        self,
-        body: UploadFile,
-        request: Request,
-    ) -> None:
-        """
-        Asynchronously uploads user-selected source documents.
-
-        Parameters
-        ----------
-        body : UploadFile
-            The file object containing the source documents to be uploaded.
-        request : Request
-            The request object containing metadata about the upload request.
-
-        Returns
-        -------
-        None
-        """
+        ...
