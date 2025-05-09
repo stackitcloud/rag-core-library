@@ -1,5 +1,3 @@
-"""Module for the Admin API."""
-
 # coding: utf-8
 
 from typing import Dict, List  # noqa: F401
@@ -28,10 +26,10 @@ from fastapi import (  # noqa: F401
 
 from admin_api_lib.models.extra_models import TokenModel  # noqa: F401
 from pydantic import Field, StrictBytes, StrictStr
-from typing import Any, List, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 from typing_extensions import Annotated
 from admin_api_lib.models.document_status import DocumentStatus
-from admin_api_lib.models.upload_source import UploadSource
+from admin_api_lib.models.key_value_pair import KeyValuePair
 
 
 router = APIRouter()
@@ -101,17 +99,16 @@ async def document_reference_id_get(
         raise HTTPException(status_code=500, detail="Not implemented")
     return await BaseAdminApi.subclasses[0]().document_reference_id_get(identification)
 
-
 @router.get(
     "/all_documents_status",
     responses={
-        200: {"model": list[DocumentStatus], "description": "list of document links"},
+        200: {"model": List[DocumentStatus], "description": "List of document links"},
         500: {"description": "Internal server error"},
     },
     tags=["admin"],
     response_model_by_alias=True,
 )
-async def get_all_documents_status() -> list[DocumentStatus]:
+async def get_all_documents_status() -> List[DocumentStatus]:
     """
     Asynchronously retrieves the status of all documents.
 
@@ -119,7 +116,7 @@ async def get_all_documents_status() -> list[DocumentStatus]:
     -------
     list[DocumentStatus]
         A list containing the status of all documents.
-    """
+    """    
     if not BaseAdminApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
     return await BaseAdminApi.subclasses[0]().get_all_documents_status()
@@ -137,9 +134,12 @@ async def get_all_documents_status() -> list[DocumentStatus]:
     response_model_by_alias=True,
 )
 async def upload_source(
-    upload_source: Annotated[UploadSource, Field(description="The source to upload.")] = Body(None, description="The source to upload."),
+    type: StrictStr = Form(None, description=""),
+    name: StrictStr = Form(None, description=""),
+    file: Optional[UploadFile] = Form(None, description=""),
+    kwargs: Optional[List[KeyValuePair]] = Form(None, description=""),
 ) -> None:
-    """Uploads user selected source."""
+    """Uploads user selected sources."""
     if not BaseAdminApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAdminApi.subclasses[0]().upload_source(upload_source)
+    return await BaseAdminApi.subclasses[0]().upload_source(type, name, file, kwargs)

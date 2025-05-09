@@ -23,9 +23,11 @@ from fastapi import (  # noqa: F401
 )
 
 from extractor_api_lib.models.extra_models import TokenModel  # noqa: F401
-from typing import Any, List
-from extractor_api_lib.models.extraction_request import ExtractionRequest
+from pydantic import StrictBytes, StrictStr
+from fastapi import Request, Response, UploadFile
+from typing import Any, List, Optional, Tuple, Union
 from extractor_api_lib.models.information_piece import InformationPiece
+from extractor_api_lib.models.key_value_pair import KeyValuePair
 
 
 router = APIRouter()
@@ -39,15 +41,18 @@ for _, name, _ in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
     "/extract",
     responses={
         200: {"model": List[InformationPiece], "description": "List of extracted information."},
-        422: {"description": "Body is not a valid PDF."},
+        422: {"description": "Body is not a valid source."},
         500: {"description": "Something somewhere went terribly wrong."},
     },
     tags=["extractor"],
     response_model_by_alias=True,
 )
-async def extract_from_file_post(
-    extraction_request: ExtractionRequest = Body(None, description=""),
+async def extract(
+    type: StrictStr = Form(None, description=""),
+    name: StrictStr = Form(None, description=""),
+    file: Optional[UploadFile] = Form(None, description=""),
+    kwargs: Optional[List[KeyValuePair]] = Form(None, description=""),
 ) -> List[InformationPiece]:
     if not BaseExtractorApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseExtractorApi.subclasses[0]().extract_from_file_post(extraction_request)
+    return await BaseExtractorApi.subclasses[0]().extract(type, name, file, kwargs)

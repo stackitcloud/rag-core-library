@@ -24,11 +24,13 @@ class BaseRagApi:
     subclasses : ClassVar[Tuple]
         A tuple that holds all subclasses of BaseRagApi.
     """
+
     subclasses: ClassVar[Tuple] = ()
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         BaseRagApi.subclasses = BaseRagApi.subclasses + (cls,)
+
     async def chat(
         self,
         session_id: StrictStr,
@@ -52,7 +54,6 @@ class BaseRagApi:
             The chat response if the chat task completes successfully, otherwise None.
         """
 
-
     async def evaluate(
         self,
     ) -> None:
@@ -63,7 +64,6 @@ class BaseRagApi:
         -------
         None
         """
-
 
     async def remove_information_piece(
         self,
@@ -83,7 +83,6 @@ class BaseRagApi:
         -------
         None
         """
-
 
     async def upload_information_piece(
         self,

@@ -12,7 +12,7 @@ import openapi_server.impl
 
 from fastapi import (  # noqa: F401
     APIRouter,
-        BackgroundTasks,
+    BackgroundTasks,
     Body,
     Cookie,
     Depends,
@@ -21,7 +21,7 @@ from fastapi import (  # noqa: F401
     HTTPException,
     Path,
     Query,
-        Request,
+    Request,
     Response,
     Security,
     status,
@@ -57,6 +57,7 @@ async def _disconnected(request: Request) -> None:
         except CancelledError:
             break
 
+
 @router.post(
     "/chat/{session_id}",
     responses={
@@ -69,7 +70,9 @@ async def _disconnected(request: Request) -> None:
 async def chat(
     request: Request,
     session_id: StrictStr = Path(..., description=""),
-    chat_request: Annotated[ChatRequest, Field(description="Chat with RAG.")] = Body(None, description="Chat with RAG."),
+    chat_request: Annotated[ChatRequest, Field(description="Chat with RAG.")] = Body(
+        None, description="Chat with RAG."
+    ),
 ) -> ChatResponse | None:
     """
     Asynchronously handles the chat endpoint for the RAG API.
@@ -125,8 +128,7 @@ async def chat(
     tags=["rag"],
     response_model_by_alias=True,
 )
-async def evaluate(
-) -> None:
+async def evaluate() -> None:
     """
     Asynchronously evaluate the RAG.
 
@@ -167,7 +169,7 @@ async def remove_information_piece(
     Returns
     -------
     None
-    """    
+    """
     if not BaseRagApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
     return await BaseRagApi.subclasses[0]().remove_information_piece(delete_request)
@@ -200,7 +202,7 @@ async def upload_information_piece(
     Returns
     -------
     None
-    """    
+    """
     if not BaseRagApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
     return await BaseRagApi.subclasses[0]().upload_information_piece(information_piece)

@@ -7,10 +7,10 @@ servers:
 paths:
   /extract:
     post:
-      operationId: extract_from_file_post
+      operationId: extract
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
               $ref: '#/components/schemas/extraction_request'
         required: true
@@ -24,7 +24,7 @@ paths:
                 type: array
           description: List of extracted information.
         "422":
-          description: Body is not a valid PDF.
+          description: Body is not a valid source.
         "500":
           description: Something somewhere went terribly wrong.
       tags:
@@ -87,19 +87,19 @@ components:
         file:
           description: ""
           format: binary
-          title: file
           type: string
         type:
           description: ""
-          title: type
           type: string
         kwargs:
           description: ""
           items:
             $ref: '#/components/schemas/key_value_pair'
-          title: kwargs
           type: array
+        name:
+          description: ""
+          type: string
       required:
+      - name
       - type
-      title: extraction_request
       type: object

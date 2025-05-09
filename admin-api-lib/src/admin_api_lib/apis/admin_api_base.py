@@ -3,24 +3,14 @@
 from typing import ClassVar, Dict, List, Tuple  # noqa: F401
 
 from pydantic import Field, StrictBytes, StrictStr
-from typing import Any, List, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 from typing_extensions import Annotated
 from fastapi import Request, Response, UploadFile
-
 from admin_api_lib.models.document_status import DocumentStatus
-from admin_api_lib.models.upload_source import UploadSource
+from admin_api_lib.models.key_value_pair import KeyValuePair
 
 
 class BaseAdminApi:
-    """
-    The base AdminApi interface.
-
-    Attributes
-    ----------
-    subclasses : ClassVar[Tuple]
-        A tuple that holds all subclasses of BaseAdminApi.
-    """
-
     subclasses: ClassVar[Tuple] = ()
 
     def __init_subclass__(cls, **kwargs):
@@ -44,10 +34,9 @@ class BaseAdminApi:
         None
         """
 
-
     async def document_reference_id_get(
         self,
-        identification: str,
+        identification: Annotated[StrictStr, Field(description="Identifier of the pdf document.")],
     ) -> Response:
         """
         Asynchronously retrieve a document reference by its identification.
@@ -76,9 +65,12 @@ class BaseAdminApi:
             A list containing the status of all documents.
         """
 
-
     async def upload_source(
         self,
-        upload_source: Annotated[UploadSource, Field(description="The PDF document to upload.")],
+        type: StrictStr,
+        name: StrictStr,
+        file: Optional[UploadFile],
+        kwargs: Optional[List[KeyValuePair]],
     ) -> None:
+        """Uploads user selected sources."""
         ...

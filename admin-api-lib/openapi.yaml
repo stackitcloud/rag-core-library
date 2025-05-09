@@ -83,14 +83,14 @@ paths:
       - admin
   /upload_source:
     post:
-      description: Uploads user selected pdf documents.
+      description: Uploads user selected sources.
       operationId: upload_source
       requestBody:
         content:
-          application/pdf:
+          multipart/form-data:
             schema:
               $ref: '#/components/schemas/upload_source'
-        description: The PDF document to upload.
+        description: The source to upload.
         required: true
       responses:
         "200":
@@ -137,21 +137,21 @@ components:
         file:
           description: ""
           format: binary
-          title: file
           type: string
         type:
           description: ""
-          title: type
           type: string
         kwargs:
           description: ""
           items:
             $ref: '#/components/schemas/key_value_pair'
-          title: kwargs
           type: array
+        name:
+          description: ""
+          type: string
       required:
+      - name
       - type
-      title: upload_source
       type: object
     key_value_pair:
       description: ""
