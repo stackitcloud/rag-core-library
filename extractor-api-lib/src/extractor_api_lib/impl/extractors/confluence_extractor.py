@@ -1,19 +1,23 @@
 """Module for the DefaultConfluenceExtractor class."""
 
-from langchain_community.document_loaders import ConfluenceLoader
+from typing import Optional
 
-from extractor_api_lib.api_endpoints.confluence_extractor import ConfluenceExtractor
+from extractor_api_lib.models.dataclasses.internal_information_piece import InternalInformationPiece
+from pydantic import StrictStr
+from langchain_community.document_loaders import ConfluenceLoader
+from fastapi import UploadFile
+
+from extractor_api_lib.impl.types.extractor_types import ExtractorTypes
+from extractor_api_lib.models.information_piece import InformationPiece
+from extractor_api_lib.models.key_value_pair import KeyValuePair
+from extractor_api_lib.extractors.information_extractor import InformationExtractor
 from extractor_api_lib.impl.mapper.confluence_langchain_document2information_piece import (
     ConfluenceLangchainDocument2InformationPiece,
 )
-from extractor_api_lib.models.confluence_parameters import ConfluenceParameters
-from extractor_api_lib.models.information_piece import InformationPiece
 
 
-class DefaultConfluenceExtractor(ConfluenceExtractor):
+class ConfluenceExtractor(InformationExtractor):
     """Default implementation of the FileExtractor interface."""
-
-    MIN_PAGE_CONTENT_LENGTH = 10
 
     def __init__(
         self,
@@ -30,7 +34,17 @@ class DefaultConfluenceExtractor(ConfluenceExtractor):
         """
         self.mapper = mapper
 
-    async def aextract_from_confluence(self, confluence_parameters: ConfluenceParameters) -> list[InformationPiece]:
+    @property
+    def extractor_type(self) -> ExtractorTypes:
+        return ExtractorTypes.CONFLUENCE
+
+    async def aextract_content(
+        self,
+        type: StrictStr,
+        name: StrictStr,
+        file: Optional[UploadFile],
+        kwargs: Optional[list[KeyValuePair]],
+    ) -> list[InternalInformationPiece]:
         """
         Asynchronously extracts information pieces from Confluence.
 
@@ -41,17 +55,14 @@ class DefaultConfluenceExtractor(ConfluenceExtractor):
 
         Returns
         -------
-        list[InformationPiece]
+        list[InternalInformationPiece]
             A list of information pieces extracted from Confluence.
         """
-        self.mapper.confluence_parameters = confluence_parameters
-        confluence_kwargs = {}
-        for ckwargs in confluence_parameters.confluence_kwargs:
-            confluence_kwargs[ckwargs.key] = ckwargs.value
-        confluence_loader_parameters = confluence_parameters.model_dump()
-        confluence_loader_parameters["confluence_kwargs"] = confluence_kwargs
+        # Convert list of key value pairs to dict
+        confluence_loader_parameters = {x.key: x.value for x in kwargs}
         # Drop the document_name parameter as it is not used by the ConfluenceLoader
-        confluence_loader_parameters.pop("document_name", None)
+        if "document_name" in confluence_loader_parameters:
+            confluence_loader_parameters.pop("document_name", None)
         document_loader = ConfluenceLoader(**confluence_loader_parameters)
         documents = document_loader.load()
         return [self.mapper.map_document2informationpiece(x) for x in documents]

@@ -2,8 +2,8 @@
 
 from extractor_api_lib.impl.types.content_type import ContentType as InternalContentType
 from extractor_api_lib.models.content_type import ContentType as ExternalContentType
-from extractor_api_lib.models.dataclasses.information_piece import (
-    InformationPiece as InternalInformationPiece,
+from extractor_api_lib.models.dataclasses.internal_information_piece import (
+    InternalInformationPiece as InternalInformationPiece,
 )
 from extractor_api_lib.models.information_piece import (
     InformationPiece as ExternalInformationPiece,

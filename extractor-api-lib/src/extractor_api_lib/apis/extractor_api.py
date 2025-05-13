@@ -1,11 +1,11 @@
 # coding: utf-8
 
-from typing import Dict, List  # noqa: F401
+from typing import Annotated, Dict, List  # noqa: F401
 import importlib
 import pkgutil
 
 from extractor_api_lib.apis.extractor_api_base import BaseExtractorApi
-import openapi_server.impl
+import extractor_api_lib.impl
 
 from fastapi import (  # noqa: F401
     APIRouter,
@@ -32,7 +32,7 @@ from extractor_api_lib.models.key_value_pair import KeyValuePair
 
 router = APIRouter()
 
-ns_pkg = openapi_server.impl
+ns_pkg = extractor_api_lib.impl
 for _, name, _ in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
     importlib.import_module(name)
 
@@ -48,10 +48,10 @@ for _, name, _ in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
     response_model_by_alias=True,
 )
 async def extract(
-    type: StrictStr = Form(None, description=""),
-    name: StrictStr = Form(None, description=""),
-    file: Optional[UploadFile] = Form(None, description=""),
-    kwargs: Optional[List[KeyValuePair]] = Form(None, description=""),
+    type: Annotated[str, Form()],
+    name: Annotated[str, Form()],
+    file: Optional[UploadFile] = None,
+    kwargs: Optional[Annotated[List[KeyValuePair], Form()]]=None,    
 ) -> List[InformationPiece]:
     if not BaseExtractorApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")

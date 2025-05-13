@@ -1,16 +1,23 @@
-"""Module for the ConfluenceExtractor abstract base class."""
-
 from abc import ABC, abstractmethod
+from typing import Optional
 
-from extractor_api_lib.models.confluence_parameters import ConfluenceParameters
+from pydantic import StrictStr
+from fastapi import UploadFile
+
 from extractor_api_lib.models.information_piece import InformationPiece
+from extractor_api_lib.models.key_value_pair import KeyValuePair
 
 
-class ConfluenceExtractor(ABC):
-    """Abstract base class for extract_from_confluence endpoint."""
+class Extractor(ABC):
 
     @abstractmethod
-    async def aextract_from_confluence(self, confluence_parameters: ConfluenceParameters) -> list[InformationPiece]:
+    async def aextract_information(
+        self,
+        type: StrictStr,
+        name: StrictStr,
+        file: Optional[UploadFile],
+        kwargs: Optional[list[KeyValuePair]],
+    ) -> list[InformationPiece]:
         """
         Extract information from confluence, using the given confluence parameters.
 
