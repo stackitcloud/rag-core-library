@@ -12,7 +12,6 @@ from unstructured.partition.docx import partition_docx
 from unstructured.partition.pptx import partition_pptx
 
 
-
 from extractor_api_lib.file_services.file_service import FileService
 from extractor_api_lib.models.information_piece import InformationPiece
 from extractor_api_lib.extractors.information_file_extractor import InformationFileExtractor
@@ -54,7 +53,7 @@ class MSDocsExtractor(InformationFileExtractor):
         """
         return [FileType.DOCX, FileType.PPTX]
 
-    async def aextract_content(self, file_path: Path) -> list[InternalInformationPiece]:
+    async def aextract_content(self, file_path: Path, name: str) -> list[InternalInformationPiece]:
         """
         Extract content from a given file based on its extension.
 
@@ -62,7 +61,8 @@ class MSDocsExtractor(InformationFileExtractor):
         ----------
         file_path : Path
             The path to the file from which content is to be extracted.
-
+        name : str
+            Name of the document.
         Returns
         -------
         list[InformationPiece]

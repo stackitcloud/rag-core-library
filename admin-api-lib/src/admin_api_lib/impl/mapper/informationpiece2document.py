@@ -4,10 +4,10 @@ import json
 
 from langchain_core.documents import Document as LangchainDocument
 
-from admin_api_lib.extractor_api_client.openapi_client.models.content_type import (
+from admin_api_lib.extractor_api_client.models.content_type import (
     ContentType as ExtractorInformaType,
 )
-from admin_api_lib.extractor_api_client.openapi_client.models.information_piece import (
+from admin_api_lib.extractor_api_client.models.information_piece import (
     InformationPiece as ExtractorInformationPiece,
 )
 from admin_api_lib.rag_backend_client.openapi_client.models.information_piece import (

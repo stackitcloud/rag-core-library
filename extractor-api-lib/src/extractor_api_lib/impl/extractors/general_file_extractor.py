@@ -40,7 +40,7 @@ class GeneralFileExtractor(InformationExtractor):
         available_extractors : list of InformationExtractor
             A list of available information extractors to be used by the GeneralExtractor.
         """
-        self._file_service=file_service
+        self._file_service = file_service
         self._available_extractors = available_extractors
 
     @property
@@ -84,7 +84,7 @@ class GeneralFileExtractor(InformationExtractor):
                 ]
                 if not correct_extractors:
                     raise ValueError(f"No extractor found for file-ending {file_type}")
-                return await correct_extractors[-1].aextract_content(temp_file_path)
+                return await correct_extractors[-1].aextract_content(temp_file_path, name)
         except Exception as e:
             logger.error("Error during document parsing: %s %s", e, traceback.format_exc())
             raise e

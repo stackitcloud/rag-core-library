@@ -70,6 +70,7 @@ class BaseAdminApi:
         name: StrictStr,
         file: Optional[UploadFile],
         kwargs: Optional[List[KeyValuePair]],
+        request: Request,
     ) -> None:
         """Uploads user selected sources."""
         ...

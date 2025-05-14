@@ -1,6 +1,5 @@
 """Module for the DependencyContainer class."""
 
-from admin_api_lib.impl.api_endpoints.default_source_uploader import DefaultSourceUploader
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import (  # noqa: WOT001
     Configuration,
@@ -12,25 +11,15 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.llms import Ollama, VLLMOpenAI
 from langfuse import Langfuse
 
-from admin_api_lib.extractor_api_client.openapi_client.api.extractor_api import (
-    ExtractorApi,
-)
-from admin_api_lib.extractor_api_client.openapi_client.api_client import ApiClient
-from admin_api_lib.extractor_api_client.openapi_client.configuration import (
-    Configuration as ExtractorConfiguration,
-)
-from admin_api_lib.impl.api_endpoints.default_confluence_loader import (
-    DefaultConfluenceLoader,
-)
+from admin_api_lib.extractor_api_client.extractor_api_client import ExtractorApiClient
+from admin_api_lib.impl.api_endpoints.default_source_uploader import DefaultSourceUploader
 from admin_api_lib.impl.api_endpoints.default_document_deleter import (
     DefaultDocumentDeleter,
 )
 from admin_api_lib.impl.api_endpoints.default_document_reference_retriever import (
     DefaultDocumentReferenceRetriever,
 )
-from admin_api_lib.impl.api_endpoints.default_document_uploader import (
-    DefaultDocumentUploader,
-)
+
 from admin_api_lib.impl.api_endpoints.default_documents_status_retriever import (
     DefaultDocumentsStatusRetriever,
 )
@@ -43,14 +32,10 @@ from admin_api_lib.impl.information_enhancer.page_summary_enhancer import (
 from admin_api_lib.impl.key_db.file_status_key_value_store import (
     FileStatusKeyValueStore,
 )
-from admin_api_lib.impl.mapper.confluence_settings_mapper import (
-    ConfluenceSettingsMapper,
-)
 from admin_api_lib.impl.mapper.informationpiece2document import (
     InformationPiece2Document,
 )
 from admin_api_lib.impl.settings.chunker_settings import ChunkerSettings
-from admin_api_lib.impl.settings.confluence_settings import ConfluenceSettings
 from admin_api_lib.impl.settings.document_extractor_settings import (
     DocumentExtractorSettings,
 )
@@ -93,7 +78,6 @@ class DependencyContainer(DeclarativeContainer):
     rag_api_settings = RAGAPISettings()
     key_value_store_settings = KeyValueSettings()
     summarizer_settings = SummarizerSettings()
-    confluence_settings = ConfluenceSettings()
 
     key_value_store = Singleton(FileStatusKeyValueStore, key_value_store_settings)
     file_service = Singleton(S3Service, s3_settings=s3_settings)
@@ -103,16 +87,13 @@ class DependencyContainer(DeclarativeContainer):
     )
 
     chunker = Singleton(TextChunker, text_splitter)
-    extractor_api_configuration = Singleton(ExtractorConfiguration, host=document_extractor_settings.host)
-    document_extractor_api_client = Singleton(ApiClient, extractor_api_configuration)
-    document_extractor = Singleton(ExtractorApi, document_extractor_api_client)
+    document_extractor = Singleton(ExtractorApiClient, document_extractor_settings.host)
 
     rag_api_configuration = Singleton(RagConfiguration, host=rag_api_settings.host)
     rag_api_client = Singleton(RagApiClient, configuration=rag_api_configuration)
     rag_api = Singleton(RagApi, rag_api_client)
 
     information_mapper = Singleton(InformationPiece2Document)
-    confluence_settings_mapper = Singleton(ConfluenceSettingsMapper)
 
     large_language_model = Selector(
         class_selector_config.llm_type,
@@ -165,7 +146,7 @@ class DependencyContainer(DeclarativeContainer):
         DefaultDocumentDeleter, rag_api=rag_api, file_service=file_service, key_value_store=key_value_store
     )
     documents_status_retriever = Singleton(DefaultDocumentsStatusRetriever, key_value_store=key_value_store)
-    
+
     document_reference_retriever = Singleton(DefaultDocumentReferenceRetriever, file_service=file_service)
 
     source_uploader = Singleton(

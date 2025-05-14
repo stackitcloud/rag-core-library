@@ -51,7 +51,7 @@ async def extract(
     type: Annotated[str, Form()],
     name: Annotated[str, Form()],
     file: Optional[UploadFile] = None,
-    kwargs: Optional[Annotated[List[KeyValuePair], Form()]]=None,    
+    kwargs: Optional[Annotated[List[KeyValuePair], Form()]] = None,
 ) -> List[InformationPiece]:
     if not BaseExtractorApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")

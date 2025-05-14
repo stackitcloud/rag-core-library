@@ -1,10 +1,13 @@
 from http.client import HTTPException
 import logging
-from typing import Optional
+import os
+from pathlib import Path
+from typing import Optional, Tuple, Union
 from threading import Thread
 import urllib
+import tempfile
 
-from pydantic import StrictStr
+from pydantic import StrictBytes, StrictStr
 from fastapi import UploadFile, status
 from langchain_core.documents import Document
 from asyncio import run
@@ -16,7 +19,7 @@ from admin_api_lib.api_endpoints.document_deleter import DocumentDeleter
 from admin_api_lib.api_endpoints.source_uploader import SourceUploader
 from admin_api_lib.chunker.chunker import Chunker
 from admin_api_lib.models.status import Status
-from admin_api_lib.extractor_api_client.openapi_client.api.extractor_api import ExtractorApi
+from admin_api_lib.extractor_api_client.extractor_api_client import ExtractorApiClient
 from admin_api_lib.impl.key_db.file_status_key_value_store import FileStatusKeyValueStore
 from admin_api_lib.information_enhancer.information_enhancer import InformationEnhancer
 from admin_api_lib.utils.utils import sanitize_document_name
@@ -28,7 +31,7 @@ class DefaultSourceUploader(SourceUploader):
 
     def __init__(
         self,
-        extractor_api: ExtractorApi,
+        extractor_api: ExtractorApiClient,
         key_value_store: FileStatusKeyValueStore,
         information_enhancer: InformationEnhancer,
         chunker: Chunker,
@@ -60,8 +63,14 @@ class DefaultSourceUploader(SourceUploader):
             self._key_value_store.upsert(
                 source_name, Status.PROCESSING
             )  # TODO: change to pipeline with timeout to error status
+            filename = None
+            if file:
+                content = await file.read()
+                filename = Path("/tmp/" + file.filename)
+                with open(filename, "wb") as tmpfile:
+                    tmpfile.write(content)
             thread = Thread(
-                target=lambda: run(self._handle_source_upload(source_name, base_url, type, name, file, kwargs))
+                target=lambda: run(self._handle_source_upload(source_name, base_url, type, name, filename, kwargs))
             )
             thread.start()
             self._background_threads.append(thread)
@@ -79,11 +88,15 @@ class DefaultSourceUploader(SourceUploader):
         base_url: str,
         type: StrictStr,
         name: StrictStr,
-        file: Optional[UploadFile],
+        file,  #: Optional[Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]]],
         kwargs: Optional[list[KeyValuePair]],
     ):
         try:
-            information_pieces = self._extractor_api.extract(type, name, file, kwargs)
+            if file:                
+                information_pieces = self._extractor_api.extract(type, source_name, str(file), kwargs)
+            else:
+                information_pieces = self._extractor_api.extract(type, source_name, None, kwargs)
+
             if not information_pieces:
                 self._key_value_store.upsert(source_name, Status.ERROR)
                 logger.error("No information pieces found in the document: %s", source_name)
@@ -98,10 +111,16 @@ class DefaultSourceUploader(SourceUploader):
             ]
 
             # Replace old document
-            await self._document_deleter.adelete_document(source_name)
+            try:
+                await self._document_deleter.adelete_document(source_name)
+            except Exception as e:
+                # deletion is allowed to fail
+                pass
             self._rag_api.upload_information_piece(rag_information_pieces)
             self._key_value_store.upsert(source_name, Status.READY)
             logger.info("File uploaded successfully: %s", source_name)
+            if file:
+                os.remove(file)
         except Exception as e:
             self._key_value_store.upsert(source_name, Status.ERROR)
             logger.error("Error while uploading %s = %s", source_name, str(e))

@@ -14,6 +14,6 @@ Do not edit the class manually.
 
 
 # import models into model package
-from admin_api_lib.extractor_api_client.openapi_client.models.content_type import ContentType
-from admin_api_lib.extractor_api_client.openapi_client.models.information_piece import InformationPiece
-from admin_api_lib.extractor_api_client.openapi_client.models.key_value_pair import KeyValuePair
+from admin_api_lib.extractor_api_client.models.content_type import ContentType
+from admin_api_lib.extractor_api_client.models.information_piece import InformationPiece
+from admin_api_lib.extractor_api_client.models.key_value_pair import KeyValuePair

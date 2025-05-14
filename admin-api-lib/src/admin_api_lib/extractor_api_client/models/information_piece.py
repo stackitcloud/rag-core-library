@@ -17,20 +17,23 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictBytes, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
-from admin_api_lib.extractor_api_client.openapi_client.models.key_value_pair import KeyValuePair
+from pydantic import BaseModel, ConfigDict, StrictStr
+from typing import Any, ClassVar, Dict, List
+from admin_api_lib.extractor_api_client.models.content_type import ContentType
+from admin_api_lib.extractor_api_client.models.key_value_pair import KeyValuePair
 from typing import Optional, Set
 from typing_extensions import Self
 
 
-class ExtractionRequest(BaseModel):
-    """ """  # noqa: E501
+class InformationPiece(BaseModel):
+    """
+    A piece of information that has been extracted.
+    """  # noqa: E501
 
-    file: Optional[Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]]] = None
-    type: StrictStr
-    kwargs: Optional[List[KeyValuePair]] = None
-    __properties: ClassVar[List[str]] = ["file", "type", "kwargs"]
+    metadata: List[KeyValuePair]
+    page_content: StrictStr
+    type: ContentType
+    __properties: ClassVar[List[str]] = ["metadata", "page_content", "type"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -49,7 +52,7 @@ class ExtractionRequest(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of ExtractionRequest from a JSON string"""
+        """Create an instance of InformationPiece from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -69,18 +72,18 @@ class ExtractionRequest(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each item in kwargs (list)
+        # override the default output from pydantic by calling `to_dict()` of each item in metadata (list)
         _items = []
-        if self.kwargs:
-            for _item_kwargs in self.kwargs:
-                if _item_kwargs:
-                    _items.append(_item_kwargs.to_dict())
-            _dict["kwargs"] = _items
+        if self.metadata:
+            for _item_metadata in self.metadata:
+                if _item_metadata:
+                    _items.append(_item_metadata.to_dict())
+            _dict["metadata"] = _items
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of ExtractionRequest from a dict"""
+        """Create an instance of InformationPiece from a dict"""
         if obj is None:
             return None
 
@@ -89,13 +92,13 @@ class ExtractionRequest(BaseModel):
 
         _obj = cls.model_validate(
             {
-                "file": obj.get("file"),
-                "type": obj.get("type"),
-                "kwargs": (
-                    [KeyValuePair.from_dict(_item) for _item in obj["kwargs"]]
-                    if obj.get("kwargs") is not None
+                "metadata": (
+                    [KeyValuePair.from_dict(_item) for _item in obj["metadata"]]
+                    if obj.get("metadata") is not None
                     else None
                 ),
+                "page_content": obj.get("page_content"),
+                "type": obj.get("type"),
             }
         )
         return _obj

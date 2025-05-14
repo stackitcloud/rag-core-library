@@ -86,8 +86,7 @@ components:
       properties:
         file:
           description: ""
-          format: binary
-          type: string
+          type: file
         type:
           description: ""
           type: string

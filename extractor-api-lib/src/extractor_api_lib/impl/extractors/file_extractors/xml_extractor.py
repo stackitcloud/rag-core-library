@@ -45,7 +45,7 @@ class XMLExtractor(InformationFileExtractor):
         """
         return [FileType.XML]
 
-    async def aextract_content(self, file_path: Path) -> list[InternalInformationPiece]:
+    async def aextract_content(self, file_path: Path, name: str) -> list[InternalInformationPiece]:
         """
         Extract content from an XML file and processes the elements.
 
@@ -53,6 +53,8 @@ class XMLExtractor(InformationFileExtractor):
         ----------
         file_path : Path
             The path to the XML file to be processed.
+        name : str
+            Name of the document.
 
         Returns
         -------

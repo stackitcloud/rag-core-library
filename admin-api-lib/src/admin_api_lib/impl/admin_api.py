@@ -1,9 +1,7 @@
 """Module containing the implementation of the Admin API."""
 
-from dataclasses import Field
 import logging
 from typing import List, Optional
-from typing_extensions import Annotated
 from pydantic import Field, StrictBytes, StrictStr
 
 from admin_api_lib.api_endpoints.source_uploader import SourceUploader
@@ -12,12 +10,11 @@ from admin_api_lib.models.upload_source import UploadSource
 from dependency_injector.wiring import Provide, inject
 from fastapi import Depends, Request, Response, UploadFile
 
-from admin_api_lib.api_endpoints.confluence_loader import ConfluenceLoader
+
 from admin_api_lib.api_endpoints.document_deleter import DocumentDeleter
 from admin_api_lib.api_endpoints.document_reference_retriever import (
     DocumentReferenceRetriever,
 )
-from admin_api_lib.api_endpoints.document_uploader import DocumentUploader
 from admin_api_lib.api_endpoints.documents_status_retriever import (
     DocumentsStatusRetriever,
 )

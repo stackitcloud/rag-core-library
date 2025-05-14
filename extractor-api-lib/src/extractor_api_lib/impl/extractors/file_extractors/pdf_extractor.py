@@ -37,7 +37,7 @@ class PDFExtractor(InformationFileExtractor):
     Attributes
     ----------
     TITLE_PATTERN : re.Pattern
-        Regular expression pattern to identify titles in the text.
+        Regular expression pattern to identify titles in the text.document
     TITLE_PATTERN_MULTILINE : re.Pattern
         Regular expression pattern to identify titles in the text with multiline support.
     """
@@ -104,13 +104,15 @@ class PDFExtractor(InformationFileExtractor):
             page_content=content,
         )
 
-    async def aextract_content(self, file_path: Path) -> list[InternalInformationPiece]:
+    async def aextract_content(self, file_path: Path, name: str) -> list[InternalInformationPiece]:
         """Extract content from given file.
 
         Parameters
         ----------
         file_path : Path
             Path to the file the information should be extracted from.
+        name : str
+            Name of the document.
 
         Returns
         -------
@@ -136,7 +138,7 @@ class PDFExtractor(InformationFileExtractor):
                         page=page,
                         temp_dir=temp_dir,
                         title=current_title,
-                        document_name=file_path.name,
+                        document_name=name,
                     )
                     pdf_elements += new_pdf_elements
 

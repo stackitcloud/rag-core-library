@@ -1,11 +1,11 @@
 # coding: utf-8
 
-from typing import Dict, List  # noqa: F401
+from typing import Dict, List, Annotated  # noqa: F401
 import importlib
 import pkgutil
 
 from admin_api_lib.apis.admin_api_base import BaseAdminApi
-from fastapi import APIRouter, Path, Request, Response, UploadFile  # noqa: F401
+from fastapi import APIRouter, Path, Request, Response, UploadFile, Form  # noqa: F401
 
 import admin_api_lib.impl
 
@@ -135,12 +135,13 @@ async def get_all_documents_status() -> List[DocumentStatus]:
     response_model_by_alias=True,
 )
 async def upload_source(
-    type: StrictStr = Form(None, description=""),
-    name: StrictStr = Form(None, description=""),
-    file: Optional[UploadFile] = Form(None, description=""),
-    kwargs: Optional[List[KeyValuePair]] = Form(None, description=""),
+    request: Request,
+    type: Annotated[str, Form()],
+    name: Annotated[str, Form()],
+    file: Optional[UploadFile] = None,
+    kwargs: Optional[Annotated[List[KeyValuePair], Form()]] = None,
 ) -> None:
     """Uploads user selected sources."""
     if not BaseAdminApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAdminApi.subclasses[0]().upload_source(type, name, file, kwargs)
+    return await BaseAdminApi.subclasses[0]().upload_source(type, name, file, kwargs, request)

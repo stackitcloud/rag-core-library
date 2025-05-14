@@ -35,7 +35,7 @@ class InformationFileExtractor(ABC):
         """
 
     @abstractmethod
-    async def aextract_content(self, file_path: Path) -> list[InternalInformationPiece]:
+    async def aextract_content(self, file_path: Path, name: str) -> list[InternalInformationPiece]:
         """
         Extract content from given file.
 
@@ -43,7 +43,9 @@ class InformationFileExtractor(ABC):
         ----------
         file_path : Path
             Path to the file the information should be extracted from.
-
+        name : str
+            Name of the document.
+            
         Returns
         -------
         list[InformationPiece]
