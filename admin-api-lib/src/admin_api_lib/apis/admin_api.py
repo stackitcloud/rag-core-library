@@ -134,7 +134,7 @@ async def get_all_documents_status() -> List[DocumentStatus]:
 @router.post(
     "/upload_file",
     responses={
-        200: {"model": object, "description": "ok"},
+        200: {"description": "ok"},
         400: {"description": "Bad request"},
         422: {"description": "Unprocessable Content"},
         500: {"description": "Internal server error"},
@@ -146,11 +146,11 @@ async def get_all_documents_status() -> List[DocumentStatus]:
 async def upload_file(
     file: UploadFile,
     request: Request,
-) -> object:
+) -> None:
     """Uploads user selected sources."""
     if not BaseAdminApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAdminApi.subclasses[0]().upload_file(file)
+    return await BaseAdminApi.subclasses[0]().upload_file(file, request)
 
 
 @router.post(
@@ -166,7 +166,6 @@ async def upload_file(
     response_model_by_alias=True,
 )
 async def upload_source(
-
     request: Request,
     type: StrictStr = Query(None, description="", alias="type"),
     name: StrictStr = Query(None, description="", alias="name"),
@@ -175,4 +174,4 @@ async def upload_source(
     """Uploads user selected sources."""
     if not BaseAdminApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAdminApi.subclasses[0]().upload_source(type, name, key_value_pair)
+    return await BaseAdminApi.subclasses[0]().upload_source(type, name, key_value_pair, request)

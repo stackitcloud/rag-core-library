@@ -15,6 +15,5 @@ class SourceUploader(ABC):
         base_url: str,
         type: StrictStr,
         name: StrictStr,
-        file: Optional[UploadFile],
-        kwargs: Optional[list[KeyValuePair]],
+        kwargs: list[KeyValuePair],
     ) -> None: ...

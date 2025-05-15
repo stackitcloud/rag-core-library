@@ -2,10 +2,12 @@ from http.client import HTTPException
 import logging
 import os
 from pathlib import Path
+import traceback
 from typing import Optional, Tuple, Union
 from threading import Thread
 import urllib
 import tempfile
+from urllib.request import Request
 
 from pydantic import StrictBytes, StrictStr
 from fastapi import UploadFile, status
@@ -27,7 +29,7 @@ from admin_api_lib.utils.utils import sanitize_document_name
 logger = logging.getLogger(__name__)
 
 
-class DefaultSourceUploader(SourceUploader):
+class DefaultFileUploader(FileUploader):
 
     def __init__(
         self,
@@ -51,19 +53,22 @@ class DefaultSourceUploader(SourceUploader):
     async def upload_source(
         self,
         base_url: str,
-        type: StrictStr,
-        name: StrictStr,
-        kwargs: list[KeyValuePair],
+        file: UploadFile,
     ) -> None:
         self._background_threads = [t for t in self._background_threads if t.is_alive()]
-        source_name = f"{type}:{sanitize_document_name(name)}"
+        
+        
         try:
+            content = await file.read()
+            file.filename = sanitize_document_name(file.filename)
+            source_name = f"file:{sanitize_document_name(file.filename)}"
             # TODO: check if document already in processing state
             self._key_value_store.upsert(
                 source_name, Status.PROCESSING
             )  # TODO: change to pipeline with timeout to error status            
+            s3_path = await self._asave_new_document(content, file.filename, source_name)
             thread = Thread(
-                target=lambda: run(self._handle_source_upload(source_name, base_url, type, name, kwargs))
+                target=lambda: run(self._handle_source_upload(s3_path,source_name, file.filename, base_url))
             )
             thread.start()
             self._background_threads.append(thread)
@@ -77,13 +82,13 @@ class DefaultSourceUploader(SourceUploader):
 
     async def _handle_source_upload(
         self,
+        s3_path:Path,
         source_name: str,
-        base_url: str,
-        type: StrictStr,
-        kwargs: list[KeyValuePair],
+        file_name:str,
+        base_url: str,        
     ):
         try:
-            information_pieces = self._extractor_api.extract(type, source_name, kwargs)
+            information_pieces = self._extractor_api.extract(s3_path, source_name)
 
             if not information_pieces:
                 self._key_value_store.upsert(source_name, Status.ERROR)
@@ -93,10 +98,11 @@ class DefaultSourceUploader(SourceUploader):
             chunked_documents = self._chunker.chunk(documents)
 
             enhanced_documents = await self._information_enhancer.ainvoke(chunked_documents)
+            self._add_file_url(file_name,base_url,enhanced_documents)
+
             rag_information_pieces = [
                 self._information_mapper.document2rag_information_piece(doc) for doc in enhanced_documents
-            ]
-
+            ]            
             # Replace old document
             try:
                 await self._document_deleter.adelete_document(source_name)
@@ -111,11 +117,8 @@ class DefaultSourceUploader(SourceUploader):
             logger.error("Error while uploading %s = %s", source_name, str(e))
 
     def _add_file_url(
-        self, type: StrictStr, file: Optional[UploadFile], base_url: str, chunked_documents: list[Document]
+        self, file: UploadFile, base_url: str, chunked_documents: list[Document]
     ):
-        if type != "file":
-            return
-
         document_url = f"{base_url.rstrip('/')}/document_reference/{urllib.parse.quote_plus(file.name)}"
         for idx, chunk in enumerate(chunked_documents):
             if chunk.metadata["id"] in chunk.metadata["related"]:
@@ -127,3 +130,23 @@ class DefaultSourceUploader(SourceUploader):
                     "document_url": document_url,
                 }
             )
+
+    async def _asave_new_document(
+        self,
+        file_content: bytes,
+        filename: str,
+        source_name:str,
+    )->Path:
+        try:
+            with tempfile.TemporaryDirectory() as temp_dir:
+                temp_file_path = Path(temp_dir) / filename
+                with open(temp_file_path, "wb") as temp_file:
+                    logger.debug("Temporary file created at %s.", temp_file_path)
+                    temp_file.write(file_content)
+                    logger.debug("Temp file created and content written.")
+
+                self._file_service.upload_file(Path(temp_file_path), filename)
+                return Path(temp_file_path)
+        except Exception as e:
+            logger.error("Error during document saving: %s %s", e, traceback.format_exc())
+            self._key_value_store.upsert(source_name, Status.ERROR)

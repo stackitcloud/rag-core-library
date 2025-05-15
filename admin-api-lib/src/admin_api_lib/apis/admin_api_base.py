@@ -78,6 +78,6 @@ class BaseAdminApi:
         self,
         file: UploadFile,
         request: Request,
-    ) -> object:
+    ) -> None:
         """Uploads user selected file."""
         ...

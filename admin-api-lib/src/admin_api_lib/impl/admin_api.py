@@ -93,12 +93,22 @@ class AdminApi(BaseAdminApi):
         self,
         type: StrictStr,
         name: StrictStr,
-        file: Optional[UploadFile],
-        kwargs: Optional[List[KeyValuePair]],
+        kwargs: List[KeyValuePair],
         request: Request,
         source_uploader: SourceUploader = Depends(Provide[DependencyContainer.source_uploader]),
     ) -> None:
-        await source_uploader.upload_source(str(request.base_url), type, name, file, kwargs)
+        await source_uploader.upload_source(str(request.base_url), type, name, kwargs)
+
+
+    @inject
+    async def upload_file(
+        self,
+        file: UploadFile,
+        request: Request,
+        file_uploader: FileUploader = Depends(Provide[DependencyContainer.file_uploader]),
+    ) -> None:
+        await file_uploader.upload_source(str(request.base_url), file)
+
 
     @inject
     async def document_reference_id_get(
