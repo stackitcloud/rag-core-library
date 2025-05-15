@@ -1,169 +1,428 @@
-openapi: 3.0.2
-info:
-  description: The API is used for the communication between the admin frontend and
-    the admin backend in the rag project.
-  title: admin-api-lib
-  version: 1.0.0
-servers:
-- url: /
-paths:
-  /document_reference/{identification}:
-    get:
-      operationId: document_reference_id_get
-      parameters:
-      - description: Identifier of the pdf document.
-        explode: false
-        in: path
-        name: identification
-        required: true
-        schema:
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/pdf:
-              schema:
-                format: binary
-                type: string
-          description: Returns the pdf in binary form.
-        "400":
-          content:
-            application/json:
-              schema:
-                type: string
-          description: Bad request
-        "404":
-          content:
-            application/json:
-              schema:
-                type: string
-          description: Document not found.
-        "500":
-          content:
-            application/json:
-              schema:
-                type: string
-          description: Internal server error
-      tags:
-      - admin
-  /delete_document/{identification}:
-    delete:
-      operationId: delete_document
-      parameters:
-      - explode: false
-        in: path
-        name: identification
-        required: true
-        schema:
-          type: string
-        style: simple
-      responses:
-        "200":
-          description: Deleted
-        "500":
-          description: Internal server error
-      tags:
-      - admin
-  /all_documents_status:
-    get:
-      operationId: get_all_documents_status
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                items:
-                  $ref: '#/components/schemas/document_status'
-                type: array
-          description: List of document links
-        "500":
-          description: Internal server error
-      tags:
-      - admin
-  /upload_source:
-    post:
-      description: Uploads user selected sources.
-      operationId: upload_source
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/upload_source'
-        description: The source to upload.
-        required: true
-      responses:
-        "200":
-          description: ok
-        "400":
-          description: Bad request
-        "422":
-          description: If no text has been extracted from the file.
-        "500":
-          description: Internal server error
-      tags:
-      - admin
-components:
-  schemas:
-    status:
-      description: ""
-      enum:
-      - UPLOADING
-      - PROCESSING
-      - READY
-      - ERROR
-      title: status
-      type: string
-    document_status:
-      description: ""
-      example:
-        name: name
-        status: UPLOADING
-      properties:
-        name:
-          description: ""
-          title: name
-          type: string
-        status:
-          $ref: '#/components/schemas/status'
-      required:
-      - name
-      - status
-      title: document_status
-      type: object
-    upload_source:
-      description: ""
-      properties:
-        file:
-          description: ""
-          format: binary
-          type: string
-        type:
-          description: ""
-          type: string
-        kwargs:
-          description: ""
-          items:
-            $ref: '#/components/schemas/key_value_pair'
-          type: array
-        name:
-          description: ""
-          type: string
-      required:
-      - name
-      - type
-      type: object
-    key_value_pair:
-      description: ""
-      example:
-        value: value
-        key: key
-      properties:
-        key:
-          description: ""
-          title: Key
-        value:
-          description: ""
-          title: Value
-      title: MetaInformationPiece
-      type: object
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "admin-api-lib",
+    "description": "The API is used for the communication between the         admin frontend and the admin backend in the rag project.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/api"
+    }
+  ],
+  "paths": {
+    "/delete_document/{identification}": {
+      "delete": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Delete Document",
+        "description": "Asynchronously deletes a document based on the provided identification.\n\nParameters\n----------\nidentification : str\n    The unique identifier of the document to be deleted.\n\nReturns\n-------\nNone",
+        "operationId": "delete_document",
+        "parameters": [
+          {
+            "name": "identification",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "",
+              "title": "Identification"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/document_reference/{identification}": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Document Reference Id Get",
+        "description": "Asynchronously retrieve a document reference by its identification.\n\nParameters\n----------\nidentification : str\n    The unique identifier for the document reference.\n\nReturns\n-------\nResponse\n    The response object containing the document reference details.",
+        "operationId": "document_reference",
+        "parameters": [
+          {
+            "name": "identification",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Identifier of the document.",
+              "title": "Identification"
+            },
+            "description": "Identifier of the document."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the pdf in binary form.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary",
+                  "title": "Response 200 Document Reference Document Reference  Identification  Get"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "title": "Response 400 Document Reference Document Reference  Identification  Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Document not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "title": "Response 404 Document Reference Document Reference  Identification  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "title": "Response 500 Document Reference Document Reference  Identification  Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/all_documents_status": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get All Documents Status",
+        "description": "Asynchronously retrieves the status of all documents.\n\nReturns\n-------\nlist[DocumentStatus]\n    A list containing the status of all documents.",
+        "operationId": "get_all_documents_status",
+        "responses": {
+          "200": {
+            "description": "List of document links",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentStatus"
+                  },
+                  "type": "array",
+                  "title": "Response 200 Get All Documents Status All Documents Status Get"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/upload_file": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Upload File",
+        "description": "Uploads user selected sources.",
+        "operationId": "upload_file",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_file_upload_file_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response 200 Upload File Upload File Post"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "422": {
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/upload_source": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Upload Source",
+        "description": "Uploads user selected sources.",
+        "operationId": "upload_source",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "",
+              "title": "Type"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "",
+              "title": "Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/KeyValuePair"
+                },
+                "description": "",
+                "title": "Key Value Pair"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "ok",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "422": {
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Body_upload_file_upload_file_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_file_upload_file_post"
+      },
+      "DocumentStatus": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "status"
+        ],
+        "title": "DocumentStatus",
+        "description": "DocumentStatus"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ValidationError"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError",
+        "description": "HTTPValidationError"
+      },
+      "KeyValuePair": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "value"
+        ],
+        "title": "KeyValuePair",
+        "description": "KeyValuePair"
+      },
+      "Status": {
+        "type": "string",
+        "enum": [
+          "UPLOADING",
+          "PROCESSING",
+          "READY",
+          "ERROR"
+        ],
+        "title": "Status",
+        "description": "allowed enum values"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationErrorLocInner"
+            },
+            "type": "array",
+            "title": "Loc"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Msg"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "description": "ValidationError"
+      },
+      "ValidationErrorLocInner": {
+        "properties": {
+          "anyof_schema_1_validator": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anyof Schema 1 Validator"
+          },
+          "anyof_schema_2_validator": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anyof Schema 2 Validator"
+          },
+          "actual_instance": {
+            "title": "Actual Instance"
+          },
+          "any_of_schemas": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Any Of Schemas"
+          }
+        },
+        "type": "object",
+        "title": "ValidationErrorLocInner",
+        "description": "ValidationErrorLocInner"
+      }
+    }
+  }
+}
