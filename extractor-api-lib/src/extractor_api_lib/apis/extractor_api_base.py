@@ -2,11 +2,10 @@
 
 from typing import ClassVar, Dict, List, Tuple  # noqa: F401
 
-from pydantic import StrictBytes, StrictStr
-from typing import Any, List, Optional, Tuple, Union
-from fastapi import Request, Response, UploadFile
+from typing import Any, List
+from extractor_api_lib.models.extraction_parameters import ExtractionParameters
+from extractor_api_lib.models.extraction_request import ExtractionRequest
 from extractor_api_lib.models.information_piece import InformationPiece
-from extractor_api_lib.models.key_value_pair import KeyValuePair
 
 
 class BaseExtractorApi:
@@ -16,10 +15,12 @@ class BaseExtractorApi:
         super().__init_subclass__(**kwargs)
         BaseExtractorApi.subclasses = BaseExtractorApi.subclasses + (cls,)
 
-    async def extract(
+    async def extract_from_file_post(
         self,
-        type: StrictStr,
-        name: StrictStr,
-        file: Optional[UploadFile],
-        kwargs: Optional[List[KeyValuePair]],
+        extraction_request: ExtractionRequest,
+    ) -> List[InformationPiece]: ...
+
+    async def extract_from_source(
+        self,
+        extraction_parameters: ExtractionParameters,
     ) -> List[InformationPiece]: ...

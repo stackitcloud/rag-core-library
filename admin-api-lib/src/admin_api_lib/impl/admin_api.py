@@ -99,7 +99,6 @@ class AdminApi(BaseAdminApi):
     ) -> None:
         await source_uploader.upload_source(str(request.base_url), type, name, kwargs)
 
-
     @inject
     async def upload_file(
         self,
@@ -108,7 +107,6 @@ class AdminApi(BaseAdminApi):
         file_uploader: FileUploader = Depends(Provide[DependencyContainer.file_uploader]),
     ) -> None:
         await file_uploader.upload_source(str(request.base_url), file)
-
 
     @inject
     async def document_reference_id_get(

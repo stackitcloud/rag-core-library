@@ -21,7 +21,7 @@ class BaseAdminApi:
     async def delete_document(
         self,
         identification: StrictStr,
-        ) -> None:
+    ) -> None:
         """
         Asynchronously deletes a document based on the provided identification.
 
@@ -73,7 +73,7 @@ class BaseAdminApi:
         request: Request,
     ) -> None:
         """Uploads user selected source."""
-        
+
     async def upload_file(
         self,
         file: UploadFile,

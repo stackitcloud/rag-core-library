@@ -17,29 +17,32 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictStr
-from typing import Any, ClassVar, Dict, List
-from admin_api_lib.extractor_api_client.models.content_type import ContentType
-from admin_api_lib.extractor_api_client.models.key_value_pair import KeyValuePair
-from typing import Optional, Set
-from typing_extensions import Self
+
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
+from extractor_api_lib.models.key_value_pair import KeyValuePair
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 
-class InformationPiece(BaseModel):
-    """
-    A piece of information that has been extracted.
-    """  # noqa: E501
+class ExtractionParameters(BaseModel):
+    """ """  # noqa: E501
 
-    metadata: List[KeyValuePair]
-    page_content: StrictStr
-    type: ContentType
-    __properties: ClassVar[List[str]] = ["metadata", "page_content", "type"]
-
-    model_config = ConfigDict(
-        populate_by_name=True,
-        validate_assignment=True,
-        protected_namespaces=(),
+    document_name: StrictStr = Field(
+        description="The name that will be used to store the confluence db in the key value db and the vectordatabase (metadata.document)."
     )
+    confluence_kwargs: Optional[List[KeyValuePair]] = Field(default=None, description="Kwargs for the extractor")
+    type: StrictStr = Field(description="Extractortype")
+    __properties: ClassVar[List[str]] = ["document_name", "confluence_kwargs", "type"]
+
+    model_config = {
+        "populate_by_name": True,
+        "validate_assignment": True,
+        "protected_namespaces": (),
+    }
 
     def to_str(self) -> str:
         """Returns the string representation of the model using alias"""
@@ -51,8 +54,8 @@ class InformationPiece(BaseModel):
         return json.dumps(self.to_dict())
 
     @classmethod
-    def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of InformationPiece from a JSON string"""
+    def from_json(cls, json_str: str) -> Self:
+        """Create an instance of ExtractionParameters from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -65,25 +68,23 @@ class InformationPiece(BaseModel):
           were set at model initialization. Other fields with value `None`
           are ignored.
         """
-        excluded_fields: Set[str] = set([])
-
         _dict = self.model_dump(
             by_alias=True,
-            exclude=excluded_fields,
+            exclude={},
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each item in metadata (list)
+        # override the default output from pydantic by calling `to_dict()` of each item in confluence_kwargs (list)
         _items = []
-        if self.metadata:
-            for _item_metadata in self.metadata:
-                if _item_metadata:
-                    _items.append(_item_metadata.to_dict())
-            _dict["metadata"] = _items
+        if self.confluence_kwargs:
+            for _item in self.confluence_kwargs:
+                if _item:
+                    _items.append(_item.to_dict())
+            _dict["confluence_kwargs"] = _items
         return _dict
 
     @classmethod
-    def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of InformationPiece from a dict"""
+    def from_dict(cls, obj: Dict) -> Self:
+        """Create an instance of ExtractionParameters from a dict"""
         if obj is None:
             return None
 
@@ -92,12 +93,12 @@ class InformationPiece(BaseModel):
 
         _obj = cls.model_validate(
             {
-                "metadata": (
-                    [KeyValuePair.from_dict(_item) for _item in obj["metadata"]]
-                    if obj.get("metadata") is not None
+                "document_name": obj.get("document_name"),
+                "confluence_kwargs": (
+                    [KeyValuePair.from_dict(_item) for _item in obj.get("confluence_kwargs")]
+                    if obj.get("confluence_kwargs") is not None
                     else None
                 ),
-                "page_content": obj.get("page_content"),
                 "type": obj.get("type"),
             }
         )

@@ -5,12 +5,12 @@ info:
 servers:
 - url: /
 paths:
-  /extract:
+  /extract_from_file:
     post:
-      operationId: extract
+      operationId: extract_from_file_post
       requestBody:
         content:
-          multipart/form-data:
+          application/json:
             schema:
               $ref: '#/components/schemas/extraction_request'
         required: true
@@ -24,13 +24,56 @@ paths:
                 type: array
           description: List of extracted information.
         "422":
-          description: Body is not a valid source.
+          description: Body is not a valid PDF.
         "500":
           description: Something somewhere went terribly wrong.
       tags:
       - extractor
+  /extract_from_source:
+    post:
+      operationId: extract_from_source
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/extraction_parameters'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/information_piece'
+                type: array
+          description: ok
+        "404":
+          description: not found
+        "422":
+          description: unprocessable entity
+        "500":
+          description: internal server error
+      tags:
+      - extractor
 components:
   schemas:
+    extraction_request:
+      description: ""
+      example:
+        path_on_s3: path on s3
+      properties:
+        path_on_s3:
+          description: ""
+          title: PathOnS3
+          type: string
+        document_name:
+          description: ""
+          type: string
+      required:
+      - document_name
+      - path_on_s3
+      title: ExtractionRequest
+      type: object
     key_value_pair:
       description: ""
       example:
@@ -81,24 +124,26 @@ components:
       - type
       title: InformationPiece
       type: object
-    extraction_request:
+    extraction_parameters:
       description: ""
       properties:
-        file:
-          description: ""
-          type: file
-        type:
-          description: ""
+        document_name:
+          description: The name that will be used to store the confluence db in the
+            key value db and the vectordatabase (metadata.document).
+          title: document_name
           type: string
-        kwargs:
-          description: ""
+        confluence_kwargs:
+          description: Kwargs for the extractor
           items:
             $ref: '#/components/schemas/key_value_pair'
+          title: confluence_kwargs
           type: array
-        name:
-          description: ""
+        type:
+          description: Extractortype
+          title: type
           type: string
       required:
-      - name
+      - document_name
       - type
+      title: confluence_parameters
       type: object

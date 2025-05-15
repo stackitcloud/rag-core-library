@@ -45,7 +45,7 @@ class InformationFileExtractor(ABC):
             Path to the file the information should be extracted from.
         name : str
             Name of the document.
-            
+
         Returns
         -------
         list[InformationPiece]

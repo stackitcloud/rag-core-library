@@ -56,8 +56,7 @@ class DefaultFileUploader(FileUploader):
         file: UploadFile,
     ) -> None:
         self._background_threads = [t for t in self._background_threads if t.is_alive()]
-        
-        
+
         try:
             content = await file.read()
             file.filename = sanitize_document_name(file.filename)
@@ -65,10 +64,10 @@ class DefaultFileUploader(FileUploader):
             # TODO: check if document already in processing state
             self._key_value_store.upsert(
                 source_name, Status.PROCESSING
-            )  # TODO: change to pipeline with timeout to error status            
+            )  # TODO: change to pipeline with timeout to error status
             s3_path = await self._asave_new_document(content, file.filename, source_name)
             thread = Thread(
-                target=lambda: run(self._handle_source_upload(s3_path,source_name, file.filename, base_url))
+                target=lambda: run(self._handle_source_upload(s3_path, source_name, file.filename, base_url))
             )
             thread.start()
             self._background_threads.append(thread)
@@ -82,10 +81,10 @@ class DefaultFileUploader(FileUploader):
 
     async def _handle_source_upload(
         self,
-        s3_path:Path,
+        s3_path: Path,
         source_name: str,
-        file_name:str,
-        base_url: str,        
+        file_name: str,
+        base_url: str,
     ):
         try:
             information_pieces = self._extractor_api.extract(s3_path, source_name)
@@ -98,11 +97,11 @@ class DefaultFileUploader(FileUploader):
             chunked_documents = self._chunker.chunk(documents)
 
             enhanced_documents = await self._information_enhancer.ainvoke(chunked_documents)
-            self._add_file_url(file_name,base_url,enhanced_documents)
+            self._add_file_url(file_name, base_url, enhanced_documents)
 
             rag_information_pieces = [
                 self._information_mapper.document2rag_information_piece(doc) for doc in enhanced_documents
-            ]            
+            ]
             # Replace old document
             try:
                 await self._document_deleter.adelete_document(source_name)
@@ -116,9 +115,7 @@ class DefaultFileUploader(FileUploader):
             self._key_value_store.upsert(source_name, Status.ERROR)
             logger.error("Error while uploading %s = %s", source_name, str(e))
 
-    def _add_file_url(
-        self, file: UploadFile, base_url: str, chunked_documents: list[Document]
-    ):
+    def _add_file_url(self, file: UploadFile, base_url: str, chunked_documents: list[Document]):
         document_url = f"{base_url.rstrip('/')}/document_reference/{urllib.parse.quote_plus(file.name)}"
         for idx, chunk in enumerate(chunked_documents):
             if chunk.metadata["id"] in chunk.metadata["related"]:
@@ -135,8 +132,8 @@ class DefaultFileUploader(FileUploader):
         self,
         file_content: bytes,
         filename: str,
-        source_name:str,
-    )->Path:
+        source_name: str,
+    ) -> Path:
         try:
             with tempfile.TemporaryDirectory() as temp_dir:
                 temp_file_path = Path(temp_dir) / filename

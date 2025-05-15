@@ -61,10 +61,8 @@ class DefaultSourceUploader(SourceUploader):
             # TODO: check if document already in processing state
             self._key_value_store.upsert(
                 source_name, Status.PROCESSING
-            )  # TODO: change to pipeline with timeout to error status            
-            thread = Thread(
-                target=lambda: run(self._handle_source_upload(source_name, base_url, type, name, kwargs))
-            )
+            )  # TODO: change to pipeline with timeout to error status
+            thread = Thread(target=lambda: run(self._handle_source_upload(source_name, base_url, type, name, kwargs)))
             thread.start()
             self._background_threads.append(thread)
         except ValueError as e:
