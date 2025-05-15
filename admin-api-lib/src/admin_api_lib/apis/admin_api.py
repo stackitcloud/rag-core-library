@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from typing import Dict, List, Annotated  # noqa: F401
+from typing import Dict, List  # noqa: F401
 import importlib
 import pkgutil
 
@@ -26,9 +26,10 @@ from fastapi import (  # noqa: F401
 
 from admin_api_lib.models.extra_models import TokenModel  # noqa: F401
 from pydantic import Field, StrictBytes, StrictStr
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Tuple, Union
 from typing_extensions import Annotated
 from admin_api_lib.models.document_status import DocumentStatus
+from admin_api_lib.models.http_validation_error import HTTPValidationError
 from admin_api_lib.models.key_value_pair import KeyValuePair
 
 
@@ -44,12 +45,14 @@ for _, name, _ in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
     responses={
         200: {"description": "Deleted"},
         500: {"description": "Internal server error"},
+        422: {"model": HTTPValidationError, "description": "Validation Error"},
     },
     tags=["admin"],
+    summary="Delete Document",
     response_model_by_alias=True,
 )
 async def delete_document(
-    identification: str = Path(..., description=""),
+    identification: StrictStr = Path(..., description=""),
 ) -> None:
     """
     Asynchronously deletes a document based on the provided identification.
@@ -75,12 +78,16 @@ async def delete_document(
         400: {"model": str, "description": "Bad request"},
         404: {"model": str, "description": "Document not found."},
         500: {"model": str, "description": "Internal server error"},
+        422: {"model": HTTPValidationError, "description": "Validation Error"},
     },
     tags=["admin"],
+    summary="Document Reference Id Get",
     response_model_by_alias=True,
 )
-async def document_reference_id_get(
-    identification: str = Path(..., description="Identifier of the pdf document."),
+async def document_reference(
+    identification: Annotated[StrictStr, Field(description="Identifier of the document.")] = Path(
+        ..., description="Identifier of the document."
+    ),
 ) -> Response:
     """
     Asynchronously retrieve a document reference by its identification.
@@ -97,7 +104,7 @@ async def document_reference_id_get(
     """
     if not BaseAdminApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAdminApi.subclasses[0]().document_reference_id_get(identification)
+    return await BaseAdminApi.subclasses[0]().document_reference(identification)
 
 
 @router.get(
@@ -107,6 +114,7 @@ async def document_reference_id_get(
         500: {"description": "Internal server error"},
     },
     tags=["admin"],
+    summary="Get All Documents Status",
     response_model_by_alias=True,
 )
 async def get_all_documents_status() -> List[DocumentStatus]:
@@ -124,24 +132,47 @@ async def get_all_documents_status() -> List[DocumentStatus]:
 
 
 @router.post(
+    "/upload_file",
+    responses={
+        200: {"model": object, "description": "ok"},
+        400: {"description": "Bad request"},
+        422: {"description": "Unprocessable Content"},
+        500: {"description": "Internal server error"},
+    },
+    tags=["admin"],
+    summary="Upload File",
+    response_model_by_alias=True,
+)
+async def upload_file(
+    file: UploadFile,
+    request: Request,
+) -> object:
+    """Uploads user selected sources."""
+    if not BaseAdminApi.subclasses:
+        raise HTTPException(status_code=500, detail="Not implemented")
+    return await BaseAdminApi.subclasses[0]().upload_file(file)
+
+
+@router.post(
     "/upload_source",
     responses={
         200: {"description": "ok"},
         400: {"description": "Bad request"},
-        422: {"description": "If no text has been extracted from the file."},
+        422: {"description": "Unprocessable Content"},
         500: {"description": "Internal server error"},
     },
     tags=["admin"],
+    summary="Upload Source",
     response_model_by_alias=True,
 )
 async def upload_source(
+
     request: Request,
-    type: Annotated[str, Form()],
-    name: Annotated[str, Form()],
-    file: Optional[UploadFile] = None,
-    kwargs: Optional[Annotated[List[KeyValuePair], Form()]] = None,
+    type: StrictStr = Query(None, description="", alias="type"),
+    name: StrictStr = Query(None, description="", alias="name"),
+    key_value_pair: List[KeyValuePair] = Body(None, description=""),
 ) -> None:
     """Uploads user selected sources."""
     if not BaseAdminApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAdminApi.subclasses[0]().upload_source(type, name, file, kwargs, request)
+    return await BaseAdminApi.subclasses[0]().upload_source(type, name, key_value_pair)

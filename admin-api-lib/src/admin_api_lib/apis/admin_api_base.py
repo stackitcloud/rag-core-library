@@ -3,11 +3,12 @@
 from typing import ClassVar, Dict, List, Tuple  # noqa: F401
 
 from pydantic import Field, StrictBytes, StrictStr
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Tuple, Union
 from typing_extensions import Annotated
-from fastapi import Request, Response, UploadFile
 from admin_api_lib.models.document_status import DocumentStatus
+from admin_api_lib.models.http_validation_error import HTTPValidationError
 from admin_api_lib.models.key_value_pair import KeyValuePair
+from fastapi import Request, Response, UploadFile
 
 
 class BaseAdminApi:
@@ -20,7 +21,7 @@ class BaseAdminApi:
     async def delete_document(
         self,
         identification: StrictStr,
-    ) -> None:
+        ) -> None:
         """
         Asynchronously deletes a document based on the provided identification.
 
@@ -34,9 +35,9 @@ class BaseAdminApi:
         None
         """
 
-    async def document_reference_id_get(
+    async def document_reference(
         self,
-        identification: Annotated[StrictStr, Field(description="Identifier of the pdf document.")],
+        identification: Annotated[StrictStr, Field(description="Identifier of the document.")],
     ) -> Response:
         """
         Asynchronously retrieve a document reference by its identification.
@@ -68,9 +69,8 @@ class BaseAdminApi:
         self,
         type: StrictStr,
         name: StrictStr,
-        file: Optional[UploadFile],
-        kwargs: Optional[List[KeyValuePair]],
+        key_value_pair: List[KeyValuePair],
         request: Request,
     ) -> None:
-        """Uploads user selected sources."""
-        ...
+        """Uploads user selected source."""
+        

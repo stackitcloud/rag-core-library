@@ -92,7 +92,7 @@ class DefaultSourceUploader(SourceUploader):
         kwargs: Optional[list[KeyValuePair]],
     ):
         try:
-            if file:                
+            if file:
                 information_pieces = self._extractor_api.extract(type, source_name, str(file), kwargs)
             else:
                 information_pieces = self._extractor_api.extract(type, source_name, None, kwargs)
