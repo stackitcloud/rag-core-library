@@ -78,6 +78,11 @@ class HTTPValidationError(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict["detail"] = _items
+        # set to None if detail (nullable) is None
+        # and model_fields_set contains the field
+        if self.detail is None and "detail" in self.model_fields_set:
+            _dict["detail"] = None
+
         return _dict
 
     @classmethod

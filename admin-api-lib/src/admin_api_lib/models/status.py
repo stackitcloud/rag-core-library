@@ -29,6 +29,10 @@ class Status(str, Enum):
     """
     allowed enum values
     """
+
+    """
+    allowed enum values
+    """
     UPLOADING = "UPLOADING"
     PROCESSING = "PROCESSING"
     READY = "READY"

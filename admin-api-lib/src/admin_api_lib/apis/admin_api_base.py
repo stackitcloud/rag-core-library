@@ -74,3 +74,10 @@ class BaseAdminApi:
     ) -> None:
         """Uploads user selected source."""
         
+    async def upload_file(
+        self,
+        file: UploadFile,
+        request: Request,
+    ) -> object:
+        """Uploads user selected file."""
+        ...

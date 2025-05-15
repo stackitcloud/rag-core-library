@@ -13,141 +13,103 @@ Do not edit the class manually.
 
 
 from __future__ import annotations
-from inspect import getfullargspec
-import json
 import pprint
 import re  # noqa: F401
+import json
 
 
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, ValidationError, field_validator
-from typing import Optional
-from typing import Union, Any, List, TYPE_CHECKING, Optional, Dict
-from typing_extensions import Literal
-from pydantic import StrictStr, Field
+from pydantic import BaseModel, ConfigDict, StrictInt, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 
 try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
 
-VALIDATIONERRORLOCINNER_ANY_OF_SCHEMAS = ["int", "str"]
-
 
 class ValidationErrorLocInner(BaseModel):
     """
     ValidationErrorLocInner
-    """
+    """  # noqa: E501
 
-    # data type: str
     anyof_schema_1_validator: Optional[StrictStr] = None
-    # data type: int
     anyof_schema_2_validator: Optional[StrictInt] = None
-    if TYPE_CHECKING:
-        actual_instance: Optional[Union[int, str]] = None
-    else:
-        actual_instance: Any = None
-    any_of_schemas: List[str] = Literal[VALIDATIONERRORLOCINNER_ANY_OF_SCHEMAS]
+    actual_instance: Optional[Any] = None
+    any_of_schemas: Optional[List[StrictStr]] = None
+    __properties: ClassVar[List[str]] = [
+        "anyof_schema_1_validator",
+        "anyof_schema_2_validator",
+        "actual_instance",
+        "any_of_schemas",
+    ]
 
     model_config = {
+        "populate_by_name": True,
         "validate_assignment": True,
         "protected_namespaces": (),
     }
 
-    def __init__(self, *args, **kwargs) -> None:
-        if args:
-            if len(args) > 1:
-                raise ValueError("If a position argument is used, only 1 is allowed to set `actual_instance`")
-            if kwargs:
-                raise ValueError("If a position argument is used, keyword arguments cannot be used.")
-            super().__init__(actual_instance=args[0])
-        else:
-            super().__init__(**kwargs)
+    def to_str(self) -> str:
+        """Returns the string representation of the model using alias"""
+        return pprint.pformat(self.model_dump(by_alias=True))
 
-    @field_validator("actual_instance")
-    def actual_instance_must_validate_anyof(cls, v):
-        instance = ValidationErrorLocInner.model_construct()
-        error_messages = []
-        # validate data type: str
-        try:
-            instance.anyof_schema_1_validator = v
-            return v
-        except (ValidationError, ValueError) as e:
-            error_messages.append(str(e))
-        # validate data type: int
-        try:
-            instance.anyof_schema_2_validator = v
-            return v
-        except (ValidationError, ValueError) as e:
-            error_messages.append(str(e))
-        if error_messages:
-            # no match
-            raise ValueError(
-                "No match found when setting the actual_instance in ValidationErrorLocInner with anyOf schemas: int, str. Details: "
-                + ", ".join(error_messages)
-            )
-        else:
-            return v
-
-    @classmethod
-    def from_dict(cls, obj: dict) -> Self:
-        return cls.from_json(json.dumps(obj))
+    def to_json(self) -> str:
+        """Returns the JSON representation of the model using alias"""
+        # TODO: pydantic v2: use .model_dump_json(by_alias=True, exclude_unset=True) instead
+        return json.dumps(self.to_dict())
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Returns the object represented by the json string"""
-        instance = cls.model_construct()
-        error_messages = []
-        # deserialize data into str
-        try:
-            # validation
-            instance.anyof_schema_1_validator = json.loads(json_str)
-            # assign value to actual_instance
-            instance.actual_instance = instance.anyof_schema_1_validator
-            return instance
-        except (ValidationError, ValueError) as e:
-            error_messages.append(str(e))
-        # deserialize data into int
-        try:
-            # validation
-            instance.anyof_schema_2_validator = json.loads(json_str)
-            # assign value to actual_instance
-            instance.actual_instance = instance.anyof_schema_2_validator
-            return instance
-        except (ValidationError, ValueError) as e:
-            error_messages.append(str(e))
+        """Create an instance of ValidationErrorLocInner from a JSON string"""
+        return cls.from_dict(json.loads(json_str))
 
-        if error_messages:
-            # no match
-            raise ValueError(
-                "No match found when deserializing the JSON string into ValidationErrorLocInner with anyOf schemas: int, str. Details: "
-                + ", ".join(error_messages)
-            )
-        else:
-            return instance
+    def to_dict(self) -> Dict[str, Any]:
+        """Return the dictionary representation of the model using alias.
 
-    def to_json(self) -> str:
-        """Returns the JSON representation of the actual instance"""
-        if self.actual_instance is None:
-            return "null"
+        This has the following differences from calling pydantic's
+        `self.model_dump(by_alias=True)`:
 
-        to_json = getattr(self.actual_instance, "to_json", None)
-        if callable(to_json):
-            return self.actual_instance.to_json()
-        else:
-            return json.dumps(self.actual_instance)
+        * `None` is only added to the output dict for nullable fields that
+          were set at model initialization. Other fields with value `None`
+          are ignored.
+        """
+        _dict = self.model_dump(
+            by_alias=True,
+            exclude={},
+            exclude_none=True,
+        )
+        # set to None if anyof_schema_1_validator (nullable) is None
+        # and model_fields_set contains the field
+        if self.anyof_schema_1_validator is None and "anyof_schema_1_validator" in self.model_fields_set:
+            _dict["anyof_schema_1_validator"] = None
 
-    def to_dict(self) -> Dict:
-        """Returns the dict representation of the actual instance"""
-        if self.actual_instance is None:
-            return "null"
+        # set to None if anyof_schema_2_validator (nullable) is None
+        # and model_fields_set contains the field
+        if self.anyof_schema_2_validator is None and "anyof_schema_2_validator" in self.model_fields_set:
+            _dict["anyof_schema_2_validator"] = None
 
-        to_json = getattr(self.actual_instance, "to_json", None)
-        if callable(to_json):
-            return self.actual_instance.to_dict()
-        else:
-            # primitive type
-            return self.actual_instance
+        # set to None if actual_instance (nullable) is None
+        # and model_fields_set contains the field
+        if self.actual_instance is None and "actual_instance" in self.model_fields_set:
+            _dict["actual_instance"] = None
 
-    def to_str(self) -> str:
-        """Returns the string representation of the actual instance"""
-        return pprint.pformat(self.model_dump())
+        return _dict
+
+    @classmethod
+    def from_dict(cls, obj: Dict) -> Self:
+        """Create an instance of ValidationErrorLocInner from a dict"""
+        if obj is None:
+            return None
+
+        if not isinstance(obj, dict):
+            return cls.model_validate(obj)
+
+        _obj = cls.model_validate(
+            {
+                "anyof_schema_1_validator": obj.get("anyof_schema_1_validator"),
+                "anyof_schema_2_validator": obj.get("anyof_schema_2_validator"),
+                "actual_instance": obj.get("actual_instance"),
+                "any_of_schemas": obj.get("any_of_schemas"),
+            }
+        )
+        return _obj
