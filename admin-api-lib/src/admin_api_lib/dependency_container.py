@@ -1,5 +1,6 @@
 """Module for the DependencyContainer class."""
 
+from admin_api_lib.impl.api_endpoints.default_file_uploader import DefaultFileUploader
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import (  # noqa: WOT001
     Configuration,
@@ -11,7 +12,13 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.llms import Ollama, VLLMOpenAI
 from langfuse import Langfuse
 
-from admin_api_lib.extractor_api_client.extractor_api_client import ExtractorApiClient
+from admin_api_lib.extractor_api_client.openapi_client.api.extractor_api import (
+    ExtractorApi,
+)
+from admin_api_lib.extractor_api_client.openapi_client.api_client import ApiClient
+from admin_api_lib.extractor_api_client.openapi_client.configuration import (
+    Configuration as ExtractorConfiguration,
+)
 from admin_api_lib.impl.api_endpoints.default_source_uploader import DefaultSourceUploader
 from admin_api_lib.impl.api_endpoints.default_document_deleter import (
     DefaultDocumentDeleter,
@@ -87,7 +94,9 @@ class DependencyContainer(DeclarativeContainer):
     )
 
     chunker = Singleton(TextChunker, text_splitter)
-    document_extractor = Singleton(ExtractorApiClient, document_extractor_settings.host)
+    extractor_api_configuration = Singleton(ExtractorConfiguration, host=document_extractor_settings.host)
+    document_extractor_api_client = Singleton(ApiClient, extractor_api_configuration)
+    document_extractor = Singleton(ExtractorApi, document_extractor_api_client)
 
     rag_api_configuration = Singleton(RagConfiguration, host=rag_api_settings.host)
     rag_api_client = Singleton(RagApiClient, configuration=rag_api_configuration)
@@ -151,6 +160,17 @@ class DependencyContainer(DeclarativeContainer):
 
     source_uploader = Singleton(
         DefaultSourceUploader,
+        extractor_api=document_extractor,
+        rag_api=rag_api,
+        information_enhancer=information_enhancer,
+        information_mapper=information_mapper,
+        chunker=chunker,
+        key_value_store=key_value_store,
+        document_deleter=document_deleter,
+    )
+
+    file_uploader = Singleton(
+        DefaultFileUploader,
         extractor_api=document_extractor,
         rag_api=rag_api,
         information_enhancer=information_enhancer,

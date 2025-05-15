@@ -9,6 +9,8 @@ import urllib
 import tempfile
 from urllib.request import Request
 
+from admin_api_lib.extractor_api_client.openapi_client.api.extractor_api import ExtractorApi
+from extractor_api_lib.models.extraction_request import ExtractionRequest
 from pydantic import StrictBytes, StrictStr
 from fastapi import UploadFile, status
 from langchain_core.documents import Document
@@ -21,7 +23,6 @@ from admin_api_lib.api_endpoints.document_deleter import DocumentDeleter
 from admin_api_lib.api_endpoints.source_uploader import SourceUploader
 from admin_api_lib.chunker.chunker import Chunker
 from admin_api_lib.models.status import Status
-from admin_api_lib.extractor_api_client.extractor_api_client import ExtractorApiClient
 from admin_api_lib.impl.key_db.file_status_key_value_store import FileStatusKeyValueStore
 from admin_api_lib.information_enhancer.information_enhancer import InformationEnhancer
 from admin_api_lib.utils.utils import sanitize_document_name
@@ -33,7 +34,7 @@ class DefaultFileUploader(FileUploader):
 
     def __init__(
         self,
-        extractor_api: ExtractorApiClient,
+        extractor_api: ExtractorApi,
         key_value_store: FileStatusKeyValueStore,
         information_enhancer: InformationEnhancer,
         chunker: Chunker,
@@ -87,7 +88,9 @@ class DefaultFileUploader(FileUploader):
         base_url: str,
     ):
         try:
-            information_pieces = self._extractor_api.extract(s3_path, source_name)
+            information_pieces = self._extractor_api.extract_from_file_post(
+                ExtractionRequest(path_on_s3=s3_path, document_name=source_name)
+            )
 
             if not information_pieces:
                 self._key_value_store.upsert(source_name, Status.ERROR)

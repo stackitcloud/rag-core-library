@@ -34,9 +34,9 @@ class ExtractionParameters(BaseModel):
     document_name: StrictStr = Field(
         description="The name that will be used to store the confluence db in the key value db and the vectordatabase (metadata.document)."
     )
-    confluence_kwargs: Optional[List[KeyValuePair]] = Field(default=None, description="Kwargs for the extractor")
     type: StrictStr = Field(description="Extractortype")
-    __properties: ClassVar[List[str]] = ["document_name", "confluence_kwargs", "type"]
+    kwargs: Optional[List[KeyValuePair]] = Field(default=None, description="Kwargs for the extractor")
+    __properties: ClassVar[List[str]] = ["document_name", "type", "kwargs"]
 
     model_config = {
         "populate_by_name": True,
@@ -73,13 +73,13 @@ class ExtractionParameters(BaseModel):
             exclude={},
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each item in confluence_kwargs (list)
+        # override the default output from pydantic by calling `to_dict()` of each item in kwargs (list)
         _items = []
-        if self.confluence_kwargs:
-            for _item in self.confluence_kwargs:
+        if self.kwargs:
+            for _item in self.kwargs:
                 if _item:
                     _items.append(_item.to_dict())
-            _dict["confluence_kwargs"] = _items
+            _dict["kwargs"] = _items
         return _dict
 
     @classmethod
@@ -94,12 +94,12 @@ class ExtractionParameters(BaseModel):
         _obj = cls.model_validate(
             {
                 "document_name": obj.get("document_name"),
-                "confluence_kwargs": (
-                    [KeyValuePair.from_dict(_item) for _item in obj.get("confluence_kwargs")]
-                    if obj.get("confluence_kwargs") is not None
+                "type": obj.get("type"),
+                "kwargs": (
+                    [KeyValuePair.from_dict(_item) for _item in obj.get("kwargs")]
+                    if obj.get("kwargs") is not None
                     else None
                 ),
-                "type": obj.get("type"),
             }
         )
         return _obj

@@ -132,16 +132,16 @@ components:
             key value db and the vectordatabase (metadata.document).
           title: document_name
           type: string
-        confluence_kwargs:
+        type:
+          description: Extractortype
+          title: type
+          type: string
+        kwargs:
           description: Kwargs for the extractor
           items:
             $ref: '#/components/schemas/key_value_pair'
           title: confluence_kwargs
           type: array
-        type:
-          description: Extractortype
-          title: type
-          type: string
       required:
       - document_name
       - type
