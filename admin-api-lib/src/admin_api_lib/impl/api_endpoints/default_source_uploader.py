@@ -1,15 +1,12 @@
 from http.client import HTTPException
 import logging
-import os
-from pathlib import Path
-from typing import Optional, Tuple, Union
-from threading import Thread
-import urllib
-import tempfile
-from pydantic import StrictBytes, StrictStr
-from fastapi import UploadFile, status
-from langchain_core.documents import Document
 from asyncio import run
+from threading import Thread
+from contextlib import suppress
+
+from pydantic import StrictStr
+from fastapi import status
+
 
 from admin_api_lib.extractor_api_client.openapi_client.api.extractor_api import ExtractorApi
 from admin_api_lib.extractor_api_client.openapi_client.models.extraction_parameters import ExtractionParameters
@@ -51,18 +48,20 @@ class DefaultSourceUploader(SourceUploader):
     async def upload_source(
         self,
         base_url: str,
-        type: StrictStr,
+        source_type: StrictStr,
         name: StrictStr,
         kwargs: list[KeyValuePair],
     ) -> None:
         self._background_threads = [t for t in self._background_threads if t.is_alive()]
-        source_name = f"{type}:{sanitize_document_name(name)}"
+        source_name = f"{source_type}:{sanitize_document_name(name)}"
         try:
             # TODO: check if document already in processing state
             self._key_value_store.upsert(
                 source_name, Status.PROCESSING
             )  # TODO: change to pipeline with timeout to error status
-            thread = Thread(target=lambda: run(self._handle_source_upload(source_name, base_url, type, name, kwargs)))
+            thread = Thread(
+                target=lambda: run(self._handle_source_upload(source_name, base_url, source_type, name, kwargs))
+            )
             thread.start()
             self._background_threads.append(thread)
         except ValueError as e:
@@ -77,13 +76,13 @@ class DefaultSourceUploader(SourceUploader):
         self,
         source_name: str,
         base_url: str,
-        type: StrictStr,
+        source_type: StrictStr,
         name: str,
         kwargs: list[KeyValuePair],
     ):
         try:
             information_pieces = self._extractor_api.extract_from_source(
-                ExtractionParameters(type=type, document_name=source_name, kwargs=[x.to_dict() for x in kwargs])
+                ExtractionParameters(type=source_type, document_name=source_name, kwargs=[x.to_dict() for x in kwargs])
             )
 
             if not information_pieces:
@@ -99,32 +98,13 @@ class DefaultSourceUploader(SourceUploader):
             ]
 
             # Replace old document
-            try:
+            # deletion is allowed to fail
+            with suppress(Exception):
                 await self._document_deleter.adelete_document(source_name)
-            except Exception as e:
-                # deletion is allowed to fail
-                pass
+
             self._rag_api.upload_information_piece(rag_information_pieces)
             self._key_value_store.upsert(source_name, Status.READY)
             logger.info("Source uploaded successfully: %s", source_name)
         except Exception as e:
             self._key_value_store.upsert(source_name, Status.ERROR)
             logger.error("Error while uploading %s = %s", source_name, str(e))
-
-    def _add_file_url(
-        self, type: StrictStr, file: Optional[UploadFile], base_url: str, chunked_documents: list[Document]
-    ):
-        if type != "file":
-            return
-
-        document_url = f"{base_url.rstrip('/')}/document_reference/{urllib.parse.quote_plus(file.name)}"
-        for idx, chunk in enumerate(chunked_documents):
-            if chunk.metadata["id"] in chunk.metadata["related"]:
-                chunk.metadata["related"].remove(chunk.metadata["id"])
-            chunk.metadata.update(
-                {
-                    "chunk": idx,
-                    "chunk_length": len(chunk.page_content),
-                    "document_url": document_url,
-                }
-            )

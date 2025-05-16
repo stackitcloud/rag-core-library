@@ -1,10 +1,9 @@
 """Module containing the implementation of the Admin API."""
 
 import logging
-from typing import List, Optional
 
 
-from pydantic import Field, StrictBytes, StrictStr
+from pydantic import StrictStr
 from dependency_injector.wiring import Provide, inject
 from fastapi import Depends, Request, Response, UploadFile
 
@@ -93,7 +92,7 @@ class AdminApi(BaseAdminApi):
         self,
         type: StrictStr,
         name: StrictStr,
-        kwargs: List[KeyValuePair],
+        kwargs: list[KeyValuePair],
         request: Request,
         source_uploader: SourceUploader = Depends(Provide[DependencyContainer.source_uploader]),
     ) -> None:

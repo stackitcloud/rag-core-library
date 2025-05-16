@@ -1,21 +1,17 @@
 from http.client import HTTPException
 import logging
-import os
 from pathlib import Path
 import traceback
-from typing import Optional, Tuple, Union
 from threading import Thread
 import urllib
 import tempfile
-from urllib.request import Request
+from contextlib import suppress
 
-
-from admin_api_lib.file_services.file_service import FileService
-from pydantic import StrictBytes, StrictStr
 from fastapi import UploadFile, status
 from langchain_core.documents import Document
 from asyncio import run
 
+from admin_api_lib.file_services.file_service import FileService
 from admin_api_lib.extractor_api_client.openapi_client.models.extraction_request import ExtractionRequest
 from admin_api_lib.api_endpoints.file_uploader import FileUploader
 from admin_api_lib.extractor_api_client.openapi_client.api.extractor_api import ExtractorApi
@@ -109,11 +105,10 @@ class DefaultFileUploader(FileUploader):
                 self._information_mapper.document2rag_information_piece(doc) for doc in enhanced_documents
             ]
             # Replace old document
-            try:
+            # deletion is allowed to fail
+            with suppress(Exception):
                 await self._document_deleter.adelete_document(source_name)
-            except Exception as e:
-                # deletion is allowed to fail
-                pass
+
             self._rag_api.upload_information_piece(rag_information_pieces)
             self._key_value_store.upsert(source_name, Status.READY)
             logger.info("Source uploaded successfully: %s", source_name)
