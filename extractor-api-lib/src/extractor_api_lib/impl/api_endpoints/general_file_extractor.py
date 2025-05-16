@@ -29,7 +29,12 @@ class GeneralFileExtractor(FileExtractor):
     appropriate extractor based on the file type of the document.
     """
 
-    def __init__(self, file_service: FileService, available_extractors: list[InformationFileExtractor], mapper: Internal2ExternalInformationPiece):
+    def __init__(
+        self,
+        file_service: FileService,
+        available_extractors: list[InformationFileExtractor],
+        mapper: Internal2ExternalInformationPiece,
+    ):
         """
         Initialize the GeneralExtractor.
 
@@ -57,12 +62,12 @@ class GeneralFileExtractor(FileExtractor):
         -------
         list[InformationPiece]
             The extracted information.
-        """        
+        """
         try:
-            with tempfile.TemporaryDirectory() as temp_dir:                
+            with tempfile.TemporaryDirectory() as temp_dir:
                 temp_file_path = Path(temp_dir) / Path(extraction_request.path_on_s3).name
                 with open(temp_file_path, "wb") as temp_file:
-                    self._file_service.download_file(extraction_request.path_on_s3,temp_file)
+                    self._file_service.download_file(extraction_request.path_on_s3, temp_file)
                     logger.debug("Temporary file created at %s.", temp_file_path)
                     logger.debug("Temp file created and content written.")
                 file_type = str(temp_file_path).split(".")[-1].upper()
@@ -71,7 +76,9 @@ class GeneralFileExtractor(FileExtractor):
                 ]
                 if not correct_extractors:
                     raise ValueError(f"No extractor found for file-ending {file_type}")
-                results = await correct_extractors[-1].aextract_content(temp_file_path, extraction_request.document_name)
+                results = await correct_extractors[-1].aextract_content(
+                    temp_file_path, extraction_request.document_name
+                )
                 return [self._mapper.map_internal_to_external(x) for x in results if x.page_content is not None]
         except Exception as e:
             logger.error("Error during document parsing: %s %s", e, traceback.format_exc())

@@ -25,12 +25,12 @@ class ExtractorApiImpl(BaseExtractorApi):
         self,
         extraction_request: ExtractionRequest,
         extractor: FileExtractor = Depends(Provide[DependencyContainer.general_file_extractor]),
-    ) -> list[InformationPiece]: 
+    ) -> list[InformationPiece]:
         return await extractor.aextract_information(extraction_request)
 
     async def extract_from_source(
         self,
         extraction_parameters: ExtractionParameters,
         extractor: SourceExtractor = Depends(Provide[DependencyContainer.source_extractor]),
-    ) -> list[InformationPiece]: 
+    ) -> list[InformationPiece]:
         return await extractor.aextract_information(extraction_parameters)

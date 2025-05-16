@@ -78,7 +78,7 @@ class DefaultSourceUploader(SourceUploader):
         source_name: str,
         base_url: str,
         type: StrictStr,
-        name:str,
+        name: str,
         kwargs: list[KeyValuePair],
     ):
         try:

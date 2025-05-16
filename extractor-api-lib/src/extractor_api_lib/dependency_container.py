@@ -38,11 +38,11 @@ class DependencyContainer(DeclarativeContainer):
     langchain_document2information_piece = Singleton(ConfluenceLangchainDocument2InformationPiece)
     file_extractors = List(pdf_extractor, ms_docs_extractor, xml_extractor)
 
-    general_file_extractor = Singleton(GeneralFileExtractor, file_service, file_extractors,intern2external)
+    general_file_extractor = Singleton(GeneralFileExtractor, file_service, file_extractors, intern2external)
     confluence_extractor = Singleton(ConfluenceExtractor, mapper=langchain_document2information_piece)
 
     source_extractor = Singleton(
         GeneralSourceExtractor,
         mapper=intern2external,
-        available_extractors=List(confluence_extractor),        
+        available_extractors=List(confluence_extractor),
     )

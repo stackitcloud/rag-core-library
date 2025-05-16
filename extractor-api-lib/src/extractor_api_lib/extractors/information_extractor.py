@@ -24,7 +24,7 @@ class InformationExtractor(ABC):
     @abstractmethod
     async def aextract_content(
         self,
-         extraction_parameters: ExtractionParameters,
+        extraction_parameters: ExtractionParameters,
     ) -> list[InternalInformationPiece]:
         """
         Extract content from source.
