@@ -2,15 +2,15 @@
 
 import logging
 from typing import List, Optional
-from pydantic import Field, StrictBytes, StrictStr
 
-from admin_api_lib.api_endpoints.source_uploader import SourceUploader
-from admin_api_lib.models.key_value_pair import KeyValuePair
-from admin_api_lib.models.upload_source import UploadSource
+
+from pydantic import Field, StrictBytes, StrictStr
 from dependency_injector.wiring import Provide, inject
 from fastapi import Depends, Request, Response, UploadFile
 
-
+from admin_api_lib.api_endpoints.file_uploader import FileUploader
+from admin_api_lib.api_endpoints.source_uploader import SourceUploader
+from admin_api_lib.models.key_value_pair import KeyValuePair
 from admin_api_lib.api_endpoints.document_deleter import DocumentDeleter
 from admin_api_lib.api_endpoints.document_reference_retriever import (
     DocumentReferenceRetriever,
@@ -106,7 +106,7 @@ class AdminApi(BaseAdminApi):
         request: Request,
         file_uploader: FileUploader = Depends(Provide[DependencyContainer.file_uploader]),
     ) -> None:
-        await file_uploader.upload_source(str(request.base_url), file)
+        await file_uploader.upload_file(str(request.base_url), file)
 
     @inject
     async def document_reference_id_get(

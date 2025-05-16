@@ -5,7 +5,7 @@ import importlib
 import pkgutil
 
 from extractor_api_lib.apis.extractor_api_base import BaseExtractorApi
-import openapi_server.impl
+import extractor_api_lib.impl
 
 from fastapi import (  # noqa: F401
     APIRouter,
@@ -31,7 +31,7 @@ from extractor_api_lib.models.information_piece import InformationPiece
 
 router = APIRouter()
 
-ns_pkg = openapi_server.impl
+ns_pkg = extractor_api_lib.impl
 for _, name, _ in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
     importlib.import_module(name)
 

@@ -7,9 +7,9 @@ import traceback
 from typing import Any, List, Optional
 
 
-from pydantic import StrictStr
-from fastapi import UploadFile
-
+from extractor_api_lib.api_endpoints.file_extractor import FileExtractor
+from extractor_api_lib.impl.mapper.internal2external_information_piece import Internal2ExternalInformationPiece
+from extractor_api_lib.models.extraction_request import ExtractionRequest
 from extractor_api_lib.file_services.file_service import FileService
 from extractor_api_lib.extractors.information_file_extractor import InformationFileExtractor
 from extractor_api_lib.extractors.information_extractor import InformationExtractor
@@ -21,7 +21,7 @@ from extractor_api_lib.models.dataclasses.internal_information_piece import Inte
 logger = logging.getLogger(__name__)
 
 
-class GeneralFileExtractor(InformationExtractor):
+class GeneralFileExtractor(FileExtractor):
     """A class to extract information from documents using available extractors.
 
     This class serves as a general extractor that utilizes a list of available
@@ -29,7 +29,7 @@ class GeneralFileExtractor(InformationExtractor):
     appropriate extractor based on the file type of the document.
     """
 
-    def __init__(self, file_service: FileService, available_extractors: list[InformationFileExtractor]):
+    def __init__(self, file_service: FileService, available_extractors: list[InformationFileExtractor], mapper: Internal2ExternalInformationPiece):
         """
         Initialize the GeneralExtractor.
 
@@ -42,18 +42,9 @@ class GeneralFileExtractor(InformationExtractor):
         """
         self._file_service = file_service
         self._available_extractors = available_extractors
+        self._mapper = mapper
 
-    @property
-    def extractor_type(self) -> ExtractorTypes:
-        return ExtractorTypes.FILE
-
-    async def aextract_content(
-        self,
-        type: StrictStr,
-        name: StrictStr,
-        file: Optional[UploadFile],
-        kwargs: Optional[List[KeyValuePair]],
-    ) -> list[InternalInformationPiece]:
+    async def aextract_information(self, extraction_request: ExtractionRequest) -> list[InformationPiece]:
         """
         Extract content from given file.
 
@@ -66,25 +57,22 @@ class GeneralFileExtractor(InformationExtractor):
         -------
         list[InformationPiece]
             The extracted information.
-        """
-        # save file on s3
-        content = await file.read()
-        filename = file.filename
+        """        
         try:
-            with tempfile.TemporaryDirectory() as temp_dir:
-                temp_file_path = Path(temp_dir) / filename
+            with tempfile.TemporaryDirectory() as temp_dir:                
+                temp_file_path = Path(temp_dir) / Path(extraction_request.path_on_s3).name
                 with open(temp_file_path, "wb") as temp_file:
+                    self._file_service.download_file(extraction_request.path_on_s3,temp_file)
                     logger.debug("Temporary file created at %s.", temp_file_path)
-                    temp_file.write(content)
                     logger.debug("Temp file created and content written.")
-                self._file_service.upload_file(temp_file_path, filename)
                 file_type = str(temp_file_path).split(".")[-1].upper()
                 correct_extractors = [
                     x for x in self._available_extractors if file_type in [y.value for y in x.compatible_file_types]
                 ]
                 if not correct_extractors:
                     raise ValueError(f"No extractor found for file-ending {file_type}")
-                return await correct_extractors[-1].aextract_content(temp_file_path, name)
+                results = await correct_extractors[-1].aextract_content(temp_file_path, extraction_request.document_name)
+                return [self._mapper.map_internal_to_external(x) for x in results if x.page_content is not None]
         except Exception as e:
             logger.error("Error during document parsing: %s %s", e, traceback.format_exc())
             raise e

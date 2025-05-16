@@ -3,6 +3,7 @@
 import logging
 from typing import Optional
 
+from extractor_api_lib.models.extraction_parameters import ExtractionParameters
 from pydantic import StrictStr
 from fastapi import UploadFile
 
@@ -10,7 +11,7 @@ from extractor_api_lib.extractors.information_extractor import InformationExtrac
 from extractor_api_lib.models.information_piece import InformationPiece
 from extractor_api_lib.models.key_value_pair import KeyValuePair
 from extractor_api_lib.impl.mapper.internal2external_information_piece import Internal2ExternalInformationPiece
-from extractor_api_lib.api_endpoints.extractor import Extractor
+from extractor_api_lib.api_endpoints.source_extractor import SourceExtractor
 from extractor_api_lib.impl.mapper.internal2external_information_piece import Internal2ExternalInformationPiece
 from extractor_api_lib.models.information_piece import InformationPiece
 from extractor_api_lib.models.key_value_pair import KeyValuePair
@@ -21,7 +22,7 @@ from extractor_api_lib.models.dataclasses.internal_information_piece import Inte
 logger = logging.getLogger(__name__)
 
 
-class DefaultExtractor(Extractor):
+class GeneralSourceExtractor(SourceExtractor):
     """A class to extract information from documents using available extractors.
 
     This class serves as a general extractor that utilizes a list of available
@@ -43,10 +44,7 @@ class DefaultExtractor(Extractor):
 
     async def aextract_information(
         self,
-        type: StrictStr,
-        name: StrictStr,
-        file: Optional[UploadFile],
-        kwargs: Optional[list[KeyValuePair]],
+        extraction_parameters: ExtractionParameters,
     ) -> list[InformationPiece]:
         """
         Extract content from given file.
@@ -61,8 +59,8 @@ class DefaultExtractor(Extractor):
         list[InformationPiece]
             The extracted information.
         """
-        correct_extractors = [x for x in self._available_extractors if type == x.extractor_type]
+        correct_extractors = [x for x in self._available_extractors if extraction_parameters.type == x.extractor_type]
         if not correct_extractors:
             raise ValueError(f"No extractor found for type {type}")
-        results = await correct_extractors[-1].aextract_content(type, name, file, kwargs)
+        results = await correct_extractors[-1].aextract_content(extraction_parameters)
         return [self._mapper.map_internal_to_external(x) for x in results if x.page_content is not None]

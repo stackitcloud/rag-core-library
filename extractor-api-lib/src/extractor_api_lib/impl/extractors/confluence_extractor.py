@@ -3,6 +3,7 @@
 from typing import Optional
 
 from extractor_api_lib.models.dataclasses.internal_information_piece import InternalInformationPiece
+from extractor_api_lib.models.extraction_parameters import ExtractionParameters
 from pydantic import StrictStr
 from langchain_community.document_loaders import ConfluenceLoader
 from fastapi import UploadFile
@@ -40,10 +41,7 @@ class ConfluenceExtractor(InformationExtractor):
 
     async def aextract_content(
         self,
-        type: StrictStr,
-        name: StrictStr,
-        file: Optional[UploadFile],
-        kwargs: Optional[list[KeyValuePair]],
+         extraction_parameters: ExtractionParameters,
     ) -> list[InternalInformationPiece]:
         """
         Asynchronously extracts information pieces from Confluence.
@@ -59,10 +57,10 @@ class ConfluenceExtractor(InformationExtractor):
             A list of information pieces extracted from Confluence.
         """
         # Convert list of key value pairs to dict
-        confluence_loader_parameters = {x.key: x.value for x in kwargs}
+        confluence_loader_parameters = {x.key: int(x.value) if x.value.isdigit() else x.value for x in extraction_parameters.kwargs}
         # Drop the document_name parameter as it is not used by the ConfluenceLoader
         if "document_name" in confluence_loader_parameters:
             confluence_loader_parameters.pop("document_name", None)
         document_loader = ConfluenceLoader(**confluence_loader_parameters)
         documents = document_loader.load()
-        return [self.mapper.map_document2informationpiece(x) for x in documents]
+        return [self.mapper.map_document2informationpiece(x, extraction_parameters.document_name) for x in documents]

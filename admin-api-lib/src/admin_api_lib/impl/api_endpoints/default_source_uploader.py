@@ -6,14 +6,13 @@ from typing import Optional, Tuple, Union
 from threading import Thread
 import urllib
 import tempfile
-
-from admin_api_lib.extractor_api_client.openapi_client.api.extractor_api import ExtractorApi
-from admin_api_lib.extractor_api_client.openapi_client.models.extraction_parameters import ExtractionParameters
 from pydantic import StrictBytes, StrictStr
 from fastapi import UploadFile, status
 from langchain_core.documents import Document
 from asyncio import run
 
+from admin_api_lib.extractor_api_client.openapi_client.api.extractor_api import ExtractorApi
+from admin_api_lib.extractor_api_client.openapi_client.models.extraction_parameters import ExtractionParameters
 from admin_api_lib.models.key_value_pair import KeyValuePair
 from admin_api_lib.rag_backend_client.openapi_client.api.rag_api import RagApi
 from admin_api_lib.impl.mapper.informationpiece2document import InformationPiece2Document
@@ -79,11 +78,12 @@ class DefaultSourceUploader(SourceUploader):
         source_name: str,
         base_url: str,
         type: StrictStr,
+        name:str,
         kwargs: list[KeyValuePair],
     ):
         try:
             information_pieces = self._extractor_api.extract_from_source(
-                ExtractionParameters(type=type, document_name=source_name, kwargs=kwargs)
+                ExtractionParameters(type=type, document_name=source_name, kwargs=[x.to_dict() for x in kwargs])
             )
 
             if not information_pieces:

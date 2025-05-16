@@ -178,4 +178,5 @@ class DependencyContainer(DeclarativeContainer):
         chunker=chunker,
         key_value_store=key_value_store,
         document_deleter=document_deleter,
+        file_service=file_service,
     )

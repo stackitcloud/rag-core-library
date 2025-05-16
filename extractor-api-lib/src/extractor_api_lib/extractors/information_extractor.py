@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 
+from extractor_api_lib.models.extraction_parameters import ExtractionParameters
 from fastapi import UploadFile
 from pydantic import StrictStr
 
@@ -23,18 +24,15 @@ class InformationExtractor(ABC):
     @abstractmethod
     async def aextract_content(
         self,
-        type: StrictStr,
-        name: StrictStr,
-        file: Optional[UploadFile],
-        kwargs: Optional[list[KeyValuePair]],
+         extraction_parameters: ExtractionParameters,
     ) -> list[InternalInformationPiece]:
         """
-        Extract content from given file.
+        Extract content from source.
 
         Parameters
         ----------
-        file_path : Path
-            Path to the file the information should be extracted from.
+        extraction_parameters : ExtractionParameters
+            The parameters used to extract information from the source.
 
         Returns
         -------
