@@ -2,7 +2,6 @@
 
 from typing import ClassVar, Dict, List, Tuple  # noqa: F401
 
-from typing import Any, List
 from extractor_api_lib.models.extraction_parameters import ExtractionParameters
 from extractor_api_lib.models.extraction_request import ExtractionRequest
 from extractor_api_lib.models.information_piece import InformationPiece

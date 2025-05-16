@@ -23,7 +23,6 @@ from fastapi import (  # noqa: F401
 )
 
 from extractor_api_lib.models.extra_models import TokenModel  # noqa: F401
-from typing import Any, List
 from extractor_api_lib.models.extraction_parameters import ExtractionParameters
 from extractor_api_lib.models.extraction_request import ExtractionRequest
 from extractor_api_lib.models.information_piece import InformationPiece

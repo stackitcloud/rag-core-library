@@ -3,7 +3,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from extractor_api_lib.models.information_piece import InformationPiece
 from extractor_api_lib.impl.types.file_type import FileType
 from extractor_api_lib.models.dataclasses.internal_information_piece import InternalInformationPiece
 from extractor_api_lib.file_services.file_service import FileService

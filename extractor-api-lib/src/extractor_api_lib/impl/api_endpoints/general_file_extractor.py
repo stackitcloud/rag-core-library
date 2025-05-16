@@ -4,7 +4,6 @@ import logging
 from pathlib import Path
 import tempfile
 import traceback
-from typing import Any, List, Optional
 
 
 from extractor_api_lib.api_endpoints.file_extractor import FileExtractor
@@ -12,11 +11,7 @@ from extractor_api_lib.impl.mapper.internal2external_information_piece import In
 from extractor_api_lib.models.extraction_request import ExtractionRequest
 from extractor_api_lib.file_services.file_service import FileService
 from extractor_api_lib.extractors.information_file_extractor import InformationFileExtractor
-from extractor_api_lib.extractors.information_extractor import InformationExtractor
-from extractor_api_lib.impl.types.extractor_types import ExtractorTypes
 from extractor_api_lib.models.information_piece import InformationPiece
-from extractor_api_lib.models.key_value_pair import KeyValuePair
-from extractor_api_lib.models.dataclasses.internal_information_piece import InternalInformationPiece
 
 logger = logging.getLogger(__name__)
 

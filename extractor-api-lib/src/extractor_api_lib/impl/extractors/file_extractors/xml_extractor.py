@@ -11,7 +11,6 @@ from unstructured.partition.xml import partition_xml
 
 from extractor_api_lib.file_services.file_service import FileService
 from extractor_api_lib.extractors.information_file_extractor import InformationFileExtractor
-from extractor_api_lib.models.information_piece import InformationPiece
 from extractor_api_lib.impl.types.content_type import ContentType
 from extractor_api_lib.impl.types.file_type import FileType
 from extractor_api_lib.impl.utils.utils import hash_datetime

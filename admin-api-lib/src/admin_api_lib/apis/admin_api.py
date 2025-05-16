@@ -166,7 +166,7 @@ async def upload_file(
 )
 async def upload_source(
     request: Request,
-    type: StrictStr = Query(None, description="", alias="type"),
+    source_type: StrictStr = Query(None, description="", alias="type"),
     name: StrictStr = Query(None, description="", alias="name"),
     key_value_pair: List[KeyValuePair] = Body(None, description=""),
 ) -> None:

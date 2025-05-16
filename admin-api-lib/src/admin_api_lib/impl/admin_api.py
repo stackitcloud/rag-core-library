@@ -90,7 +90,7 @@ class AdminApi(BaseAdminApi):
     @inject
     async def upload_source(
         self,
-        type: StrictStr,
+        source_type: StrictStr,
         name: StrictStr,
         kwargs: list[KeyValuePair],
         request: Request,

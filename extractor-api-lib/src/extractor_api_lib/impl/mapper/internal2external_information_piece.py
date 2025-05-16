@@ -5,9 +5,7 @@ from extractor_api_lib.models.content_type import ContentType as ExternalContent
 from extractor_api_lib.models.dataclasses.internal_information_piece import (
     InternalInformationPiece as InternalInformationPiece,
 )
-from extractor_api_lib.models.information_piece import (
-    InformationPiece as ExternalInformationPiece,
-)
+from extractor_api_lib.models.information_piece import InformationPiece
 from extractor_api_lib.models.key_value_pair import KeyValuePair as MetaInformationPiece
 
 
@@ -27,7 +25,7 @@ class Internal2ExternalInformationPiece:
         InternalContentType.TABLE: ExternalContentType.TABLE,
     }
 
-    def map_internal_to_external(self, internal: InternalInformationPiece) -> ExternalInformationPiece:
+    def map_internal_to_external(self, internal: InternalInformationPiece) -> InformationPiece:
         """Map an InternalInformationPiece object to an ExternalInformationPiece object.
 
         Parameters

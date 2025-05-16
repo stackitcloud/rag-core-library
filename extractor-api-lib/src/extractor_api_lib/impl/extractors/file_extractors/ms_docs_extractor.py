@@ -6,14 +6,12 @@ from pathlib import Path
 from typing import Any, Optional
 
 import pandas as pd
-
 from unstructured.documents.elements import Element
 from unstructured.partition.docx import partition_docx
 from unstructured.partition.pptx import partition_pptx
 
 
 from extractor_api_lib.file_services.file_service import FileService
-from extractor_api_lib.models.information_piece import InformationPiece
 from extractor_api_lib.extractors.information_file_extractor import InformationFileExtractor
 from extractor_api_lib.impl.types.content_type import ContentType
 from extractor_api_lib.impl.types.file_type import FileType

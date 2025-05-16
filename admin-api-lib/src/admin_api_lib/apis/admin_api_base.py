@@ -66,7 +66,7 @@ class BaseAdminApi:
 
     async def upload_source(
         self,
-        type: StrictStr,
+        source_type: StrictStr,
         name: StrictStr,
         key_value_pair: List[KeyValuePair],
         request: Request,

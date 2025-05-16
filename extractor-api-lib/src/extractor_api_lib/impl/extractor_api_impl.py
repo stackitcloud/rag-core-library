@@ -1,20 +1,15 @@
 """Module for the implementation of the ExtractorApi interface."""
 
+from fastapi import Depends
 from dependency_injector.wiring import Provide, inject
+
 from extractor_api_lib.api_endpoints.file_extractor import FileExtractor
 from extractor_api_lib.api_endpoints.source_extractor import SourceExtractor
 from extractor_api_lib.models.extraction_parameters import ExtractionParameters
 from extractor_api_lib.models.extraction_request import ExtractionRequest
-from fastapi import Depends, UploadFile
-
-from pydantic import StrictStr
-from typing import Optional
 from extractor_api_lib.models.information_piece import InformationPiece
-from extractor_api_lib.models.key_value_pair import KeyValuePair
-
 from extractor_api_lib.apis.extractor_api_base import BaseExtractorApi
 from extractor_api_lib.dependency_container import DependencyContainer
-from extractor_api_lib.models.information_piece import InformationPiece
 
 
 class ExtractorApiImpl(BaseExtractorApi):
