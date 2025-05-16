@@ -1,7 +1,4 @@
-"""Module for the FileExtractor abstract base class."""
-
 from abc import ABC, abstractmethod
-
 from extractor_api_lib.models.extraction_request import ExtractionRequest
 from extractor_api_lib.models.information_piece import InformationPiece
 

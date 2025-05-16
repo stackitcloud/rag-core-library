@@ -1,25 +1,16 @@
-"""Module for the base AdminApi interface."""
-
 # coding: utf-8
-# flake8: noqa: D105
 
-from typing import ClassVar, Tuple  # noqa: F401
+from typing import ClassVar, Dict, List, Tuple  # noqa: F401
+from typing_extensions import Annotated
 
+from pydantic import Field, StrictStr
 from fastapi import Request, Response, UploadFile
 
 from admin_api_lib.models.document_status import DocumentStatus
+from admin_api_lib.models.key_value_pair import KeyValuePair
 
 
 class BaseAdminApi:
-    """
-    The base AdminApi interface.
-
-    Attributes
-    ----------
-    subclasses : ClassVar[Tuple]
-        A tuple that holds all subclasses of BaseAdminApi.
-    """
-
     subclasses: ClassVar[Tuple] = ()
 
     def __init_subclass__(cls, **kwargs):
@@ -28,7 +19,7 @@ class BaseAdminApi:
 
     async def delete_document(
         self,
-        identification: str,
+        identification: StrictStr,
     ) -> None:
         """
         Asynchronously deletes a document based on the provided identification.
@@ -43,9 +34,9 @@ class BaseAdminApi:
         None
         """
 
-    async def document_reference_id_get(
+    async def document_reference(
         self,
-        identification: str,
+        identification: Annotated[StrictStr, Field(description="Identifier of the document.")],
     ) -> Response:
         """
         Asynchronously retrieve a document reference by its identification.
@@ -73,33 +64,19 @@ class BaseAdminApi:
             A list containing the status of all documents.
         """
 
-    async def load_confluence_post(
+    async def upload_source(
         self,
-    ) -> None:
-        """
-        Asynchronously loads a Confluence space.
-
-        Returns
-        -------
-        None
-        """
-
-    async def upload_documents_post(
-        self,
-        body: UploadFile,
+        source_type: StrictStr,
+        name: StrictStr,
+        key_value_pair: List[KeyValuePair],
         request: Request,
     ) -> None:
-        """
-        Asynchronously uploads user-selected source documents.
+        """Uploads user selected source."""
 
-        Parameters
-        ----------
-        body : UploadFile
-            The file object containing the source documents to be uploaded.
-        request : Request
-            The request object containing metadata about the upload request.
-
-        Returns
-        -------
-        None
-        """
+    async def upload_file(
+        self,
+        file: UploadFile,
+        request: Request,
+    ) -> None:
+        """Uploads user selected file."""
+        ...
