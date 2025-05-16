@@ -30,9 +30,9 @@ class ExtractionParameters(BaseModel):
     document_name: StrictStr = Field(
         description="The name that will be used to store the confluence db in the key value db and the vectordatabase (metadata.document)."
     )
-    type: StrictStr = Field(description="Extractortype")
     kwargs: Optional[List[KeyValuePair]] = Field(default=None, description="Kwargs for the extractor")
-    __properties: ClassVar[List[str]] = ["document_name", "type", "kwargs"]
+    source_type: StrictStr = Field(description="Extractortype")
+    __properties: ClassVar[List[str]] = ["document_name", "kwargs", "source_type"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -92,12 +92,12 @@ class ExtractionParameters(BaseModel):
         _obj = cls.model_validate(
             {
                 "document_name": obj.get("document_name"),
-                "type": obj.get("type"),
                 "kwargs": (
                     [KeyValuePair.from_dict(_item) for _item in obj["kwargs"]]
                     if obj.get("kwargs") is not None
                     else None
                 ),
+                "source_type": obj.get("source_type"),
             }
         )
         return _obj
