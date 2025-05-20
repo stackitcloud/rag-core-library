@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class DefaultFileUploader(FileUploader):
-
+    """The DefaultFileUploader is responsible for adding a new source file document to the available content."""
     def __init__(
         self,
         extractor_api: ExtractorApi,
@@ -40,6 +40,28 @@ class DefaultFileUploader(FileUploader):
         information_mapper: InformationPiece2Document,
         file_service: FileService,
     ):
+        """
+        Initialize the DefaultFileUploader.
+
+        Parameters
+        ----------
+        extractor_api : ExtractorApi
+            Client for the Extraction service.
+        key_value_store : FileStatusKeyValueStore
+            The key-value store for storing filename and the corresponding status.
+        information_enhancer : InformationEnhancer
+            The service for enhancing information.
+        chunker : Chunker
+            The service for chunking documents into chunks.
+        document_deleter : DocumentDeleter
+            The service for deleting documents.
+        rag_api : RagApi
+            The API for RAG backend.
+        information_mapper : InformationPiece2Document
+            The mapper for converting information pieces to langchain documents.
+        file_service : FileService
+            The service for handling file operations on the S3 storage
+        """
         self._extractor_api = extractor_api
         self._rag_api = rag_api
         self._key_value_store = key_value_store
@@ -55,6 +77,20 @@ class DefaultFileUploader(FileUploader):
         base_url: str,
         file: UploadFile,
     ) -> None:
+        """
+        Uploads a source file for content extraction.
+
+        Parameters
+        ----------
+        base_url : str
+            The base url of the service. Is used to determine the download link of the file.
+        file : UploadFile
+            The file to process.
+
+        Returns
+        -------
+        None
+        """
         self._background_threads = [t for t in self._background_threads if t.is_alive()]
 
         try:

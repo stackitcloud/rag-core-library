@@ -36,6 +36,26 @@ class DefaultSourceUploader(SourceUploader):
         rag_api: RagApi,
         information_mapper: InformationPiece2Document,
     ):
+        """
+        Initialize the DefaultSourceUploader.
+
+        Parameters
+        ----------
+        extractor_api : ExtractorApi
+            Client for the Extraction service.
+        key_value_store : FileStatusKeyValueStore
+            The key-value store for storing filename and the corresponding status.
+        information_enhancer : InformationEnhancer
+            The service for enhancing information.
+        chunker : Chunker
+            The service for chunking documents into chunks.
+        document_deleter : DocumentDeleter
+            The service for deleting documents.
+        rag_api : RagApi
+            The API for RAG backend.
+        information_mapper : InformationPiece2Document
+            The mapper for converting information pieces to langchain documents.        
+        """
         self._extractor_api = extractor_api
         self._rag_api = rag_api
         self._key_value_store = key_value_store
@@ -52,6 +72,24 @@ class DefaultSourceUploader(SourceUploader):
         name: StrictStr,
         kwargs: list[KeyValuePair],
     ) -> None:
+        """
+        Uploads the parameters for source content extraction.
+
+        Parameters
+        ----------
+        base_url : str
+            The base url of the service. Is used to determine the download link of the source.
+        source_type : str
+            The type of the source. Is used by the extractor service to determine the correct extraction method.
+        name : str
+            Display name of the source.
+        kwargs : list[KeyValuePair]
+            List of KeyValuePair with parameters used for the extraction.
+
+        Returns
+        -------
+        None
+        """
         self._background_threads = [t for t in self._background_threads if t.is_alive()]
         source_name = f"{source_type}:{sanitize_document_name(name)}"
         try:

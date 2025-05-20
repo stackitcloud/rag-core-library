@@ -105,8 +105,8 @@ The following endpoints are provided by the *admin-api-lib*:
 - `/delete_document/{identification}`: Deletes the file from storage (if applicable) and vector database. The `identification` can be retrieved from the `/all_documents_status` endpoint.
 - `/document_reference/{identification}`: Returns the document.
 - `/all_documents_status`: Return the `identification` and status of all available sources.
-- `/upload_documents`: Endpoint to upload files.
-- `/load_confluence`: Endpoint to load a confluence space
+- `/upload_file`: Endpoint to upload files.
+- `/upload_source`: Endpoint to upload non-file sources.
 
 ### 2.1 Requirements
 
@@ -135,14 +135,15 @@ Will return the source document stored in the connected storage system.
 Will return a list of all sources for the chat and their current status.
 
 
-#### `/upload_documents`
+#### `/upload_file`
 
 Files can be uploaded here. This endpoint will process the document in a background and will extract information using the [document-extractor](#3-extractor-api-lib).
 The extracted information will be summarized using a LLM. The summary, as well as the unrefined extracted document, will be uploaded to the [rag-core-api](#1-rag-core-api).
 
-#### `/load_confluence`
+#### `/upload_source`
 
-Loads all the content of a confluence space using the [document-extractor](#3-extractor-api-lib).
+Loads all the content from an abritrary non-file source using the [document-extractor](#3-extractor-api-lib).
+The `type`of the source needs to correspond to an extractor in the [document-extractor](#3-extractor-api-lib).
 The extracted information will be summarized using LLM. The summary, as well as the unrefined extracted document, will be uploaded to the [rag-core-api](#1-rag-core-api).
 
 ### 2.3 Replaceable parts
@@ -162,9 +163,9 @@ The extracted information will be summarized using LLM. The summary, as well as 
 | information_enhancer |  [`rag_core_lib.chains.async_chain.AsyncChain[Any, Any]`](./rag-core-lib/src/rag_core_lib/chains/async_chain.py)| [`rag_core_lib.impl.tracers.langfuse_traced_chain.LangfuseTracedGraph`](./rag-core-lib/src/rag_core_lib/impl/tracers/langfuse_traced_chain.py) |Wraps around the *untraced_information_enhancer* and adds langfuse tracing. |
 | document_deleter |[`admin_api_lib.api_endpoints.document_deleter.DocumentDeleter`](./admin-api-lib/src/admin_api_lib/api_endpoints/document_deleter.py) | [`admin_api_lib.impl.api_endpoints.default_document_deleter.DefaultDocumentDeleter`](./admin-api-lib/src/admin_api_lib/impl/api_endpoints/default_document_deleter.py) |  Handles deletion of sources. |
 | documents_status_retriever |  [`admin_api_lib.api_endpoints.documents_status_retriever.DocumentsStatusRetriever`](./admin-api-lib/src/admin_api_lib/api_endpoints/documents_status_retriever.py) | [`admin_api_lib.impl.api_endpoints.default_documents_status_retriever.DefaultDocumentsStatusRetriever`](./admin-api-lib/src/admin_api_lib/impl/api_endpoints/default_documents_status_retriever.py) |Handles return of source status. |
-| confluence_loader | [`admin_api_lib.api_endpoints.confluence_loader.ConfluenceLoader`](./admin-api-lib/src/admin_api_lib/api_endpoints/confluence_loader.py) | [`admin_api_lib.impl.api_endpoints.default_confluence_loader.DefaultConfluenceLoader`](./admin-api-lib/src/admin_api_lib/impl/api_endpoints/default_confluence_loader.py)| Handles data loading and extraction from confluence. |
+| source_uploader | [`admin_api_lib.api_endpoints.source_uploader.SourceUploader`](./admin-api-lib/src/admin_api_lib/api_endpoints/source_uploader.py) | [`admin_api_lib.impl.api_endpoints.default_source_uploader.DefaultSourceUploader`](./admin-api-lib/src/admin_api_lib/impl/api_endpoints/default_source_uploader.py)| Handles data loading and extraction from various non-file sources. |
 | document_reference_retriever | [`admin_api_lib.api_endpoints.document_reference_retriever.DocumentReferenceRetriever`](./admin-api-lib/src/admin_api_lib/api_endpoints/document_reference_retriever.py) | [`admin_api_lib.impl.api_endpoints.default_document_reference_retriever.DefaultDocumentReferenceRetriever`](./admin-api-lib/src/admin_api_lib/impl/api_endpoints/default_document_reference_retriever.py) | Handles return of files from connected storage. |
-| document_uploader | [`admin_api_lib.api_endpoints.document_uploader.DocumentUploader`](./admin-api-lib/src/admin_api_lib/api_endpoints/document_uploader.py) | [`admin_api_lib.impl.api_endpoints.default_document_uploader.DefaultDocumentUploader`](./admin-api-lib/src/admin_api_lib/impl/api_endpoints/default_document_uploader.py) | Handles upload and extraction of files. |
+| file_uploader | [`admin_api_lib.api_endpoints.file_uploader.FileUploader`](./admin-api-lib/src/admin_api_lib/api_endpoints/file_uploader.py) | [`admin_api_lib.impl.api_endpoints.default_file_uploader.DefaultFileUploader`](./admin-api-lib/src/admin_api_lib/impl/api_endpoints/default_file_uploader.py) | Handles upload and extraction of files. |
 
 ## 3. Extractor API Lib
 
