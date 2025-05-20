@@ -28,6 +28,8 @@ class GeneralSourceExtractor(SourceExtractor):
         ----------
         available_extractors : list of InformationExtractor
             A list of available information extractors to be used by the GeneralExtractor.
+        mapper : Internal2ExternalInformationPiece
+            Mapper for mapping the internal represantation to the external one.
         """
         self._mapper = mapper
         self._available_extractors = available_extractors
@@ -37,17 +39,17 @@ class GeneralSourceExtractor(SourceExtractor):
         extraction_parameters: ExtractionParameters,
     ) -> list[InformationPiece]:
         """
-        Extract content from given file.
+        Extract information from source, using the given parameters.
 
         Parameters
         ----------
-        file_path : Path
-            Path to the file the information should be extracted from.
+        extraction_parameters : ExtractionParameters
+            The parameters used to extract information from the source.
 
         Returns
         -------
         list[InformationPiece]
-            The extracted information.
+            A list of extracted information pieces.
         """
         correct_extractors = [x for x in self._available_extractors if extraction_parameters.type == x.extractor_type]
         if not correct_extractors:

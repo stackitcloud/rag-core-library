@@ -176,7 +176,7 @@ This API should not be exposed by ingress and only used for internally.
 The following endpoints are provided by the *extractor-api-lib*:
 
 - `/extract_from_file`: This endpoint extracts the information from files.
-- `/extract_from_confluence`: This endpoint extracts the information from a confluence space.
+- `/extract_from_source`: This endpoint extracts the information from a non-file source.
 
 ### 3.1 Requirements
 
@@ -203,12 +203,14 @@ The following types of information will be extracted:
 - `TEXT`: plain text
 - `TABLE`: data in tabular form found in the document
 
-#### `/extract_from_confluence`
+#### `/extract_from_source`
 
-The extract from confluence endpoint will extract the information from a confluence space.
-The following types of information will be extracted:
+This endpoint will extract data for non-file source.
+The type of information that is extracted will vary depending on the source, the following types of information can be extracted:
 
 - `TEXT`: plain text
+- `TABLE`: data in tabular form found in the document
+- `IMAGE`: data in tabular form found in the document
 
 ### 3.3 Replaceable parts
 
@@ -222,7 +224,8 @@ The following types of information will be extracted:
 | all_extractors | `dependency_injector.providers.List[extractor_api_lib.document_parser.information_extractor.InformationExtractor]` | `dependency_injector.providers.List(pdf_extractor, ms_docs_extractor, xml_extractor)` | List of all available extractors. If you add a new type of extractor you would have to add it to this list. |
 | general_extractor | [`extractor_api_lib.document_parser.information_extractor.InformationExtractor`](./extractor-api-lib/src/extractor_api_lib/document_parser/information_extractor.py) |[`extractor_api_lib.document_parser.general_extractor.GeneralExtractor`](./extractor-api-lib/src/extractor_api_lib/document_parser/general_extractor.py) | Combines multiple extractors and decides which one to use for the given file format. |
 | file_extractor | [`extractor_api_lib.api_endpoints.file_extractor.FileExtractor`](./extractor-api-lib/src/extractor_api_lib/api_endpoints/file_extractor.py) | [`extractor_api_lib.impl.api_endpoints.default_file_extractor.DefaultFileExtractor`](./extractor-api-lib/src/extractor_api_lib/impl/api_endpoints/default_file_extractor.py) | Implementation of the `/extract_from_file` endpoint. Uses *general_extractor*. |
-| confluence_extractor | [`extractor_api_lib.api_endpoints.confluence_extractor.ConfluenceExtractor`](./extractor-api-lib/src/extractor_api_lib/api_endpoints/confluence_extractor.py) | [`extractor_api_lib.impl.api_endpoints.default_confluence_extractor.DefaultConfluenceExtractor`](./extractor-api-lib/src/extractor_api_lib/impl/api_endpoints/default_confluence_extractor.py) | Implementation of the `/extract_from_confluence` endpoint. |
+| general_source_extractor | [`extractor_api_lib.api_endpoints.source_extractor.SourceExtractor`](./extractor-api-lib/src/extractor_api_lib/api_endpoints/source_extractor.py) | [`extractor_api_lib.impl.api_endpoints.general_source_extractor.GeneralSourceExtractor`](./extractor-api-lib/src/extractor_api_lib/impl/api_endpoints/general_source_extractor.py) | Implementation of the `/extract_from_source` endpoint.  Will decide the correct extractor for the source. |
+| confluence_extractor | [`extractor_api_lib.extractors.information_extractor.InformationExtractor`](./extractor-api-lib/src/extractor_api_lib/extractors/information_extractor.py) | [`extractor_api_lib.impl.extractors.confluence_extractor.ConfluenceExtractor`](./extractor-api-lib/src/extractor_api_lib/extractors/confluence_extractor.py) | Implementation of an esxtractor for the source `confluence`. |
 
 ## 4. RAG Core Lib
 

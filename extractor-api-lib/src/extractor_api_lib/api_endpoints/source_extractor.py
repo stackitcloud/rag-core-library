@@ -5,6 +5,7 @@ from extractor_api_lib.models.information_piece import InformationPiece
 
 
 class SourceExtractor(ABC):
+    """Abstract base class for extract_from_source endpoint."""
 
     @abstractmethod
     async def aextract_information(

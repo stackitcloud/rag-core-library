@@ -12,14 +12,14 @@ from extractor_api_lib.impl.mapper.confluence_langchain_document2information_pie
 
 
 class ConfluenceExtractor(InformationExtractor):
-    """Default implementation of the FileExtractor interface."""
+    """Implementation of the InformationExtractor interface for confluence."""
 
     def __init__(
         self,
         mapper: ConfluenceLangchainDocument2InformationPiece,
     ):
         """
-        Initialize the DefaultConfluenceExtractor.
+        Initialize the ConfluenceExtractor.
 
         Parameters
         ----------
@@ -42,7 +42,7 @@ class ConfluenceExtractor(InformationExtractor):
 
         Parameters
         ----------
-        confluence_parameters : ConfluenceParameters
+        extraction_parameters : ExtractionParameters
             The parameters required to connect to and extract data from Confluence.
 
         Returns
