@@ -2,11 +2,9 @@
 
 # coding: utf-8
 # flake8: noqa: D105
+
 from typing import ClassVar, Dict, List, Tuple  # noqa: F401
 
-from pydantic import Field, StrictStr
-from typing import Any, List
-from typing_extensions import Annotated
 from rag_core_api.models.chat_request import ChatRequest
 from rag_core_api.models.chat_response import ChatResponse
 from rag_core_api.models.delete_request import DeleteRequest
@@ -33,8 +31,8 @@ class BaseRagApi:
 
     async def chat(
         self,
-        session_id: StrictStr,
-        chat_request: Annotated[ChatRequest, Field(description="Chat with RAG.")],
+        session_id: str,
+        chat_request: ChatRequest,
     ) -> ChatResponse:
         """
         Asynchronously handles the chat endpoint for the RAG API.

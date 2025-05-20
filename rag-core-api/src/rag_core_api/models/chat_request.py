@@ -13,13 +13,14 @@ Do not edit the class manually.
 
 
 from __future__ import annotations
+
+import json
 import pprint
 import re  # noqa: F401
-import json
-
+from typing import Any, ClassVar, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional
+
 from rag_core_api.models.chat_history import ChatHistory
 
 try:
@@ -47,8 +48,7 @@ class ChatRequest(BaseModel):
 
     def to_json(self) -> str:
         """Returns the JSON representation of the model using alias"""
-        # TODO: pydantic v2: use .model_dump_json(by_alias=True, exclude_unset=True) instead
-        return json.dumps(self.to_dict())
+        return self.model_dump_json(by_alias=True, exclude_unset=True)
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
@@ -86,7 +86,7 @@ class ChatRequest(BaseModel):
 
         _obj = cls.model_validate(
             {
-                "history": ChatHistory.from_dict(obj.get("history")) if obj.get("history") is not None else None,
+                "history": (ChatHistory.from_dict(obj.get("history")) if obj.get("history") is not None else None),
                 "message": obj.get("message"),
             }
         )
