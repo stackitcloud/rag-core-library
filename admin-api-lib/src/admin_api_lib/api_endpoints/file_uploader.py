@@ -1,4 +1,5 @@
 """Module for the upload file endpoint."""
+
 from abc import ABC, abstractmethod
 
 from fastapi import UploadFile
@@ -11,7 +12,7 @@ class FileUploader(ABC):
         self,
         base_url: str,
         file: UploadFile,
-    ) -> None: 
+    ) -> None:
         """
         Uploads a source file for content extraction.
 

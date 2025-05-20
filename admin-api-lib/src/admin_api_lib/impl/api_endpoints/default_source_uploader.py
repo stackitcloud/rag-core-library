@@ -54,7 +54,7 @@ class DefaultSourceUploader(SourceUploader):
         rag_api : RagApi
             The API for RAG backend.
         information_mapper : InformationPiece2Document
-            The mapper for converting information pieces to langchain documents.        
+            The mapper for converting information pieces to langchain documents.
         """
         self._extractor_api = extractor_api
         self._rag_api = rag_api

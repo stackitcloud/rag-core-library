@@ -1,4 +1,5 @@
 """Module for the upload source endpoint."""
+
 from abc import ABC, abstractmethod
 
 from pydantic import StrictStr
@@ -8,6 +9,7 @@ from admin_api_lib.models.key_value_pair import KeyValuePair
 
 class SourceUploader(ABC):
     """Abstract base class for source upload."""
+
     @abstractmethod
     async def upload_source(
         self,
@@ -15,7 +17,7 @@ class SourceUploader(ABC):
         source_type: StrictStr,
         name: StrictStr,
         kwargs: list[KeyValuePair],
-    ) -> None: 
+    ) -> None:
         """
         Uploads the parameters for source content extraction.
 

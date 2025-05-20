@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 class DefaultFileUploader(FileUploader):
     """The DefaultFileUploader is responsible for adding a new source file document to the available content."""
+
     def __init__(
         self,
         extractor_api: ExtractorApi,
