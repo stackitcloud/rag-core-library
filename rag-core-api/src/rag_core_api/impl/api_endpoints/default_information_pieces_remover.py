@@ -73,8 +73,7 @@ class DefaultInformationPiecesRemover(InformationPieceRemover):
             self._upload_counter_key_value_store.subtract()
             remaining, error = self._upload_counter_key_value_store.get()
             if not error and remaining == 0:
-                # TODO: switch collection
-                pass
+                self._vector_database.switch_collections()
         except Exception as e:
             logger.error("Error while deleting from vector db: %s", e)
             raise HTTPException(

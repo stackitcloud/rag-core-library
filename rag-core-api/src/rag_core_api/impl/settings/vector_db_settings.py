@@ -24,7 +24,9 @@ class VectorDatabaseSettings(BaseSettings):
         env_prefix = "VECTOR_DB_"
         case_sensitive = False
 
-    collection_name: str = Field()
+    collection_name_prefix: str = Field()
+    collection_alias_working: str = Field()
+    collection_alias_prod: str = Field()
     location: str = Field()
     validate_collection_config: bool = Field(
         default=False

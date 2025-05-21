@@ -54,6 +54,22 @@ class VectorDatabase(ABC):
         """
         raise NotImplementedError()
 
+    @property
+    @abstractmethod
+    def collection_working_available(self):
+        """
+        Check if the collection is available.
+
+        This property checks if the collection specified by the `_vectorstore.collection_alias_working`
+        exists in the list of collections and if it contains any points.
+
+        Returns
+        -------
+        bool
+            True if the collection exists, False otherwise.
+        """
+        raise NotImplementedError()
+
     @abstractmethod
     async def asearch(self, query: str, search_kwargs: dict, filter_kwargs: dict) -> list[Document]:
         """Search in a vector database for points fitting the query and the search_kwargs.

@@ -54,12 +54,13 @@ class DefaultInformationPiecesUploader(InformationPiecesUploader):
             InformationPieceMapper.information_piece2langchain_document(document) for document in information_piece
         ]
         try:
-            # TODO: check if "working" collection exists. If not create it
+            if not self._vector_database.collection_working_available:
+                self._vector_database.duplicate_alias_tagged_collection()
             self._vector_database.upload(langchain_documents)
             self._upload_counter_key_value_store.subtract()
             remaining, error = self._upload_counter_key_value_store.get()
             if not error and remaining == 0:
-                # TODO: switch collection
+                self._vector_database.switch_collections()
                 pass
         except ValueError as e:
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))

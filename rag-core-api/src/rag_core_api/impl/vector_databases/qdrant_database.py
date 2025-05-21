@@ -68,6 +68,25 @@ class QdrantDatabase(VectorDatabase):
             return collection.points_count > 0
         return False
 
+    @property
+    def collection_working_available(self):
+        """
+        Check if the collection is available.
+
+        This property checks if the collection specified by the `_vectorstore.collection_alias_working`
+        exists in the list of collections and if it contains any points.
+
+        Returns
+        -------
+        bool
+            True if the collection exists, False otherwise.
+        """
+        aliases = self._vectorstore.client.get_aliases()
+        for alias in aliases.aliases:
+            if alias.alias_name == self._settings.collection_alias_working:
+                return True
+        return False
+
     @staticmethod
     def _search_kwargs_builder(search_kwargs: dict, filter_kwargs: dict):
         """Build search kwargs with proper Qdrant filter format."""
@@ -157,7 +176,7 @@ class QdrantDatabase(VectorDatabase):
             for search_result in requested[0]
         ]
 
-    def upload(self, documents: list[Document], collection_name: str | None = None) -> None:
+    def upload(self, documents: list[Document]) -> None:
         """
         Save the given documents to the Qdrant database. If collection does not exist, it will be created.
 
@@ -172,14 +191,15 @@ class QdrantDatabase(VectorDatabase):
         -------
         None
         """
+        aliases = self._vectorstore.client.get_aliases()
+        true_collection_name = ...
+        for alias in aliases.aliases:
+            if alias.alias_name == self._settings.collection_alias_working:
+                true_collection_name = alias.collection_name
 
-        alias_of_interest = self._get_aliases_of_interest()
-        if collection_name:
-            true_collection_name = collection_name
-        elif not len(alias_of_interest):
-            true_collection_name = self._settings.collection_name + f"_{create_timestamp()}"
-        else:
-            true_collection_name = alias_of_interest[0].collection_name
+        if not true_collection_name:
+            # TODO: create collection(name)
+            raise ValueError(f"Collection with alias {self._settings.collection_alias_working} does not exist.")
 
         self._vectorstore = self._vectorstore.from_documents(
             documents,
@@ -190,18 +210,7 @@ class QdrantDatabase(VectorDatabase):
             retrieval_mode=self._settings.retrieval_mode,
         )
 
-        if len(alias_of_interest) == 0:
-            self._vectorstore.client.update_collection_aliases(
-                change_aliases_operations=[
-                    models.CreateAliasOperation(
-                        create_alias=models.CreateAlias(
-                            collection_name=true_collection_name, alias_name=self._settings.collection_name
-                        )
-                    ),
-                ]
-            )
-
-    def delete(self, delete_request: dict, collection_name: str | None = None) -> None:
+    def delete(self, delete_request: dict) -> None:
         """
         Delete points from a collection based on the given conditions.
 
@@ -212,13 +221,14 @@ class QdrantDatabase(VectorDatabase):
         collection_name : str, optional
             The collection name to delete from; uses settings collection if None.
         """
-        alias_of_interest = self._get_aliases_of_interest()
-        if collection_name:
-            true_collection_name = collection_name
-        elif len(alias_of_interest):
-            true_collection_name = alias_of_interest[0].collection_name
-        else:
-            raise ValueError(f"Collection with alias {self._settings.collection_name} does not exist.")
+        aliases = self._vectorstore.client.get_aliases()
+        true_collection_name = ...
+        for alias in aliases.aliases:
+            if alias.alias_name == self._settings.collection_alias_working:
+                true_collection_name = alias.collection_name
+
+        if not true_collection_name:
+            raise ValueError(f"Collection with alias {self._settings.collection_alias_working} does not exist.")
 
         filter_conditions = [
             models.FieldCondition(
@@ -250,29 +260,27 @@ class QdrantDatabase(VectorDatabase):
         """
         return self._vectorstore.client.get_collections().collections
 
-    def switch_collections(self, collection_name: str):
+    def switch_collections(self):
         """
-        Switch the alias of the current collection to the specified collection.
-
-
-        Parameters
-        ----------
-        collection_name : str
-            The name of the collection to switch to.
+        Switch the alias of the working collection to the prod collection.
         """
-        aliases = self._vectorstore.client.get_aliases().aliases
-        for alias in aliases:
-            if alias.alias_name == self._settings.collection_name:
-                if alias.collection_name == collection_name:
-                    logger.warning("Nothings needs to be done, alias already set for the collection!")
-                break
+        aliases = self._vectorstore.client.get_aliases()
+        true_collection_name = ...
+        for alias in aliases.aliases:
+            if alias.alias_name == self._settings.collection_alias_working:
+                true_collection_name = alias.collection_name
 
         self._vectorstore.client.update_collection_aliases(
             change_aliases_operations=[
-                models.DeleteAliasOperation(delete_alias=models.DeleteAlias(alias_name=self._settings.collection_name)),
+                models.DeleteAliasOperation(
+                    delete_alias=models.DeleteAlias(alias_name=self._settings.collection_alias_working)
+                ),
+                models.DeleteAliasOperation(
+                    delete_alias=models.DeleteAlias(alias_name=self._settings.collection_alias_prod)
+                ),
                 models.CreateAliasOperation(
                     create_alias=models.CreateAlias(
-                        collection_name=collection_name, alias_name=self._settings.collection_name
+                        collection_name=true_collection_name, alias_name=self._settings.collection_alias_prod
                     )
                 ),
             ]
@@ -299,6 +307,15 @@ class QdrantDatabase(VectorDatabase):
             ).config.params.sparse_vectors,
             init_from=models.InitFrom(collection=source_collection_name),
         )
+        self._vectorstore.client.update_collection_aliases(
+            change_aliases_operations=[
+                models.CreateAliasOperation(
+                    create_alias=models.CreateAlias(
+                        collection_name=target_collection_name, alias_name=self._settings.collection_alias_working
+                    )
+                ),
+            ]
+        )
 
     def duplicate_alias_tagged_collection(self):
         """
@@ -308,17 +325,16 @@ class QdrantDatabase(VectorDatabase):
         and copies all points from the latest collection to the new one.
         """
         aliases = self._vectorstore.client.get_aliases()
-        alias_of_interest = []
+        true_collection_name = ...
         for alias in aliases.aliases:
-            if alias.alias_name == self._settings.collection_name:
-                alias_of_interest.append(alias)
-        if len(alias_of_interest) == 0:
-            raise ValueError(f"Collection with alias {self._settings.collection_name} does not exist.")
-        if len(alias_of_interest) > 1:
-            raise ValueError(f"Multiple collections with alias {self._settings.collection_name} exist.")
+            if alias.alias_name == self._settings.collection_alias_working:
+                true_collection_name = alias.collection_name
 
-        source_collection_name = alias_of_interest[0].collection_name
-        target_collection_name = f"{alias_of_interest[0].alias_name}_{create_timestamp()}"
+        if not true_collection_name:
+            raise ValueError(f"Collection with alias {self._settings.collection_alias_working} does not exist.")
+
+        source_collection_name = true_collection_name.collection_name
+        target_collection_name = f"{self._settings.collection_name_prefix}_{create_timestamp()}"
 
         logger.info(f"Duplicating collection {source_collection_name} to {target_collection_name}")
         self.create_collection_from(
@@ -337,7 +353,7 @@ class QdrantDatabase(VectorDatabase):
             A list of sorted collection names.
         """
         collections = self.get_collections()
-        collection_alias_name = self._settings.collection_name
+        collection_alias_name = self._settings.collection_name_prefix
         collections_names = []
         for collection in collections:
             if collection.name.startswith(collection_alias_name):
@@ -352,7 +368,10 @@ class QdrantDatabase(VectorDatabase):
         aliases = self._vectorstore.client.get_aliases()
         alias_of_interest = []
         for alias in aliases.aliases:
-            if alias.alias_name == self._settings.collection_name:
+            if (
+                alias.alias_name == self._settings.collection_alias_working
+                or alias.alias_name == self._settings.collection_alias_prod
+            ):
                 alias_of_interest.append(alias)
         return alias_of_interest
 

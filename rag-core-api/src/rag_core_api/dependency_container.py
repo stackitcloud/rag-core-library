@@ -128,7 +128,7 @@ class DependencyContainer(DeclarativeContainer):
     vectorstore = Singleton(
         QdrantVectorStore,
         client=vectordb_client,
-        collection_name=vector_database_settings.collection_name,
+        collection_name=vector_database_settings.collection_name_prefix,
         embedding=embedder,
         sparse_embedding=sparse_embedder,
         validate_collection_config=False,
