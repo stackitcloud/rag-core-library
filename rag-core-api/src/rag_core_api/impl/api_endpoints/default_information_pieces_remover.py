@@ -6,6 +6,7 @@ import logging
 from fastapi import HTTPException, status
 
 from rag_core_api.api_endpoints.information_piece_remover import InformationPieceRemover
+from rag_core_api.impl.key_db.upload_counter_key_value_store import UploadCounterKeyValueStore
 from rag_core_api.models.delete_request import DeleteRequest
 from rag_core_api.vector_databases.vector_database import VectorDatabase
 
@@ -15,15 +16,22 @@ logger = logging.getLogger(__name__)
 class DefaultInformationPiecesRemover(InformationPieceRemover):
     """DefaultInformationPiecesRemover is responsible for removing information pieces from a vector database."""
 
-    def __init__(self, vector_database: VectorDatabase):
+    def __init__(
+        self,
+        vector_database: VectorDatabase,
+        upload_counter_key_value_store: UploadCounterKeyValueStore,
+    ):
         """Initialize the DefaultInformationPiecesRemover with a vector database.
 
         Parameters
         ----------
         vector_database : VectorDatabase
             An instance of the VectorDatabase class used for managing vector data.
+        upload_counter_key_value_store : UploadCOunterKeyValueStore
+            The key-value store for storing the remaining operations until the underlying DB is updated.
         """
         self._vector_database = vector_database
+        self._upload_counter_key_value_store = upload_counter_key_value_store
 
     def remove_information_piece(self, delete_request: DeleteRequest) -> None:
         """
@@ -60,7 +68,13 @@ class DefaultInformationPiecesRemover(InformationPieceRemover):
                 detail="No search parameters found.",
             )
         try:
+            # TODO: check if "working" collection exists. If not create it
             self._vector_database.delete(metadata)
+            self._upload_counter_key_value_store.subtract()
+            remaining, error = self._upload_counter_key_value_store.get()
+            if not error and remaining == 0:
+                # TODO: switch collection
+                pass
         except Exception as e:
             logger.error("Error while deleting from vector db: %s", e)
             raise HTTPException(

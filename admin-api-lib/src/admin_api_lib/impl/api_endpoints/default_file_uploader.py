@@ -7,6 +7,7 @@ import urllib
 import tempfile
 from contextlib import suppress
 
+from admin_api_lib.impl.key_db.upload_counter_key_value_store import UploadCounterKeyValueStore
 from fastapi import UploadFile, status
 from langchain_core.documents import Document
 from asyncio import run
@@ -40,6 +41,7 @@ class DefaultFileUploader(FileUploader):
         rag_api: RagApi,
         information_mapper: InformationPiece2Document,
         file_service: FileService,
+        upload_counter_key_value_store: UploadCounterKeyValueStore,
     ):
         """
         Initialize the DefaultFileUploader.
@@ -62,6 +64,8 @@ class DefaultFileUploader(FileUploader):
             The mapper for converting information pieces to langchain documents.
         file_service : FileService
             The service for handling file operations on the S3 storage
+        upload_counter_key_value_store : UploadCOunterKeyValueStore
+            The key-value store for storing the remaining operations until the underlying DB is updated.
         """
         self._extractor_api = extractor_api
         self._rag_api = rag_api
@@ -72,6 +76,7 @@ class DefaultFileUploader(FileUploader):
         self._document_deleter = document_deleter
         self._background_threads = []
         self._file_service = file_service
+        self._upload_counter_key_value_store = upload_counter_key_value_store
 
     async def upload_file(
         self,
@@ -141,13 +146,27 @@ class DefaultFileUploader(FileUploader):
             rag_information_pieces = [
                 self._information_mapper.document2rag_information_piece(doc) for doc in enhanced_documents
             ]
+            self._upload_counter_key_value_store.add(2)  # 2 operations. delete and upload
             # Replace old document
             # deletion is allowed to fail
             with suppress(Exception):
                 await self._document_deleter.adelete_document(source_name)
 
             self._rag_api.upload_information_piece(rag_information_pieces)
-            self._key_value_store.upsert(source_name, Status.READY)
+            remaining, error = self._upload_counter_key_value_store.get()
+            if not error and remaining == 0:
+                self._key_value_store.upsert(source_name, Status.READY)
+                for name, status in self._key_value_store.get_all():
+                    if status == Status.PROCESSED:
+                        self._key_value_store.upsert(name, Status.READY)
+            elif not error:
+                # There are still operations remaining
+                self._key_value_store.upsert(source_name, Status.PROCESSED)
+            else:
+                self._key_value_store.upsert(source_name, Status.ERROR)
+                for name, status in self._key_value_store.get_all():
+                    if status == Status.PROCESSED:
+                        self._key_value_store.upsert(name, Status.ERROR)
             logger.info("Source uploaded successfully: %s", source_name)
         except Exception as e:
             self._key_value_store.upsert(source_name, Status.ERROR)

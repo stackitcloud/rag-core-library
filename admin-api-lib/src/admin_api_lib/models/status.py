@@ -33,7 +33,7 @@ class Status(str, Enum):
     """
     allowed enum values
     """
-    UPLOADING = "UPLOADING"
+    PROCESSED = "PROCESSED"
     PROCESSING = "PROCESSING"
     READY = "READY"
     ERROR = "ERROR"

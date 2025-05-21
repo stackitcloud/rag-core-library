@@ -6,6 +6,7 @@ from fastapi import UploadFile
 
 
 class FileUploader(ABC):
+    """Abstract base class for file upload."""
 
     @abstractmethod
     async def upload_file(

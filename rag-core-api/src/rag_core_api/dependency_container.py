@@ -38,6 +38,8 @@ from rag_core_api.impl.embeddings.langchain_community_embedder import (
 from rag_core_api.impl.embeddings.stackit_embedder import StackitEmbedder
 from rag_core_api.impl.evaluator.langfuse_ragas_evaluator import LangfuseRagasEvaluator
 from rag_core_api.impl.graph.chat_graph import DefaultChatGraph
+from rag_core_api.impl.key_db.file_status_key_value_store import FileStatusKeyValueStore
+from rag_core_api.impl.key_db.upload_counter_key_value_store import UploadCounterKeyValueStore
 from rag_core_api.impl.reranking.flashrank_reranker import FlashrankReranker
 from rag_core_api.impl.retriever.composite_retriever import CompositeRetriever
 from rag_core_api.impl.retriever.retriever_quark import RetrieverQuark
@@ -46,6 +48,7 @@ from rag_core_api.impl.settings.embedder_class_type_settings import (
     EmbedderClassTypeSettings,
 )
 from rag_core_api.impl.settings.error_messages import ErrorMessages
+from rag_core_api.impl.settings.key_value_settings import KeyValueSettings
 from rag_core_api.impl.settings.ollama_embedder_settings import OllamaEmbedderSettings
 from rag_core_api.impl.settings.ragas_settings import RagasSettings
 from rag_core_api.impl.settings.reranker_settings import RerankerSettings
@@ -97,6 +100,7 @@ class DependencyContainer(DeclarativeContainer):
     stackit_embedder_settings = StackitEmbedderSettings()
     chat_history_settings = ChatHistorySettings()
     sparse_embedder_settings = SparseEmbedderSettings()
+    key_value_store_settings = KeyValueSettings()
     chat_history_config.from_dict(chat_history_settings.model_dump())
 
     class_selector_config.from_dict(rag_class_type_settings.model_dump() | embedder_class_type_settings.model_dump())
@@ -112,6 +116,8 @@ class DependencyContainer(DeclarativeContainer):
         ),
     )
 
+    key_value_store = Singleton(FileStatusKeyValueStore, key_value_store_settings)
+    upload_counter_key_value_store = Singleton(UploadCounterKeyValueStore, key_value_store_settings)
     sparse_embedder = Singleton(FastEmbedSparse, **sparse_embedder_settings.model_dump())
 
     vectordb_client = Singleton(

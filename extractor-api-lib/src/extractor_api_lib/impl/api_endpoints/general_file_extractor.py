@@ -39,6 +39,8 @@ class GeneralFileExtractor(FileExtractor):
             An instance of FileService to handle file operations.
         available_extractors : list of InformationExtractor
             A list of available information extractors to be used by the GeneralExtractor.
+        mapper : Internal2ExternalInformationPiece
+            Mapper for mapping the internal represantation to the external one.
         """
         self._file_service = file_service
         self._available_extractors = available_extractors

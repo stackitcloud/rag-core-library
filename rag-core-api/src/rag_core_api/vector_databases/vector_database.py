@@ -128,3 +128,37 @@ class VectorDatabase(ABC):
             If the method is not implemented.
         """
         raise NotImplementedError()
+
+    @abstractmethod
+    def get_sorted_collection_names(self) -> list[str]:
+        """
+        Get sorted collection names based on the timestamp in the collection name.
+        List is sorted in ascending order.
+        Returns
+        -------
+        list[str]
+            A list of sorted collection names.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def switch_collections(self) -> None:
+        """
+        Switch the alias of the current collection to the specified collection.
+        Raises
+        ------
+        NotImplementedError
+            If the method is not implemented.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def duplicate_alias_tagged_collection(self) -> None:
+        """
+        Duplicate the alias-tagged collection in the vector database.
+        Raises
+        ------
+        NotImplementedError
+            If the method is not implemented.
+        """
+        raise NotImplementedError()

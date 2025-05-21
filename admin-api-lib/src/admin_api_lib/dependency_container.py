@@ -1,6 +1,7 @@
 """Module for the DependencyContainer class."""
 
 from admin_api_lib.impl.api_endpoints.default_file_uploader import DefaultFileUploader
+from admin_api_lib.impl.key_db.upload_counter_key_value_store import UploadCounterKeyValueStore
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import (  # noqa: WOT001
     Configuration,
@@ -87,6 +88,7 @@ class DependencyContainer(DeclarativeContainer):
     summarizer_settings = SummarizerSettings()
 
     key_value_store = Singleton(FileStatusKeyValueStore, key_value_store_settings)
+    upload_counter_key_value_store = Singleton(UploadCounterKeyValueStore, key_value_store_settings)
     file_service = Singleton(S3Service, s3_settings=s3_settings)
 
     text_splitter = Singleton(RecursiveCharacterTextSplitter)(
@@ -167,6 +169,7 @@ class DependencyContainer(DeclarativeContainer):
         chunker=chunker,
         key_value_store=key_value_store,
         document_deleter=document_deleter,
+        upload_counter_key_value_store=upload_counter_key_value_store,
     )
 
     file_uploader = Singleton(
@@ -179,4 +182,5 @@ class DependencyContainer(DeclarativeContainer):
         key_value_store=key_value_store,
         document_deleter=document_deleter,
         file_service=file_service,
+        upload_counter_key_value_store=upload_counter_key_value_store,
     )

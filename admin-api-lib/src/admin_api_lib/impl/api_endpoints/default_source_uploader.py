@@ -4,6 +4,7 @@ from asyncio import run
 from threading import Thread
 from contextlib import suppress
 
+from admin_api_lib.impl.key_db.upload_counter_key_value_store import UploadCounterKeyValueStore
 from pydantic import StrictStr
 from fastapi import status
 
@@ -35,6 +36,7 @@ class DefaultSourceUploader(SourceUploader):
         document_deleter: DocumentDeleter,
         rag_api: RagApi,
         information_mapper: InformationPiece2Document,
+        upload_counter_key_value_store: UploadCounterKeyValueStore,
     ):
         """
         Initialize the DefaultSourceUploader.
@@ -55,6 +57,8 @@ class DefaultSourceUploader(SourceUploader):
             The API for RAG backend.
         information_mapper : InformationPiece2Document
             The mapper for converting information pieces to langchain documents.
+        upload_counter_key_value_store : UploadCOunterKeyValueStore
+            The key-value store for storing the remaining operations until the underlying DB is updated.
         """
         self._extractor_api = extractor_api
         self._rag_api = rag_api
@@ -64,6 +68,7 @@ class DefaultSourceUploader(SourceUploader):
         self._chunker = chunker
         self._document_deleter = document_deleter
         self._background_threads = []
+        self._upload_counter_key_value_store = upload_counter_key_value_store
 
     async def upload_source(
         self,
@@ -134,14 +139,27 @@ class DefaultSourceUploader(SourceUploader):
             rag_information_pieces = [
                 self._information_mapper.document2rag_information_piece(doc) for doc in enhanced_documents
             ]
-
+            self._upload_counter_key_value_store.add(2)  # 2 operations. delete and upload
             # Replace old document
             # deletion is allowed to fail
             with suppress(Exception):
                 await self._document_deleter.adelete_document(source_name)
 
             self._rag_api.upload_information_piece(rag_information_pieces)
-            self._key_value_store.upsert(source_name, Status.READY)
+            remaining, error = self._upload_counter_key_value_store.get()
+            if not error and remaining == 0:
+                self._key_value_store.upsert(source_name, Status.READY)
+                for name, status in self._key_value_store.get_all():
+                    if status == Status.PROCESSED:
+                        self._key_value_store.upsert(name, Status.READY)
+            elif not error:
+                # There are still operations remaining
+                self._key_value_store.upsert(source_name, Status.PROCESSED)
+            else:
+                self._key_value_store.upsert(source_name, Status.ERROR)
+                for name, status in self._key_value_store.get_all():
+                    if status == Status.PROCESSED:
+                        self._key_value_store.upsert(name, Status.ERROR)
             logger.info("Source uploaded successfully: %s", source_name)
         except Exception as e:
             self._key_value_store.upsert(source_name, Status.ERROR)
