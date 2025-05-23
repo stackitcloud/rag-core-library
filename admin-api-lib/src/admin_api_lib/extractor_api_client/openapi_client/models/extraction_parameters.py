@@ -17,18 +17,22 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
+from admin_api_lib.extractor_api_client.openapi_client.models.key_value_pair import KeyValuePair
 from typing import Optional, Set
 from typing_extensions import Self
 
 
-class KeyValuePair(BaseModel):
+class ExtractionParameters(BaseModel):
     """ """  # noqa: E501
 
-    key: Optional[Any] = None
-    value: Optional[Any] = None
-    __properties: ClassVar[List[str]] = ["key", "value"]
+    document_name: StrictStr = Field(
+        description="The name that will be used to store the confluence db in the key value db and the vectordatabase (metadata.document)."
+    )
+    kwargs: Optional[List[KeyValuePair]] = Field(default=None, description="Kwargs for the extractor")
+    source_type: StrictStr = Field(description="Extractortype")
+    __properties: ClassVar[List[str]] = ["document_name", "kwargs", "source_type"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -47,7 +51,7 @@ class KeyValuePair(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of KeyValuePair from a JSON string"""
+        """Create an instance of ExtractionParameters from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -67,26 +71,33 @@ class KeyValuePair(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # set to None if key (nullable) is None
-        # and model_fields_set contains the field
-        if self.key is None and "key" in self.model_fields_set:
-            _dict["key"] = None
-
-        # set to None if value (nullable) is None
-        # and model_fields_set contains the field
-        if self.value is None and "value" in self.model_fields_set:
-            _dict["value"] = None
-
+        # override the default output from pydantic by calling `to_dict()` of each item in kwargs (list)
+        _items = []
+        if self.kwargs:
+            for _item_kwargs in self.kwargs:
+                if _item_kwargs:
+                    _items.append(_item_kwargs.to_dict())
+            _dict["kwargs"] = _items
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of KeyValuePair from a dict"""
+        """Create an instance of ExtractionParameters from a dict"""
         if obj is None:
             return None
 
         if not isinstance(obj, dict):
             return cls.model_validate(obj)
 
-        _obj = cls.model_validate({"key": obj.get("key"), "value": obj.get("value")})
+        _obj = cls.model_validate(
+            {
+                "document_name": obj.get("document_name"),
+                "kwargs": (
+                    [KeyValuePair.from_dict(_item) for _item in obj["kwargs"]]
+                    if obj.get("kwargs") is not None
+                    else None
+                ),
+                "source_type": obj.get("source_type"),
+            }
+        )
         return _obj

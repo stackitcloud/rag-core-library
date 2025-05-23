@@ -18,8 +18,9 @@ import re  # noqa: F401
 import json
 
 
-from pydantic import BaseModel, ConfigDict, StrictStr
-from typing import Any, ClassVar, Dict, List
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
+from extractor_api_lib.models.key_value_pair import KeyValuePair
 
 try:
     from typing import Self
@@ -27,12 +28,15 @@ except ImportError:
     from typing_extensions import Self
 
 
-class ExtractionRequest(BaseModel):
+class ExtractionParameters(BaseModel):
     """ """  # noqa: E501
 
-    path_on_s3: StrictStr
-    document_name: StrictStr
-    __properties: ClassVar[List[str]] = ["path_on_s3", "document_name"]
+    document_name: StrictStr = Field(
+        description="The name that will be used to store the confluence db in the key value db and the vectordatabase (metadata.document)."
+    )
+    kwargs: Optional[List[KeyValuePair]] = Field(default=None, description="Kwargs for the extractor")
+    source_type: StrictStr = Field(description="Extractortype")
+    __properties: ClassVar[List[str]] = ["document_name", "kwargs", "source_type"]
 
     model_config = {
         "populate_by_name": True,
@@ -51,7 +55,7 @@ class ExtractionRequest(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of ExtractionRequest from a JSON string"""
+        """Create an instance of ExtractionParameters from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -69,16 +73,33 @@ class ExtractionRequest(BaseModel):
             exclude={},
             exclude_none=True,
         )
+        # override the default output from pydantic by calling `to_dict()` of each item in kwargs (list)
+        _items = []
+        if self.kwargs:
+            for _item in self.kwargs:
+                if _item:
+                    _items.append(_item.to_dict())
+            _dict["kwargs"] = _items
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Dict) -> Self:
-        """Create an instance of ExtractionRequest from a dict"""
+        """Create an instance of ExtractionParameters from a dict"""
         if obj is None:
             return None
 
         if not isinstance(obj, dict):
             return cls.model_validate(obj)
 
-        _obj = cls.model_validate({"path_on_s3": obj.get("path_on_s3"), "document_name": obj.get("document_name")})
+        _obj = cls.model_validate(
+            {
+                "document_name": obj.get("document_name"),
+                "kwargs": (
+                    [KeyValuePair.from_dict(_item) for _item in obj.get("kwargs")]
+                    if obj.get("kwargs") is not None
+                    else None
+                ),
+                "source_type": obj.get("source_type"),
+            }
+        )
         return _obj
