@@ -1,3 +1,5 @@
+"""Module for the Extractor API."""
+
 # coding: utf-8
 
 from typing import Dict, List  # noqa: F401
@@ -48,6 +50,19 @@ for _, name, _ in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
 async def extract_from_file_post(
     extraction_request: ExtractionRequest = Body(None, description=""),
 ) -> List[InformationPiece]:
+    """
+    Extract information from a file based on the provided extraction request.
+
+    Parameters
+    ----------
+    extraction_request : ExtractionRequest
+        The request object containing details about the extraction process.
+
+    Returns
+    -------
+    List[InformationPiece]
+        A list of extracted information pieces.
+    """
     if not BaseExtractorApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
     return await BaseExtractorApi.subclasses[0]().extract_from_file_post(extraction_request)
@@ -67,6 +82,24 @@ async def extract_from_file_post(
 async def extract_from_source(
     extraction_parameters: ExtractionParameters = Body(None, description=""),
 ) -> List[InformationPiece]:
+    """
+    Extract information from a source based on the provided extraction parameters.
+
+    Parameters
+    ----------
+    extraction_parameters : ExtractionParameters, optional
+        The request object containing details about the extraction process.
+
+    Returns
+    -------
+    List[InformationPiece]
+        A list of extracted information pieces.
+
+    Raises
+    ------
+    HTTPException
+        If the extraction process fails or encounters an error.
+    """
     if not BaseExtractorApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
     return await BaseExtractorApi.subclasses[0]().extract_from_source(extraction_parameters)

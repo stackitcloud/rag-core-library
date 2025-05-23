@@ -98,7 +98,7 @@ class DefaultSourceUploader(SourceUploader):
                 source_name, Status.PROCESSING
             )  # TODO: change to pipeline with timeout to error status
             thread = Thread(
-                target=lambda: run(self._handle_source_upload(source_name, base_url, source_type, name, kwargs))
+                target=lambda: run(self._handle_source_upload(source_name, source_type, kwargs))
             )
             thread.start()
             self._background_threads.append(thread)
@@ -113,9 +113,7 @@ class DefaultSourceUploader(SourceUploader):
     async def _handle_source_upload(
         self,
         source_name: str,
-        base_url: str,
         source_type: StrictStr,
-        name: str,
         kwargs: list[KeyValuePair],
     ):
         try:
@@ -135,8 +133,7 @@ class DefaultSourceUploader(SourceUploader):
                 self._information_mapper.document2rag_information_piece(doc) for doc in enhanced_documents
             ]
 
-            # Replace old document
-            # deletion is allowed to fail
+            # Replace old document, deletion is allowed to fail
             with suppress(Exception):
                 await self._document_deleter.adelete_document(source_name)
 

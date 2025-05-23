@@ -1,3 +1,5 @@
+"""Module for the Admin API."""
+
 # coding: utf-8
 
 from typing import Dict, List  # noqa: F401

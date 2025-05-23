@@ -96,6 +96,26 @@ class AdminApi(BaseAdminApi):
         request: Request,
         source_uploader: SourceUploader = Depends(Provide[DependencyContainer.source_uploader]),
     ) -> None:
+        """
+        Asynchronously uploads user-selected source documents.
+
+        Parameters
+        ----------
+        source_type : StrictStr
+            The type of the source document to be uploaded.
+        name : StrictStr
+            The name of the source document to be uploaded.
+        kwargs : list[KeyValuePair]
+           Additional parameters required for the extractor.
+        request : Request
+            The HTTP request object containing metadata about the upload request.
+        source_uploader : SourceUploader
+            An instance of SourceUploader to handle the upload process.
+
+        Returns
+        -------
+        None
+        """
         await source_uploader.upload_source(str(request.base_url), source_type, name, kwargs)
 
     @inject
@@ -105,6 +125,22 @@ class AdminApi(BaseAdminApi):
         request: Request,
         file_uploader: FileUploader = Depends(Provide[DependencyContainer.file_uploader]),
     ) -> None:
+        """
+        Asynchronously uploads a file to the server.
+
+        Parameters
+        ----------
+        file : UploadFile
+            The file object to be uploaded.
+        request : Request
+            The HTTP request object containing metadata about the upload request.
+        file_uploader : FileUploader, optional
+            An instance of FileUploader to handle the upload process.
+
+        Returns
+        -------
+        None
+        """
         await file_uploader.upload_file(str(request.base_url), file)
 
     @inject

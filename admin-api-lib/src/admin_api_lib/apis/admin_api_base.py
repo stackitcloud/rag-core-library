@@ -1,4 +1,7 @@
+"""Module for the base AdminApi interface."""
+
 # coding: utf-8
+# flake8: noqa: D105
 
 from typing import ClassVar, Dict, List, Tuple  # noqa: F401
 from typing_extensions import Annotated
@@ -11,6 +14,15 @@ from admin_api_lib.models.key_value_pair import KeyValuePair
 
 
 class BaseAdminApi:
+    """
+    The base AdminApi interface.
+
+    Attributes
+    ----------
+    subclasses : ClassVar[Tuple]
+        A tuple that holds all subclasses of BaseAdminApi.
+    """
+
     subclasses: ClassVar[Tuple] = ()
 
     def __init_subclass__(cls, **kwargs):
@@ -71,12 +83,30 @@ class BaseAdminApi:
         key_value_pair: List[KeyValuePair],
         request: Request,
     ) -> None:
-        """Uploads user selected source."""
+        """
+        Asynchronously uploads user selected source.
+
+        Returns
+        -------
+        None
+        """
 
     async def upload_file(
         self,
         file: UploadFile,
         request: Request,
     ) -> None:
-        """Uploads user selected file."""
-        ...
+        """
+        Asynchronously uploads user-selected documents.
+
+        Parameters
+        ----------
+        file : UploadFile
+            The file object containing the source documents to be uploaded.
+        request : Request
+            The request object containing metadata about the upload request.
+
+        Returns
+        -------
+        None
+        """
