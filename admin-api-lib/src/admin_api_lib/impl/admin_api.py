@@ -96,7 +96,7 @@ class AdminApi(BaseAdminApi):
         request: Request,
         source_uploader: SourceUploader = Depends(Provide[DependencyContainer.source_uploader]),
     ) -> None:
-        await source_uploader.upload_source(str(request.base_url), type, name, kwargs)
+        await source_uploader.upload_source(str(request.base_url), source_type, name, kwargs)
 
     @inject
     async def upload_file(

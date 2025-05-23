@@ -51,8 +51,8 @@ class GeneralSourceExtractor(SourceExtractor):
         list[InformationPiece]
             A list of extracted information pieces.
         """
-        correct_extractors = [x for x in self._available_extractors if extraction_parameters.type == x.extractor_type]
+        correct_extractors = [x for x in self._available_extractors if extraction_parameters.source_type == x.extractor_type]
         if not correct_extractors:
-            raise ValueError(f"No extractor found for type {type}")
+            raise ValueError(f"No extractor found for type {extraction_parameters.source_type}")
         results = await correct_extractors[-1].aextract_content(extraction_parameters)
         return [self._mapper.map_internal_to_external(x) for x in results if x.page_content is not None]

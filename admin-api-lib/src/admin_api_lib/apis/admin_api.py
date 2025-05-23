@@ -173,4 +173,4 @@ async def upload_source(
     """Uploads user selected sources."""
     if not BaseAdminApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAdminApi.subclasses[0]().upload_source(type, name, key_value_pair, request)
+    return await BaseAdminApi.subclasses[0]().upload_source(source_type, name, key_value_pair, request)

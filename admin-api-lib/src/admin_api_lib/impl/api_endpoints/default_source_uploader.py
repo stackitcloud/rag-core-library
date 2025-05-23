@@ -120,7 +120,7 @@ class DefaultSourceUploader(SourceUploader):
     ):
         try:
             information_pieces = self._extractor_api.extract_from_source(
-                ExtractionParameters(type=source_type, document_name=source_name, kwargs=[x.to_dict() for x in kwargs])
+                ExtractionParameters(source_type=source_type, document_name=source_name, kwargs=[x.to_dict() for x in kwargs])
             )
 
             if not information_pieces:
