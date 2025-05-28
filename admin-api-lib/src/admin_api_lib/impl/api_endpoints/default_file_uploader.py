@@ -98,7 +98,7 @@ class DefaultFileUploader(FileUploader):
             content = await file.read()
             file.filename = sanitize_document_name(file.filename)
             source_name = f"file:{sanitize_document_name(file.filename)}"
-            # TODO: check if document already in processing state
+            self._check_if_already_in_processing(source_name)
             self._key_value_store.upsert(
                 source_name, Status.PROCESSING
             )  # TODO: change to pipeline with timeout to error status
@@ -115,6 +115,28 @@ class DefaultFileUploader(FileUploader):
             self._key_value_store.upsert(source_name, Status.ERROR)
             logger.error("Error while uploading %s = %s", source_name, str(e))
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+    def _check_if_already_in_processing(self, source_name: str) -> None:
+        """
+        Checks if the source is already in processing state.
+
+        Parameters
+        ----------
+        source_name : str
+            The name of the source.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        ValueError
+            If the source is already in processing state.
+        """
+        existing = [s for name, s in self._key_value_store.get_all() if name == source_name]
+        if any(s == Status.PROCESSING for s in existing):
+            raise ValueError(f"Document {source_name} is already in processing state")
 
     async def _handle_source_upload(
         self,
