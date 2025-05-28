@@ -1,3 +1,4 @@
+import asyncio
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from fastapi import HTTPException
@@ -88,20 +89,6 @@ async def test_upload_source_already_processing_raises_error(mocks):
         await uploader.upload_source("http://base", source_type, name, [])
     key_value_store.upsert.assert_any_call(source_name, Status.ERROR)
 
-
-@pytest.mark.asyncio
-async def test_upload_source_not_processing_starts_thread(mocks, monkeypatch):
-    extractor_api, key_value_store, information_enhancer, chunker, document_deleter, rag_api, information_mapper = mocks
-    key_value_store.get_all.return_value = []
-    dummy_thread = MagicMock()
-    monkeypatch.setattr('admin_api_lib.impl.api_endpoints.default_source_uploader.Thread', lambda *args, **kwargs: dummy_thread)
-    uploader = DefaultSourceUploader(
-        extractor_api, key_value_store, information_enhancer, chunker, document_deleter, rag_api, information_mapper
-    )
-    await uploader.upload_source("http://base", "typeY", "nameY", [])
-    key_value_store.upsert.assert_any_call(f"typeY:{sanitize_document_name('nameY')}", Status.PROCESSING)
-    dummy_thread.start.assert_called_once()
-
 @pytest.mark.asyncio
 async def test_upload_source_no_timeout(mocks, monkeypatch):
     extractor_api, key_value_store, information_enhancer, chunker, document_deleter, rag_api, information_mapper = mocks
@@ -109,21 +96,19 @@ async def test_upload_source_no_timeout(mocks, monkeypatch):
     source_type = "typeZ"
     name = "quick"
     source_name = f"{source_type}:{sanitize_document_name(name)}"
-    # dummy thread that finishes before timeout
+    # patch Thread so no actual background work is done
     dummy_thread = MagicMock()
-    dummy_thread.is_alive.return_value = False
-    monkeypatch.setattr(
-        'admin_api_lib.impl.api_endpoints.default_source_uploader.Thread',
-        lambda *args, **kwargs: dummy_thread
-    )
+    monkeypatch.setattr(default_source_uploader, 'Thread', lambda *args, **kwargs: dummy_thread)
     uploader = DefaultSourceUploader(
         extractor_api, key_value_store, information_enhancer, chunker, document_deleter, rag_api, information_mapper
     )
     # should not raise
-    await uploader.upload_source("http://base", source_type, name, [])
+    await uploader.upload_source("http://base", source_type, name, [], timeout=1.0)
     # only PROCESSING status upserted, no ERROR
-    key_value_store.upsert.assert_any_call(source_name, Status.PROCESSING)
+    assert any(call.args[1] == Status.PROCESSING for call in key_value_store.upsert.call_args_list)
     assert not any(call.args[1] == Status.ERROR for call in key_value_store.upsert.call_args_list)
+    dummy_thread.start.assert_called_once()
+
 
 @pytest.mark.asyncio
 async def test_upload_source_timeout_error(mocks, monkeypatch):
@@ -132,14 +117,31 @@ async def test_upload_source_timeout_error(mocks, monkeypatch):
     source_type = "typeTimeout"
     name = "slow"
     source_name = f"{source_type}:{sanitize_document_name(name)}"
-    # simulate slow thread sleeping 2s; patch timeout to 1s
-    def slow_thread_factory(*args, **kwargs):
-        return threading.Thread(target=lambda: time.sleep(2), daemon=True)
-    monkeypatch.setattr(default_source_uploader, 'Thread', slow_thread_factory)
+    # monkey-patch the handler to sleep so that timeout triggers
+    async def fake_handle(self, source_name_arg, source_type_arg, kwargs_arg):
+        await asyncio.sleep(3600)
+    # patch handler and Thread to trigger timeout synchronously
+    monkeypatch.setattr(
+        default_source_uploader.DefaultSourceUploader,
+        '_handle_source_upload',
+        fake_handle
+    )
+    def FakeThread(target, args=(), **kwargs):
+        # this ensures serial execution, so that the error status can be checked
+        class T:
+            def start(self_inner):
+                target(*args)
+            def is_alive(self_inner):
+                return False
+        return T()
+    monkeypatch.setattr(default_source_uploader, 'Thread', FakeThread)
     uploader = DefaultSourceUploader(
         extractor_api, key_value_store, information_enhancer, chunker, document_deleter, rag_api, information_mapper
     )
-    with pytest.raises(HTTPException) as exc:
-        await uploader.upload_source("http://base", source_type, name, [], timeout=1.0)
-    assert "timed out" in exc.value.detail
-    key_value_store.upsert.assert_any_call(source_name, Status.ERROR)
+    # no exception should be raised; timeout path sets ERROR status
+
+    await uploader.upload_source("http://base", source_type, name, [], timeout=1.0)
+    # first call marks PROCESSING, second marks ERROR
+    calls = [call.args for call in key_value_store.upsert.call_args_list]
+    assert (source_name, Status.PROCESSING) in calls
+    assert (source_name, Status.ERROR) in calls
