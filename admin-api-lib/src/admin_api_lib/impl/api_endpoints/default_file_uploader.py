@@ -1,13 +1,14 @@
-from http.client import HTTPException
+import asyncio
 import logging
 from pathlib import Path
 import traceback
 from threading import Thread
+from typing import Optional
 import urllib
 import tempfile
 from contextlib import suppress
 
-from fastapi import UploadFile, status
+from fastapi import UploadFile, status, HTTPException
 from langchain_core.documents import Document
 from asyncio import run
 
@@ -77,6 +78,7 @@ class DefaultFileUploader(FileUploader):
         self,
         base_url: str,
         file: UploadFile,
+        timeout: Optional[float] = 3600.0,
     ) -> None:
         """
         Uploads a source file for content extraction.
@@ -99,13 +101,9 @@ class DefaultFileUploader(FileUploader):
             file.filename = sanitize_document_name(file.filename)
             source_name = f"file:{sanitize_document_name(file.filename)}"
             self._check_if_already_in_processing(source_name)
-            self._key_value_store.upsert(
-                source_name, Status.PROCESSING
-            )  # TODO: change to pipeline with timeout to error status
+            self._key_value_store.upsert(source_name, Status.PROCESSING)
             s3_path = await self._asave_new_document(content, file.filename, source_name)
-            thread = Thread(
-                target=lambda: run(self._handle_source_upload(s3_path, source_name, file.filename, base_url))
-            )
+            thread = Thread(target=self._thread_worker, args=(s3_path, source_name, file.filename, base_url, timeout))
             thread.start()
             self._background_threads.append(thread)
         except ValueError as e:
@@ -138,6 +136,25 @@ class DefaultFileUploader(FileUploader):
         if any(s == Status.PROCESSING for s in existing):
             raise ValueError(f"Document {source_name} is already in processing state")
 
+    def _thread_worker(self,s3_path, source_name, filename, base_url, timeout):
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(
+                asyncio.wait_for(
+                    self._handle_source_upload(s3_path, source_name, filename, base_url),
+                    timeout=timeout
+                )
+            )
+        except asyncio.TimeoutError:
+            logger.error("Upload of %s timed out after %s seconds", source_name, timeout)
+            self._key_value_store.upsert(source_name, Status.ERROR)
+        except Exception as e:
+            logger.exception("Error while uploading %s", source_name)
+            self._key_value_store.upsert(source_name, Status.ERROR)
+        finally:
+            loop.close()
+
     async def _handle_source_upload(
         self,
         s3_path: Path,
@@ -153,6 +170,7 @@ class DefaultFileUploader(FileUploader):
             if not information_pieces:
                 self._key_value_store.upsert(source_name, Status.ERROR)
                 logger.error("No information pieces found in the document: %s", source_name)
+                raise Exception("No information pieces found")
             documents = [self._information_mapper.extractor_information_piece2document(x) for x in information_pieces]
 
             chunked_documents = self._chunker.chunk(documents)

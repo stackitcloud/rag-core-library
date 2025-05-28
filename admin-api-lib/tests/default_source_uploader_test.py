@@ -86,7 +86,8 @@ async def test_upload_source_already_processing_raises_error(mocks):
         extractor_api, key_value_store, information_enhancer, chunker, document_deleter, rag_api, information_mapper
     )
     with pytest.raises(HTTPException):
-        await uploader.upload_source("http://base", source_type, name, [])
+        # use default timeout
+        await uploader.upload_source(source_type, name, [])
     key_value_store.upsert.assert_any_call(source_name, Status.ERROR)
 
 @pytest.mark.asyncio
@@ -103,7 +104,7 @@ async def test_upload_source_no_timeout(mocks, monkeypatch):
         extractor_api, key_value_store, information_enhancer, chunker, document_deleter, rag_api, information_mapper
     )
     # should not raise
-    await uploader.upload_source("http://base", source_type, name, [], timeout=1.0)
+    await uploader.upload_source(source_type, name, [], timeout=1.0)
     # only PROCESSING status upserted, no ERROR
     assert any(call.args[1] == Status.PROCESSING for call in key_value_store.upsert.call_args_list)
     assert not any(call.args[1] == Status.ERROR for call in key_value_store.upsert.call_args_list)
@@ -140,7 +141,7 @@ async def test_upload_source_timeout_error(mocks, monkeypatch):
     )
     # no exception should be raised; timeout path sets ERROR status
 
-    await uploader.upload_source("http://base", source_type, name, [], timeout=1.0)
+    await uploader.upload_source(source_type, name, [], timeout=1.0)
     # first call marks PROCESSING, second marks ERROR
     calls = [call.args for call in key_value_store.upsert.call_args_list]
     assert (source_name, Status.PROCESSING) in calls

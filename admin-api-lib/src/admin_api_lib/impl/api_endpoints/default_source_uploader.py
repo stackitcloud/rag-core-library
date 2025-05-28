@@ -70,12 +70,30 @@ class DefaultSourceUploader(SourceUploader):
 
     async def upload_source(
         self,
-        base_url: str,
         source_type: StrictStr,
         name: StrictStr,
         kwargs: list[KeyValuePair],
         timeout: float = 3600.0,
     ) -> None:
+        """
+        Uploads the parameters for source content extraction.
+
+        Parameters
+        ----------
+        source_type : str
+            The type of the source. Is used by the extractor service to determine the correct extraction method.
+        name : str
+            Display name of the source.
+        kwargs : list[KeyValuePair]
+            List of KeyValuePair with parameters used for the extraction.
+        timeout : float, optional
+            Timeout for the operation, by default 3600.0 seconds (1 hour).
+
+        Returns
+        -------
+        None
+        """
+
         self._background_threads = [t for t in self._background_threads if t.is_alive()]
 
         source_name = f"{source_type}:{sanitize_document_name(name)}"
@@ -158,7 +176,7 @@ class DefaultSourceUploader(SourceUploader):
             if not information_pieces:
                 self._key_value_store.upsert(source_name, Status.ERROR)
                 logger.error("No information pieces found in the document: %s", source_name)
-                return
+                raise Exception("No information pieces found")
             documents: list[Document] = []
             for piece in information_pieces:
                 documents.append(self._information_mapper.extractor_information_piece2document(piece))

@@ -81,10 +81,18 @@ class BaseAdminApi:
         source_type: StrictStr,
         name: StrictStr,
         key_value_pair: List[KeyValuePair],
-        request: Request,
     ) -> None:
         """
         Asynchronously uploads user selected source.
+
+        Parameters
+        ----------
+        source_type : str
+            The type of the source. Is used by the extractor service to determine the correct extractor to use.
+        name : str
+            Display name of the source.
+        key_value_pair : list[KeyValuePair]
+            List of KeyValuePair with parameters used for the extraction.
 
         Returns
         -------

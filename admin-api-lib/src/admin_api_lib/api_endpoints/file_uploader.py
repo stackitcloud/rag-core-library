@@ -1,6 +1,7 @@
 """Module for the upload file endpoint."""
 
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from fastapi import UploadFile
 
@@ -12,6 +13,7 @@ class FileUploader(ABC):
         self,
         base_url: str,
         file: UploadFile,
+        timeout: Optional[float],
     ) -> None:
         """
         Uploads a source file for content extraction.
@@ -22,6 +24,8 @@ class FileUploader(ABC):
             The base url of the service. Is used to determine the download link of the file.
         file : UploadFile
             The file to process.
+        timeout : float, optional
+          Timeout for the operation.
 
         Returns
         -------

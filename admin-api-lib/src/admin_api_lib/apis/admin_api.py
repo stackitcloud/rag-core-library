@@ -148,7 +148,16 @@ async def upload_file(
     file: UploadFile,
     request: Request,
 ) -> None:
-    """Uploads user selected sources."""
+    """
+    Uploads user selected sources.
+
+    Parameters
+    ----------
+    file : UploadFile
+        The file to be uploaded.
+    request : Request
+        The HTTP request object containing metadata about the upload request.
+    """
     if not BaseAdminApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
     return await BaseAdminApi.subclasses[0]().upload_file(file, request)
@@ -167,12 +176,22 @@ async def upload_file(
     response_model_by_alias=True,
 )
 async def upload_source(
-    request: Request,
     source_type: StrictStr = Query(None, description="", alias="type"),
     name: StrictStr = Query(None, description="", alias="name"),
     key_value_pair: List[KeyValuePair] = Body(None, description=""),
 ) -> None:
-    """Uploads user selected sources."""
+    """
+    Uploads user selected sources.
+
+    Parameters
+    ----------
+    source_type : str
+        The type of the source. Is used by the extractor service to determine the correct extractor to use.
+    name : str
+        Display name of the source.
+    key_value_pair : List[KeyValuePair]
+        List of KeyValuePair with parameters used for the extraction.
+    """
     if not BaseAdminApi.subclasses:
         raise HTTPException(status_code=500, detail="Not implemented")
-    return await BaseAdminApi.subclasses[0]().upload_source(source_type, name, key_value_pair, request)
+    return await BaseAdminApi.subclasses[0]().upload_source(source_type, name, key_value_pair)
