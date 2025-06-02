@@ -49,6 +49,7 @@ from admin_api_lib.impl.settings.document_extractor_settings import (
 from admin_api_lib.impl.settings.key_value_settings import KeyValueSettings
 from admin_api_lib.impl.settings.rag_api_settings import RAGAPISettings
 from admin_api_lib.impl.settings.s3_settings import S3Settings
+from admin_api_lib.impl.settings.source_uploader_settings import SourceUploaderSettings
 from admin_api_lib.impl.settings.summarizer_settings import SummarizerSettings
 from admin_api_lib.impl.summarizer.langchain_summarizer import LangchainSummarizer
 from admin_api_lib.prompt_templates.summarize_prompt import SUMMARIZE_PROMPT
@@ -85,6 +86,7 @@ class DependencyContainer(DeclarativeContainer):
     rag_api_settings = RAGAPISettings()
     key_value_store_settings = KeyValueSettings()
     summarizer_settings = SummarizerSettings()
+    source_uploader_settings = SourceUploaderSettings()
 
     key_value_store = Singleton(FileStatusKeyValueStore, key_value_store_settings)
     file_service = Singleton(S3Service, s3_settings=s3_settings)
@@ -167,6 +169,7 @@ class DependencyContainer(DeclarativeContainer):
         chunker=chunker,
         key_value_store=key_value_store,
         document_deleter=document_deleter,
+        settings=source_uploader_settings,
     )
 
     file_uploader = Singleton(
