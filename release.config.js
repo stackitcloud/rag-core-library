@@ -1,8 +1,12 @@
 const config = {
     branches: ['main'],
     plugins: [
-      '@semantic-release/commit-analyzer',
-      '@semantic-release/release-notes-generator',
+      ['@semantic-release/commit-analyzer', {
+        preset: 'conventionalcommits'
+      }],
+      ['@semantic-release/release-notes-generator', {
+        preset: 'conventionalcommits'
+      }],
       '@semantic-release/git',
       '@semantic-release/github'
     ]
