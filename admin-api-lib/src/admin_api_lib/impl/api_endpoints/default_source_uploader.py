@@ -9,6 +9,7 @@ from langchain_core.documents import Document
 
 from admin_api_lib.extractor_api_client.openapi_client.api.extractor_api import ExtractorApi
 from admin_api_lib.extractor_api_client.openapi_client.models.extraction_parameters import ExtractionParameters
+from admin_api_lib.impl.settings.source_uploader_settings import SourceUploaderSettings
 from admin_api_lib.models.key_value_pair import KeyValuePair
 from admin_api_lib.rag_backend_client.openapi_client.api.rag_api import RagApi
 from admin_api_lib.impl.mapper.informationpiece2document import InformationPiece2Document
@@ -37,6 +38,7 @@ class DefaultSourceUploader(SourceUploader):
         document_deleter: DocumentDeleter,
         rag_api: RagApi,
         information_mapper: InformationPiece2Document,
+        settings: SourceUploaderSettings,
     ):
         """
         Initialize the DefaultSourceUploader.
@@ -67,13 +69,13 @@ class DefaultSourceUploader(SourceUploader):
         self._chunker = chunker
         self._document_deleter = document_deleter
         self._background_threads = []
+        self._settings = settings
 
     async def upload_source(
         self,
         source_type: StrictStr,
         name: StrictStr,
         kwargs: list[KeyValuePair],
-        timeout: float = 3600.0,
     ) -> None:
         """
         Uploads the parameters for source content extraction.
@@ -101,7 +103,7 @@ class DefaultSourceUploader(SourceUploader):
             self._check_if_already_in_processing(source_name)
             self._key_value_store.upsert(source_name, Status.PROCESSING)
 
-            thread = Thread(target=self._thread_worker, args=(source_name, source_type, kwargs, timeout))
+            thread = Thread(target=self._thread_worker, args=(source_name, source_type, kwargs, self._settings.timeout))
             thread.start()
             self._background_threads.append(thread)
         except ValueError as e:
