@@ -2,7 +2,6 @@ import logging
 from pathlib import Path
 import traceback
 from threading import Thread
-from typing import Optional
 import urllib
 import tempfile
 from contextlib import suppress
