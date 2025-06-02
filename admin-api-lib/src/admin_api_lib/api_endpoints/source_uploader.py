@@ -1,15 +1,16 @@
 """Module for the upload source endpoint."""
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Optional
 
 from pydantic import StrictStr
 
+from admin_api_lib.api_endpoints.uploader_base import UploaderBase
 from admin_api_lib.models.key_value_pair import KeyValuePair
 
 
-class SourceUploader(ABC):
-    """Abstract base class for source upload."""
+class SourceUploader(UploaderBase):
+    """Abstract base class for source uploader API endpoints."""
 
     @abstractmethod
     async def upload_source(

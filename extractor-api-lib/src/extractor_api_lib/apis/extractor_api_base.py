@@ -29,7 +29,7 @@ class BaseExtractorApi:
         self,
         extraction_request: ExtractionRequest,
     ) -> List[InformationPiece]:
-         """
+        """
         Extract information from a file based on the provided extraction request.
 
         Parameters

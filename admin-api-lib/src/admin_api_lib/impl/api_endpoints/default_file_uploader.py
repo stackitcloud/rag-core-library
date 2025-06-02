@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from pathlib import Path
 import traceback
@@ -64,6 +63,7 @@ class DefaultFileUploader(FileUploader):
         file_service : FileService
             The service for handling file operations on the S3 storage
         """
+        super().__init__()
         self._extractor_api = extractor_api
         self._rag_api = rag_api
         self._key_value_store = key_value_store
@@ -94,16 +94,18 @@ class DefaultFileUploader(FileUploader):
         -------
         None
         """
-        self._background_threads = [t for t in self._background_threads if t.is_alive()]
+        self._prune_background_threads()
 
         try:
-            content = await file.read()
             file.filename = sanitize_document_name(file.filename)
             source_name = f"file:{sanitize_document_name(file.filename)}"
             self._check_if_already_in_processing(source_name)
             self._key_value_store.upsert(source_name, Status.PROCESSING)
+            content = await file.read()
             s3_path = await self._asave_new_document(content, file.filename, source_name)
-            thread = Thread(target=self._thread_worker, args=(s3_path, source_name, file.filename, base_url, timeout))
+            thread = Thread(
+                target=lambda: run(self._handle_source_upload(s3_path, source_name, file.filename, base_url))
+            ) #TODO: add timeout. same logic like in default_source_uploader leaded to strange behavior
             thread.start()
             self._background_threads.append(thread)
         except ValueError as e:
@@ -136,25 +138,6 @@ class DefaultFileUploader(FileUploader):
         if any(s == Status.PROCESSING for s in existing):
             raise ValueError(f"Document {source_name} is already in processing state")
 
-    def _thread_worker(self,s3_path, source_name, filename, base_url, timeout):
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            loop.run_until_complete(
-                asyncio.wait_for(
-                    self._handle_source_upload(s3_path, source_name, filename, base_url),
-                    timeout=timeout
-                )
-            )
-        except asyncio.TimeoutError:
-            logger.error("Upload of %s timed out after %s seconds", source_name, timeout)
-            self._key_value_store.upsert(source_name, Status.ERROR)
-        except Exception as e:
-            logger.exception("Error while uploading %s", source_name)
-            self._key_value_store.upsert(source_name, Status.ERROR)
-        finally:
-            loop.close()
-
     async def _handle_source_upload(
         self,
         s3_path: Path,
@@ -171,7 +154,9 @@ class DefaultFileUploader(FileUploader):
                 self._key_value_store.upsert(source_name, Status.ERROR)
                 logger.error("No information pieces found in the document: %s", source_name)
                 raise Exception("No information pieces found")
-            documents = [self._information_mapper.extractor_information_piece2document(x) for x in information_pieces]
+            documents: list[Document] = []
+            for piece in information_pieces:
+                documents.append(self._information_mapper.extractor_information_piece2document(piece))
 
             chunked_documents = self._chunker.chunk(documents)
 
@@ -184,7 +169,7 @@ class DefaultFileUploader(FileUploader):
             # Replace old document
             # deletion is allowed to fail
             with suppress(Exception):
-                await self._document_deleter.adelete_document(source_name)
+                await self._document_deleter.adelete_document(source_name, remove_from_key_value_store=False)
 
             self._rag_api.upload_information_piece(rag_information_pieces)
             self._key_value_store.upsert(source_name, Status.READY)

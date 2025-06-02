@@ -1,12 +1,14 @@
 """Module for the upload file endpoint."""
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Optional
 
 from fastapi import UploadFile
 
+from admin_api_lib.api_endpoints.uploader_base import UploaderBase
 
-class FileUploader(ABC):
+
+class FileUploader(UploaderBase):
 
     @abstractmethod
     async def upload_file(

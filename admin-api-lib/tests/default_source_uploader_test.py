@@ -1,13 +1,15 @@
+# ignore:
+
 import asyncio
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from fastapi import HTTPException
-import threading, time
 
 from admin_api_lib.impl.api_endpoints.default_source_uploader import DefaultSourceUploader
 from admin_api_lib.models.status import Status
 from admin_api_lib.utils.utils import sanitize_document_name
 from admin_api_lib.impl.api_endpoints import default_source_uploader
+
 
 @pytest.fixture
 def mocks():
@@ -51,7 +53,7 @@ async def test_handle_source_upload_success(mocks):
 
     key_value_store.upsert.assert_any_call("source1", Status.READY)
     rag_api.upload_information_piece.assert_called_once_with([dummy_rag_piece])
-    document_deleter.adelete_document.assert_awaited_once_with("source1")
+    document_deleter.adelete_document.assert_awaited_once_with("source1", remove_from_key_value_store=False)
 
 
 @pytest.mark.asyncio
@@ -90,16 +92,16 @@ async def test_upload_source_already_processing_raises_error(mocks):
         await uploader.upload_source(source_type, name, [])
     key_value_store.upsert.assert_any_call(source_name, Status.ERROR)
 
+
 @pytest.mark.asyncio
 async def test_upload_source_no_timeout(mocks, monkeypatch):
     extractor_api, key_value_store, information_enhancer, chunker, document_deleter, rag_api, information_mapper = mocks
     key_value_store.get_all.return_value = []
     source_type = "typeZ"
     name = "quick"
-    source_name = f"{source_type}:{sanitize_document_name(name)}"
     # patch Thread so no actual background work is done
     dummy_thread = MagicMock()
-    monkeypatch.setattr(default_source_uploader, 'Thread', lambda *args, **kwargs: dummy_thread)
+    monkeypatch.setattr(default_source_uploader, "Thread", lambda *args, **kwargs: dummy_thread)
     uploader = DefaultSourceUploader(
         extractor_api, key_value_store, information_enhancer, chunker, document_deleter, rag_api, information_mapper
     )
@@ -118,24 +120,26 @@ async def test_upload_source_timeout_error(mocks, monkeypatch):
     source_type = "typeTimeout"
     name = "slow"
     source_name = f"{source_type}:{sanitize_document_name(name)}"
+
     # monkey-patch the handler to sleep so that timeout triggers
     async def fake_handle(self, source_name_arg, source_type_arg, kwargs_arg):
         await asyncio.sleep(3600)
+
     # patch handler and Thread to trigger timeout synchronously
-    monkeypatch.setattr(
-        default_source_uploader.DefaultSourceUploader,
-        '_handle_source_upload',
-        fake_handle
-    )
+    monkeypatch.setattr(default_source_uploader.DefaultSourceUploader, "_handle_source_upload", fake_handle)
+
     def FakeThread(target, args=(), **kwargs):
         # this ensures serial execution, so that the error status can be checked
         class T:
-            def start(self_inner):
+            def start(self):
                 target(*args)
-            def is_alive(self_inner):
+
+            def is_alive(self):
                 return False
+
         return T()
-    monkeypatch.setattr(default_source_uploader, 'Thread', FakeThread)
+
+    monkeypatch.setattr(default_source_uploader, "Thread", FakeThread)
     uploader = DefaultSourceUploader(
         extractor_api, key_value_store, information_enhancer, chunker, document_deleter, rag_api, information_mapper
     )
