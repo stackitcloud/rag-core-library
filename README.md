@@ -210,7 +210,7 @@ The type of information that is extracted will vary depending on the source, the
 
 - `TEXT`: plain text
 - `TABLE`: data in tabular form found in the document
-- `IMAGE`: data in tabular form found in the document
+- `IMAGE`: image found in the document
 
 ### 3.3 Replaceable parts
 
