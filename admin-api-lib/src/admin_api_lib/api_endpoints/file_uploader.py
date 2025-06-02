@@ -15,7 +15,6 @@ class FileUploader(UploaderBase):
         self,
         base_url: str,
         file: UploadFile,
-        timeout: Optional[float],
     ) -> None:
         """
         Uploads a source file for content extraction.
@@ -26,8 +25,6 @@ class FileUploader(UploaderBase):
             The base url of the service. Is used to determine the download link of the file.
         file : UploadFile
             The file to process.
-        timeout : float, optional
-          Timeout for the operation.
 
         Returns
         -------
