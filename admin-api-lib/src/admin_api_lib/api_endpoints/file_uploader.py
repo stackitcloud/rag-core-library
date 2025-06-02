@@ -1,7 +1,6 @@
 """Module for the upload file endpoint."""
 
 from abc import abstractmethod
-from typing import Optional
 
 from fastapi import UploadFile
 

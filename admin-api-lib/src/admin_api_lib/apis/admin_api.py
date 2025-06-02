@@ -176,9 +176,9 @@ async def upload_file(
     response_model_by_alias=True,
 )
 async def upload_source(
-    source_type: StrictStr = Query(None, description="", alias="sourceType"),
-    name: StrictStr = Query(None, description="", alias="name"),
-    key_value_pair: List[KeyValuePair] = Body(None, description=""),
+    source_type: StrictStr = Query(None, description="The type of the source", alias="sourceType"),
+    name: StrictStr = Query(None, description="The name of the source", alias="name"),
+    key_value_pair: List[KeyValuePair] = Body(None, description="The key-value pairs for the source"),
 ) -> None:
     """
     Uploads user selected sources.
