@@ -78,7 +78,6 @@ class DefaultFileUploader(FileUploader):
         self,
         base_url: str,
         file: UploadFile,
-        timeout: Optional[float] = 3600.0,
     ) -> None:
         """
         Uploads a source file for content extraction.
