@@ -144,7 +144,7 @@ The extracted information will be summarized using a LLM. The summary, as well a
 
 Loads all the content from an arbitrary non-file source using the [document-extractor](#3-extractor-api-lib).
 The `type`of the source needs to correspond to an extractor in the [document-extractor](#3-extractor-api-lib).
-The extracted information will be summarized using LLM. The summary, as well as the unrefined extracted document, will be uploaded to the [rag-core-api](#1-rag-core-api).
+The extracted information will be summarized using LLM. The summary, as well as the unrefined extracted document, will be uploaded to the [rag-core-api](#1-rag-core-api). An is configured. Defaults to 3600 seconds (1 hour). Can be adjusted by values in the helm chart.
 
 ### 2.3 Replaceable parts
 
