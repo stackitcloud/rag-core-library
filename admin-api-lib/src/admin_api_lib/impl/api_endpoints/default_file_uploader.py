@@ -105,7 +105,7 @@ class DefaultFileUploader(FileUploader):
             s3_path = await self._asave_new_document(content, file.filename, source_name)
             thread = Thread(
                 target=lambda: run(self._handle_source_upload(s3_path, source_name, file.filename, base_url))
-            ) #TODO: add timeout. same logic like in default_source_uploader leaded to strange behavior
+            )  # TODO: add timeout. same logic like in default_source_uploader leaded to strange behavior
             thread.start()
             self._background_threads.append(thread)
         except ValueError as e:

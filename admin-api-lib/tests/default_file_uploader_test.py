@@ -135,4 +135,3 @@ async def test_upload_file_starts_thread(mocks, monkeypatch):
 
     key_value_store.upsert.assert_any_call(source_name, Status.PROCESSING)
     dummy_thread.start.assert_called_once()
-
