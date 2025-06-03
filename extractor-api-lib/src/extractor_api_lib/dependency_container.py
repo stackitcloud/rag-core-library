@@ -9,6 +9,7 @@ from extractor_api_lib.impl.extractors.file_extractors.ms_docs_extractor import 
 from extractor_api_lib.impl.extractors.file_extractors.pdf_extractor import PDFExtractor
 from extractor_api_lib.impl.extractors.file_extractors.xml_extractor import XMLExtractor
 from extractor_api_lib.impl.api_endpoints.general_file_extractor import GeneralFileExtractor
+from extractor_api_lib.impl.extractors.sitemap_extractor import SitemapExtractor
 from extractor_api_lib.impl.file_services.s3_service import S3Service
 from extractor_api_lib.impl.mapper.confluence_langchain_document2information_piece import (
     ConfluenceLangchainDocument2InformationPiece,
@@ -16,6 +17,7 @@ from extractor_api_lib.impl.mapper.confluence_langchain_document2information_pie
 from extractor_api_lib.impl.mapper.internal2external_information_piece import (
     Internal2ExternalInformationPiece,
 )
+from extractor_api_lib.impl.mapper.sitemap_document2information_piece import SitemapLangchainDocument2InformationPiece
 from extractor_api_lib.impl.settings.pdf_extractor_settings import PDFExtractorSettings
 from extractor_api_lib.impl.settings.s3_settings import S3Settings
 from extractor_api_lib.impl.table_converter.dataframe2markdown import DataFrame2Markdown
@@ -36,13 +38,14 @@ class DependencyContainer(DeclarativeContainer):
 
     intern2external = Singleton(Internal2ExternalInformationPiece)
     langchain_document2information_piece = Singleton(ConfluenceLangchainDocument2InformationPiece)
+    sitemap_document2information_piece = Singleton(SitemapLangchainDocument2InformationPiece)
     file_extractors = List(pdf_extractor, ms_docs_extractor, xml_extractor)
 
     general_file_extractor = Singleton(GeneralFileExtractor, file_service, file_extractors, intern2external)
     confluence_extractor = Singleton(ConfluenceExtractor, mapper=langchain_document2information_piece)
-
+    sitemap_extractor = Singleton(SitemapExtractor, mapper=sitemap_document2information_piece)
     source_extractor = Singleton(
         GeneralSourceExtractor,
         mapper=intern2external,
-        available_extractors=List(confluence_extractor),
+        available_extractors=List(confluence_extractor, sitemap_extractor),
     )

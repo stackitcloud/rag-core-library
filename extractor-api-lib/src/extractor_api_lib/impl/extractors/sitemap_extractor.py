@@ -1,6 +1,8 @@
 """Module for the DefaultSitemapExtractor class."""
 
 from langchain_community.document_loaders import SitemapLoader
+import asyncio
+
 
 from extractor_api_lib.impl.types.extractor_types import ExtractorTypes
 from extractor_api_lib.models.dataclasses.internal_information_piece import InternalInformationPiece
@@ -51,12 +53,23 @@ class SitemapExtractor(InformationExtractor):
             A list of information pieces extracted from Sitemap.
         """
         # Convert list of key value pairs to dict
-        confluence_loader_parameters = {
+        sitemap_loader_parameters = {
             x.key: int(x.value) if x.value.isdigit() else x.value for x in extraction_parameters.kwargs
         }
         # Drop the document_name parameter as it is not used by the SitemapLoader
-        if "document_name" in confluence_loader_parameters:
-            confluence_loader_parameters.pop("document_name", None)
-        document_loader = ConfluenceLoader(**confluence_loader_parameters)
-        documents = document_loader.load()
+        if "document_name" in sitemap_loader_parameters:
+            sitemap_loader_parameters.pop("document_name", None)
+        document_loader = SitemapLoader(**sitemap_loader_parameters)
+        documents = []
+        try:
+            # Run the synchronous iteration in a thread to avoid event loop conflicts
+            def load_documents():
+                docs = []
+                for doc in document_loader.lazy_load():
+                    docs.append(doc)
+                return docs
+
+            documents = await asyncio.get_event_loop().run_in_executor(None, load_documents)
+        except Exception as e:
+            raise ValueError(f"Failed to load documents from Sitemap: {e}")
         return [self.mapper.map_document2informationpiece(x, extraction_parameters.document_name) for x in documents]
