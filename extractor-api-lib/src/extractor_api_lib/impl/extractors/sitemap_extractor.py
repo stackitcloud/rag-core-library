@@ -2,7 +2,7 @@
 
 from langchain_community.document_loaders import SitemapLoader
 import asyncio
-
+import json
 
 from extractor_api_lib.impl.types.extractor_types import ExtractorTypes
 from extractor_api_lib.models.dataclasses.internal_information_piece import InternalInformationPiece
@@ -53,9 +53,18 @@ class SitemapExtractor(InformationExtractor):
             A list of information pieces extracted from Sitemap.
         """
         # Convert list of key value pairs to dict
-        sitemap_loader_parameters = {
-            x.key: int(x.value) if x.value.isdigit() else x.value for x in extraction_parameters.kwargs
-        }
+        sitemap_loader_parameters = {}
+        for x in extraction_parameters.kwargs:
+            if x.key == "header_template":
+                # Parse JSON string back to dictionary
+                try:
+                    sitemap_loader_parameters[x.key] = json.loads(x.value)
+                except (json.JSONDecodeError, TypeError):
+                    # If it's not a valid JSON string, treat as regular value
+                    sitemap_loader_parameters[x.key] = x.value
+            else:
+                sitemap_loader_parameters[x.key] = int(x.value) if x.value.isdigit() else x.value
+
         # Drop the document_name parameter as it is not used by the SitemapLoader
         if "document_name" in sitemap_loader_parameters:
             sitemap_loader_parameters.pop("document_name", None)
