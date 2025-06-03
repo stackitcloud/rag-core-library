@@ -48,7 +48,7 @@ class ConfluenceExtractor(InformationExtractor):
         Returns
         -------
         list[InternalInformationPiece]
-            A list of information pieces    extracted from Confluence.
+            A list of information pieces extracted from Confluence.
         """
         # Convert list of key value pairs to dict
         confluence_loader_parameters = {
