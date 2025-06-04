@@ -52,31 +52,33 @@ class SitemapExtractor(InformationExtractor):
         list[InternalInformationPiece]
             A list of information pieces extracted from Sitemap.
         """
-        # Convert list of key value pairs to dict
         sitemap_loader_parameters = {}
+        headers = None
+
         for x in extraction_parameters.kwargs:
             if x.key == "header_template":
-                # Parse JSON string back to dictionary
+                try:
+                    headers = json.loads(x.value)
+                except (json.JSONDecodeError, TypeError):
+                    headers = x.value if isinstance(x.value, dict) else None
+            elif x.key == "filter_urls":
                 try:
                     sitemap_loader_parameters[x.key] = json.loads(x.value)
                 except (json.JSONDecodeError, TypeError):
-                    # If it's not a valid JSON string, treat as regular value
                     sitemap_loader_parameters[x.key] = x.value
             else:
                 sitemap_loader_parameters[x.key] = int(x.value) if x.value.isdigit() else x.value
 
-        # Drop the document_name parameter as it is not used by the SitemapLoader
+        if headers:
+            sitemap_loader_parameters["header_template"] = headers
+
         if "document_name" in sitemap_loader_parameters:
             sitemap_loader_parameters.pop("document_name", None)
         document_loader = SitemapLoader(**sitemap_loader_parameters)
         documents = []
         try:
-            # Run the synchronous iteration in a thread to avoid event loop conflicts
             def load_documents():
-                docs = []
-                for doc in document_loader.lazy_load():
-                    docs.append(doc)
-                return docs
+                return list(document_loader.lazy_load())
 
             documents = await asyncio.get_event_loop().run_in_executor(None, load_documents)
         except Exception as e:
