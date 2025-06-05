@@ -62,25 +62,7 @@ class SitemapExtractor(InformationExtractor):
         list[InternalInformationPiece]
             A list of information pieces extracted from Sitemap.
         """
-        sitemap_loader_parameters = {}
-        headers = None
-
-        for x in extraction_parameters.kwargs:
-            if x.key == "header_template":
-                try:
-                    headers = json.loads(x.value)
-                except (json.JSONDecodeError, TypeError):
-                    headers = x.value if isinstance(x.value, dict) else None
-            elif x.key == "filter_urls":
-                try:
-                    sitemap_loader_parameters[x.key] = json.loads(x.value)
-                except (json.JSONDecodeError, TypeError):
-                    sitemap_loader_parameters[x.key] = x.value
-            else:
-                sitemap_loader_parameters[x.key] = int(x.value) if x.value.isdigit() else x.value
-
-        if headers:
-            sitemap_loader_parameters["header_template"] = headers
+        sitemap_loader_parameters = self._parse_sitemap_loader_parameters(extraction_parameters)
 
         if "document_name" in sitemap_loader_parameters:
             sitemap_loader_parameters.pop("document_name", None)
@@ -96,6 +78,7 @@ class SitemapExtractor(InformationExtractor):
         document_loader = SitemapLoader(**sitemap_loader_parameters)
         documents = []
         try:
+
             def load_documents():
                 return list(document_loader.lazy_load())
 
@@ -103,3 +86,33 @@ class SitemapExtractor(InformationExtractor):
         except Exception as e:
             raise ValueError(f"Failed to load documents from Sitemap: {e}")
         return [self._mapper.map_document2informationpiece(x, extraction_parameters.document_name) for x in documents]
+
+    def _parse_sitemap_loader_parameters(self, extraction_parameters: ExtractionParameters) -> dict:
+        """
+        Parse the extraction parameters to extract sitemap loader parameters.
+
+        Parameters
+        ----------
+        extraction_parameters : ExtractionParameters
+            The parameters required to connect to and extract data from Sitemap.
+
+        Returns
+        -------
+        dict
+            A dictionary containing the parsed sitemap loader parameters.
+        """
+        sitemap_loader_parameters = {}
+        for x in extraction_parameters.kwargs:
+            if x.key == "header_template":
+                try:
+                    sitemap_loader_parameters[x.key] = json.loads(x.value)
+                except (json.JSONDecodeError, TypeError):
+                    sitemap_loader_parameters[x.key] = x.value if isinstance(x.value, dict) else None
+            elif x.key == "filter_urls":
+                try:
+                    sitemap_loader_parameters[x.key] = json.loads(x.value)
+                except (json.JSONDecodeError, TypeError):
+                    sitemap_loader_parameters[x.key] = x.value
+            else:
+                sitemap_loader_parameters[x.key] = int(x.value) if x.value.isdigit() else x.value
+        return sitemap_loader_parameters

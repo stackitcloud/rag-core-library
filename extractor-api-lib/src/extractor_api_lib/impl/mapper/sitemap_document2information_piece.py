@@ -1,7 +1,9 @@
 """Module for the SitemapLangchainDocument2InformationPiece class."""
-from extractor_api_lib.impl.utils.utils import hash_datetime
-from extractor_api_lib.mapper.source_langchain_document2information_piece import SourceLangchainDocument2InformationPiece
 
+from extractor_api_lib.impl.utils.utils import hash_datetime
+from extractor_api_lib.mapper.source_langchain_document2information_piece import (
+    SourceLangchainDocument2InformationPiece,
+)
 
 
 class SitemapLangchainDocument2InformationPiece(SourceLangchainDocument2InformationPiece):

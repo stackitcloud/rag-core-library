@@ -19,6 +19,7 @@ def custom_sitemap_parser_function(content: Union[str, BeautifulSoup]) -> str:
     texts = [element.get_text(separator=" ", strip=True) for element in article_elements]
     return "\n".join(texts)
 
+
 def custom_sitemap_meta_function(meta: dict, _content: Any) -> dict:
     """
     Given metadata and HTML content, extract the title from the first <h1> element

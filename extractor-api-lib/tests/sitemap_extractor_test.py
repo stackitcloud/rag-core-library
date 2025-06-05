@@ -1,9 +1,8 @@
 """Comprehensive test suite for SitemapExtractor class."""
 
 import asyncio
-import json
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch, Mock
+from unittest.mock import MagicMock, patch
 from langchain_core.documents import Document as LangchainDocument
 
 from extractor_api_lib.impl.extractors.sitemap_extractor import SitemapExtractor
@@ -27,7 +26,7 @@ class TestSitemapExtractor:
         mapper.map_document2informationpiece.return_value = InternalInformationPiece(
             type=ContentType.TEXT,
             metadata={"document": "test_doc", "id": "test_id", "related": []},
-            page_content="Test content"
+            page_content="Test content",
         )
         return mapper
 
@@ -47,8 +46,8 @@ class TestSitemapExtractor:
                 KeyValuePair(key="filter_urls", value='["https://example.com/page1", "https://example.com/page2"]'),
                 KeyValuePair(key="header_template", value='{"User-Agent": "test-agent"}'),
                 KeyValuePair(key="max_depth", value="2"),
-                KeyValuePair(key="blocksize", value="10")
-            ]
+                KeyValuePair(key="blocksize", value="10"),
+            ],
         )
 
     def test_init(self, mock_mapper):
@@ -61,8 +60,10 @@ class TestSitemapExtractor:
         assert sitemap_extractor.extractor_type == ExtractorTypes.SITEMAP
 
     @pytest.mark.asyncio
-    @patch('extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader')
-    async def test_aextract_content_basic(self, mock_sitemap_loader_class, sitemap_extractor, sample_extraction_parameters):
+    @patch("extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader")
+    async def test_aextract_content_basic(
+        self, mock_sitemap_loader_class, sitemap_extractor, sample_extraction_parameters
+    ):
         """Test basic content extraction functionality."""
         # Setup mock SitemapLoader
         mock_loader_instance = MagicMock()
@@ -71,13 +72,11 @@ class TestSitemapExtractor:
         # Create mock documents
         mock_documents = [
             LangchainDocument(
-                page_content="Content from page 1",
-                metadata={"source": "https://example.com/page1", "title": "Page 1"}
+                page_content="Content from page 1", metadata={"source": "https://example.com/page1", "title": "Page 1"}
             ),
             LangchainDocument(
-                page_content="Content from page 2",
-                metadata={"source": "https://example.com/page2", "title": "Page 2"}
-            )
+                page_content="Content from page 2", metadata={"source": "https://example.com/page2", "title": "Page 2"}
+            ),
         ]
 
         mock_loader_instance.lazy_load.return_value = iter(mock_documents)
@@ -87,13 +86,13 @@ class TestSitemapExtractor:
             InternalInformationPiece(
                 type=ContentType.TEXT,
                 metadata={"document": "test_sitemap_doc", "id": "id1", "related": []},
-                page_content="Content from page 1"
+                page_content="Content from page 1",
             ),
             InternalInformationPiece(
                 type=ContentType.TEXT,
                 metadata={"document": "test_sitemap_doc", "id": "id2", "related": []},
-                page_content="Content from page 2"
-            )
+                page_content="Content from page 2",
+            ),
         ]
 
         sitemap_extractor.mapper.map_document2informationpiece.side_effect = expected_info_pieces
@@ -119,7 +118,7 @@ class TestSitemapExtractor:
         assert sitemap_extractor.mapper.map_document2informationpiece.call_count == 2
 
     @pytest.mark.asyncio
-    @patch('extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader')
+    @patch("extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader")
     async def test_aextract_content_json_parsing_failure(self, mock_sitemap_loader_class, sitemap_extractor):
         """Test extraction with invalid JSON in parameters falls back to string values."""
         # Create parameters with invalid JSON
@@ -129,8 +128,8 @@ class TestSitemapExtractor:
             kwargs=[
                 KeyValuePair(key="web_path", value="https://example.com/sitemap.xml"),
                 KeyValuePair(key="filter_urls", value="invalid-json["),
-                KeyValuePair(key="header_template", value="invalid-json{")
-            ]
+                KeyValuePair(key="header_template", value="invalid-json{"),
+            ],
         )
 
         # Setup mock
@@ -150,7 +149,7 @@ class TestSitemapExtractor:
         assert "header_template" not in call_args  # Should not be set due to invalid JSON
 
     @pytest.mark.asyncio
-    @patch('extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader')
+    @patch("extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader")
     async def test_aextract_content_header_template_dict_value(self, mock_sitemap_loader_class, sitemap_extractor):
         """Test extraction when header_template is already a dict."""
         extraction_params = ExtractionParameters(
@@ -158,8 +157,8 @@ class TestSitemapExtractor:
             source_type="sitemap",
             kwargs=[
                 KeyValuePair(key="web_path", value="https://example.com/sitemap.xml"),
-                KeyValuePair(key="header_template", value={"User-Agent": "direct-dict"})
-            ]
+                KeyValuePair(key="header_template", value={"User-Agent": "direct-dict"}),
+            ],
         )
 
         # Setup mock
@@ -168,14 +167,14 @@ class TestSitemapExtractor:
         mock_loader_instance.lazy_load.return_value = iter([])
 
         # Execute
-        result = await sitemap_extractor.aextract_content(extraction_params)
+        _ = await sitemap_extractor.aextract_content(extraction_params)
 
         # Verify
         call_args = mock_sitemap_loader_class.call_args[1]
         assert call_args["header_template"] == {"User-Agent": "direct-dict"}
 
     @pytest.mark.asyncio
-    @patch('extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader')
+    @patch("extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader")
     async def test_aextract_content_document_name_removed(self, mock_sitemap_loader_class, sitemap_extractor):
         """Test that document_name parameter is removed from SitemapLoader parameters."""
         extraction_params = ExtractionParameters(
@@ -183,8 +182,8 @@ class TestSitemapExtractor:
             source_type="sitemap",
             kwargs=[
                 KeyValuePair(key="web_path", value="https://example.com/sitemap.xml"),
-                KeyValuePair(key="document_name", value="should_be_removed")
-            ]
+                KeyValuePair(key="document_name", value="should_be_removed"),
+            ],
         )
 
         # Setup mock
@@ -200,7 +199,7 @@ class TestSitemapExtractor:
         assert "document_name" not in call_args
 
     @pytest.mark.asyncio
-    @patch('extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader')
+    @patch("extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader")
     async def test_aextract_content_numeric_parameters(self, mock_sitemap_loader_class, sitemap_extractor):
         """Test extraction with numeric string parameters."""
         extraction_params = ExtractionParameters(
@@ -211,8 +210,8 @@ class TestSitemapExtractor:
                 KeyValuePair(key="max_depth", value="5"),
                 KeyValuePair(key="blocksize", value="20"),
                 KeyValuePair(key="blocknum", value="1"),
-                KeyValuePair(key="non_numeric", value="not_a_number")
-            ]
+                KeyValuePair(key="non_numeric", value="not_a_number"),
+            ],
         )
 
         # Setup mock
@@ -231,8 +230,10 @@ class TestSitemapExtractor:
         assert call_args["non_numeric"] == "not_a_number"
 
     @pytest.mark.asyncio
-    @patch('extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader')
-    async def test_aextract_content_loader_exception(self, mock_sitemap_loader_class, sitemap_extractor, sample_extraction_parameters):
+    @patch("extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader")
+    async def test_aextract_content_loader_exception(
+        self, mock_sitemap_loader_class, sitemap_extractor, sample_extraction_parameters
+    ):
         """Test handling of SitemapLoader exceptions."""
         # Setup mock to raise exception
         mock_loader_instance = MagicMock()
@@ -244,8 +245,10 @@ class TestSitemapExtractor:
             await sitemap_extractor.aextract_content(sample_extraction_parameters)
 
     @pytest.mark.asyncio
-    @patch('extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader')
-    async def test_aextract_content_empty_documents(self, mock_sitemap_loader_class, sitemap_extractor, sample_extraction_parameters):
+    @patch("extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader")
+    async def test_aextract_content_empty_documents(
+        self, mock_sitemap_loader_class, sitemap_extractor, sample_extraction_parameters
+    ):
         """Test extraction when SitemapLoader returns no documents."""
         # Setup mock to return empty list
         mock_loader_instance = MagicMock()
@@ -260,15 +263,13 @@ class TestSitemapExtractor:
         sitemap_extractor.mapper.map_document2informationpiece.assert_not_called()
 
     @pytest.mark.asyncio
-    @patch('extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader')
+    @patch("extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader")
     async def test_aextract_content_minimal_parameters(self, mock_sitemap_loader_class, sitemap_extractor):
         """Test extraction with minimal required parameters."""
         extraction_params = ExtractionParameters(
             document_name="minimal_doc",
             source_type="sitemap",
-            kwargs=[
-                KeyValuePair(key="web_path", value="https://example.com/sitemap.xml")
-            ]
+            kwargs=[KeyValuePair(key="web_path", value="https://example.com/sitemap.xml")],
         )
 
         # Setup mock
@@ -285,7 +286,7 @@ class TestSitemapExtractor:
         mock_sitemap_loader_class.assert_called_once_with(web_path="https://example.com/sitemap.xml")
 
     @pytest.mark.asyncio
-    @patch('extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader')
+    @patch("extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader")
     async def test_aextract_content_complex_filter_urls(self, mock_sitemap_loader_class, sitemap_extractor):
         """Test extraction with complex filter_urls JSON array."""
         extraction_params = ExtractionParameters(
@@ -293,8 +294,10 @@ class TestSitemapExtractor:
             source_type="sitemap",
             kwargs=[
                 KeyValuePair(key="web_path", value="https://example.com/sitemap.xml"),
-                KeyValuePair(key="filter_urls", value='[".*\\\\.html$", ".*page[0-9]+.*", "https://example\\\\.com/special/.*"]')
-            ]
+                KeyValuePair(
+                    key="filter_urls", value='[".*\\\\.html$", ".*page[0-9]+.*", "https://example\\\\.com/special/.*"]'
+                ),
+            ],
         )
 
         # Setup mock
@@ -311,7 +314,7 @@ class TestSitemapExtractor:
         assert call_args["filter_urls"] == expected_patterns
 
     @pytest.mark.asyncio
-    @patch('extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader')
+    @patch("extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader")
     async def test_aextract_content_no_headers(self, mock_sitemap_loader_class, sitemap_extractor):
         """Test extraction without header_template parameter."""
         extraction_params = ExtractionParameters(
@@ -319,8 +322,8 @@ class TestSitemapExtractor:
             source_type="sitemap",
             kwargs=[
                 KeyValuePair(key="web_path", value="https://example.com/sitemap.xml"),
-                KeyValuePair(key="max_depth", value="3")
-            ]
+                KeyValuePair(key="max_depth", value="3"),
+            ],
         )
 
         # Setup mock
@@ -337,27 +340,27 @@ class TestSitemapExtractor:
         assert call_args["max_depth"] == 3
 
     @pytest.mark.asyncio
-    @patch('extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader')
+    @patch("extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader")
     async def test_aextract_content_with_real_langchain_documents(self, mock_sitemap_loader_class, sitemap_extractor):
         """Test extraction with realistic LangChain Document objects."""
         extraction_params = ExtractionParameters(
             document_name="realistic_doc",
             source_type="sitemap",
-            kwargs=[KeyValuePair(key="web_path", value="https://example.com/sitemap.xml")]
+            kwargs=[KeyValuePair(key="web_path", value="https://example.com/sitemap.xml")],
         )
 
         # Create realistic documents
         mock_documents = [
             LangchainDocument(
-                page_content="<html><body><h1>Welcome to Example</h1><p>This is the homepage content with useful information about our services.</p></body></html>",
+                page_content="""<html><body><h1>Welcome to Example</h1><p>This is the homepage content with useful information about our services.</p></body></html>""",
                 metadata={
                     "source": "https://example.com/",
                     "title": "Example Homepage",
                     "loc": "https://example.com/",
                     "lastmod": "2023-12-01",
                     "changefreq": "weekly",
-                    "priority": "1.0"
-                }
+                    "priority": "1.0",
+                },
             ),
             LangchainDocument(
                 page_content="<html><body><h1>About Us</h1><p>Learn more about our company history and mission.</p></body></html>",
@@ -365,9 +368,9 @@ class TestSitemapExtractor:
                     "source": "https://example.com/about",
                     "title": "About Us - Example",
                     "loc": "https://example.com/about",
-                    "lastmod": "2023-11-15"
-                }
-            )
+                    "lastmod": "2023-11-15",
+                },
+            ),
         ]
 
         # Setup mock
@@ -389,9 +392,11 @@ class TestSitemapExtractor:
             assert args[1] == "realistic_doc"
 
     @pytest.mark.asyncio
-    @patch('extractor_api_lib.impl.extractors.sitemap_extractor.asyncio.get_event_loop')
-    @patch('extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader')
-    async def test_aextract_content_executor_usage(self, mock_sitemap_loader_class, mock_get_event_loop, sitemap_extractor, sample_extraction_parameters):
+    @patch("extractor_api_lib.impl.extractors.sitemap_extractor.asyncio.get_event_loop")
+    @patch("extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader")
+    async def test_aextract_content_executor_usage(
+        self, mock_sitemap_loader_class, mock_get_event_loop, sitemap_extractor, sample_extraction_parameters
+    ):
         """Test that content extraction uses executor for non-async sitemap loading."""
         # Setup mocks
         mock_loop = MagicMock()
@@ -407,7 +412,7 @@ class TestSitemapExtractor:
         mock_loop.run_in_executor.return_value = future
 
         # Execute
-        result = await sitemap_extractor.aextract_content(sample_extraction_parameters)
+        _ = await sitemap_extractor.aextract_content(sample_extraction_parameters)
 
         # Verify executor was used
         mock_loop.run_in_executor.assert_called_once()
@@ -418,17 +423,14 @@ class TestSitemapExtractor:
     def test_extractor_inheritance(self, sitemap_extractor):
         """Test that SitemapExtractor properly inherits from InformationExtractor."""
         from extractor_api_lib.extractors.information_extractor import InformationExtractor
+
         assert isinstance(sitemap_extractor, InformationExtractor)
 
     @pytest.mark.asyncio
-    @patch('extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader')
+    @patch("extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader")
     async def test_aextract_content_edge_case_empty_kwargs(self, mock_sitemap_loader_class, sitemap_extractor):
         """Test extraction with empty kwargs list."""
-        extraction_params = ExtractionParameters(
-            document_name="empty_kwargs_doc",
-            source_type="sitemap",
-            kwargs=[]
-        )
+        extraction_params = ExtractionParameters(document_name="empty_kwargs_doc", source_type="sitemap", kwargs=[])
 
         # Setup mock
         mock_loader_instance = MagicMock()
@@ -444,7 +446,7 @@ class TestSitemapExtractor:
         mock_sitemap_loader_class.assert_called_once_with()
 
     @pytest.mark.asyncio
-    @patch('extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader')
+    @patch("extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader")
     async def test_aextract_content_mixed_parameter_types(self, mock_sitemap_loader_class, sitemap_extractor):
         """Test extraction with mixed parameter types (strings, numbers, JSON)."""
         extraction_params = ExtractionParameters(
@@ -455,9 +457,11 @@ class TestSitemapExtractor:
                 KeyValuePair(key="max_depth", value="3"),  # Will be converted to int
                 KeyValuePair(key="continue_on_failure", value="true"),  # Will remain string
                 KeyValuePair(key="filter_urls", value='["pattern1", "pattern2"]'),  # Will be parsed as JSON
-                KeyValuePair(key="header_template", value='{"Authorization": "Bearer token123"}'),  # Will be parsed as JSON
-                KeyValuePair(key="custom_param", value="custom_value")  # Will remain string
-            ]
+                KeyValuePair(
+                    key="header_template", value='{"Authorization": "Bearer token123"}'
+                ),  # Will be parsed as JSON
+                KeyValuePair(key="custom_param", value="custom_value"),  # Will remain string
+            ],
         )
 
         # Setup mock

@@ -1,10 +1,8 @@
 """Module for the ConfluenceLangchainDocument2InformationPiece class."""
 
-from langchain_core.documents import Document as LangchainDocument
-
-from extractor_api_lib.mapper.source_langchain_document2information_piece import SourceLangchainDocument2InformationPiece
-from extractor_api_lib.models.dataclasses.internal_information_piece import InternalInformationPiece
-from extractor_api_lib.models.content_type import ContentType
+from extractor_api_lib.mapper.source_langchain_document2information_piece import (
+    SourceLangchainDocument2InformationPiece,
+)
 
 
 class ConfluenceLangchainDocument2InformationPiece(SourceLangchainDocument2InformationPiece):
@@ -26,7 +24,6 @@ class ConfluenceLangchainDocument2InformationPiece(SourceLangchainDocument2Infor
     DOCUMENT_KEY : str
         Key for the document.
     """
-
 
     def _map_meta(self, internal: dict, document_name: str) -> dict:
         metadata = {}

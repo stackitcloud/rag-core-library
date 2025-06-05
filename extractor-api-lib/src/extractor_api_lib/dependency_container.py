@@ -21,7 +21,10 @@ from extractor_api_lib.impl.mapper.sitemap_document2information_piece import Sit
 from extractor_api_lib.impl.settings.pdf_extractor_settings import PDFExtractorSettings
 from extractor_api_lib.impl.settings.s3_settings import S3Settings
 from extractor_api_lib.impl.table_converter.dataframe2markdown import DataFrame2Markdown
-from extractor_api_lib.impl.utils.sitemap_extractor_utils import custom_sitemap_meta_function, custom_sitemap_parser_function
+from extractor_api_lib.impl.utils.sitemap_extractor_utils import (
+    custom_sitemap_meta_function,
+    custom_sitemap_parser_function,
+)
 
 
 class DependencyContainer(DeclarativeContainer):
@@ -52,7 +55,7 @@ class DependencyContainer(DeclarativeContainer):
         SitemapExtractor,
         mapper=sitemap_document2information_piece,
         parsing_function=sitemap_parsing_function,
-        meta_function=sitemap_meta_function
+        meta_function=sitemap_meta_function,
     )
     source_extractor = Singleton(
         GeneralSourceExtractor,
