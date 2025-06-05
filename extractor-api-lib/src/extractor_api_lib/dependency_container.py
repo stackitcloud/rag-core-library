@@ -1,7 +1,7 @@
 """Module for dependency injection container for managing application dependencies."""
 
 from dependency_injector.containers import DeclarativeContainer
-from dependency_injector.providers import List, Singleton  # noqa: WOT001
+from dependency_injector.providers import Factory, List, Singleton  # noqa: WOT001
 
 from extractor_api_lib.impl.api_endpoints.general_source_extractor import GeneralSourceExtractor
 from extractor_api_lib.impl.extractors.confluence_extractor import ConfluenceExtractor
@@ -21,14 +21,18 @@ from extractor_api_lib.impl.mapper.sitemap_document2information_piece import Sit
 from extractor_api_lib.impl.settings.pdf_extractor_settings import PDFExtractorSettings
 from extractor_api_lib.impl.settings.s3_settings import S3Settings
 from extractor_api_lib.impl.table_converter.dataframe2markdown import DataFrame2Markdown
+from extractor_api_lib.impl.utils.sitemap_extractor_utils import custom_sitemap_meta_function, custom_sitemap_parser_function
 
 
 class DependencyContainer(DeclarativeContainer):
     """Dependency injection container for managing application dependencies."""
 
     # Settings
-    settings_s3 = Singleton(S3Settings)
-    settings_pdf_extractor = Singleton(PDFExtractorSettings)
+    settings_s3 = S3Settings()
+    settings_pdf_extractor = PDFExtractorSettings()
+
+    sitemap_parsing_function = Factory(lambda: custom_sitemap_parser_function)
+    sitemap_meta_function = Factory(lambda: custom_sitemap_meta_function)
 
     database_converter = Singleton(DataFrame2Markdown)
     file_service = Singleton(S3Service, settings_s3)
@@ -43,7 +47,13 @@ class DependencyContainer(DeclarativeContainer):
 
     general_file_extractor = Singleton(GeneralFileExtractor, file_service, file_extractors, intern2external)
     confluence_extractor = Singleton(ConfluenceExtractor, mapper=langchain_document2information_piece)
-    sitemap_extractor = Singleton(SitemapExtractor, mapper=sitemap_document2information_piece)
+
+    sitemap_extractor = Singleton(
+        SitemapExtractor,
+        mapper=sitemap_document2information_piece,
+        parsing_function=sitemap_parsing_function,
+        meta_function=sitemap_meta_function
+    )
     source_extractor = Singleton(
         GeneralSourceExtractor,
         mapper=intern2external,

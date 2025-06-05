@@ -1,5 +1,6 @@
 """Module for the DefaultSitemapExtractor class."""
 
+from typing import Optional
 from langchain_community.document_loaders import SitemapLoader
 import asyncio
 import json
@@ -19,6 +20,8 @@ class SitemapExtractor(InformationExtractor):
     def __init__(
         self,
         mapper: SitemapLangchainDocument2InformationPiece,
+        parsing_function: Optional[callable] = None,
+        meta_function: Optional[callable] = None,
     ):
         """
         Initialize the SitemapExtractor.
@@ -29,11 +32,18 @@ class SitemapExtractor(InformationExtractor):
             An instance of SitemapLangchainDocument2InformationPiece used for mapping langchain documents
             to information pieces.
         """
-        self.mapper = mapper
+        self._mapper = mapper
+        self._parsing_function = parsing_function
+        self._meta_function = meta_function
 
     @property
     def extractor_type(self) -> ExtractorTypes:
         return ExtractorTypes.SITEMAP
+
+    @property
+    def mapper(self) -> SitemapLangchainDocument2InformationPiece:
+        """Get the mapper instance."""
+        return self._mapper
 
     async def aextract_content(
         self,
@@ -74,6 +84,15 @@ class SitemapExtractor(InformationExtractor):
 
         if "document_name" in sitemap_loader_parameters:
             sitemap_loader_parameters.pop("document_name", None)
+
+        # Only pass custom functions if they are provided
+        if self._parsing_function is not None:
+            # Get the actual function from the provider
+            sitemap_loader_parameters["parsing_function"] = self._parsing_function
+        if self._meta_function is not None:
+            # Get the actual function from the provider
+            sitemap_loader_parameters["meta_function"] = self._meta_function
+
         document_loader = SitemapLoader(**sitemap_loader_parameters)
         documents = []
         try:
@@ -83,4 +102,4 @@ class SitemapExtractor(InformationExtractor):
             documents = await asyncio.get_event_loop().run_in_executor(None, load_documents)
         except Exception as e:
             raise ValueError(f"Failed to load documents from Sitemap: {e}")
-        return [self.mapper.map_document2informationpiece(x, extraction_parameters.document_name) for x in documents]
+        return [self._mapper.map_document2informationpiece(x, extraction_parameters.document_name) for x in documents]

@@ -54,7 +54,7 @@ class TestSitemapExtractor:
     def test_init(self, mock_mapper):
         """Test SitemapExtractor initialization."""
         extractor = SitemapExtractor(mapper=mock_mapper)
-        assert extractor.mapper == mock_mapper
+        assert extractor._mapper == mock_mapper
 
     def test_extractor_type(self, sitemap_extractor):
         """Test that extractor_type returns SITEMAP."""
