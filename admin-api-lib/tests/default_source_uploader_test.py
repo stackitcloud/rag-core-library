@@ -24,12 +24,30 @@ def mocks():
     rag_api = MagicMock()
     information_mapper = MagicMock()
     settings = MagicMock()
-    return extractor_api, key_value_store, information_enhancer, chunker, document_deleter, rag_api, information_mapper, settings
+    return (
+        extractor_api,
+        key_value_store,
+        information_enhancer,
+        chunker,
+        document_deleter,
+        rag_api,
+        information_mapper,
+        settings,
+    )
 
 
 @pytest.mark.asyncio
 async def test_handle_source_upload_success(mocks):
-    extractor_api, key_value_store, information_enhancer, chunker, document_deleter, rag_api, information_mapper, settings = mocks
+    (
+        extractor_api,
+        key_value_store,
+        information_enhancer,
+        chunker,
+        document_deleter,
+        rag_api,
+        information_mapper,
+        settings,
+    ) = mocks
     # Setup mocks
     dummy_piece = MagicMock()
     extractor_api.extract_from_source.return_value = [dummy_piece]
@@ -48,7 +66,7 @@ async def test_handle_source_upload_success(mocks):
         document_deleter,
         rag_api,
         information_mapper,
-        settings=settings
+        settings=settings,
     )
 
     await uploader._handle_source_upload("source1", "type1", [])
@@ -60,7 +78,16 @@ async def test_handle_source_upload_success(mocks):
 
 @pytest.mark.asyncio
 async def test_handle_source_upload_no_info_pieces(mocks):
-    extractor_api, key_value_store, information_enhancer, chunker, document_deleter, rag_api, information_mapper, settings = mocks
+    (
+        extractor_api,
+        key_value_store,
+        information_enhancer,
+        chunker,
+        document_deleter,
+        rag_api,
+        information_mapper,
+        settings,
+    ) = mocks
     extractor_api.extract_from_source.return_value = []
 
     uploader = DefaultSourceUploader(
@@ -82,13 +109,29 @@ async def test_handle_source_upload_no_info_pieces(mocks):
 
 @pytest.mark.asyncio
 async def test_upload_source_already_processing_raises_error(mocks):
-    extractor_api, key_value_store, information_enhancer, chunker, document_deleter, rag_api, information_mapper, settings = mocks
+    (
+        extractor_api,
+        key_value_store,
+        information_enhancer,
+        chunker,
+        document_deleter,
+        rag_api,
+        information_mapper,
+        settings,
+    ) = mocks
     source_type = "typeX"
     name = "Doc Name"
     source_name = f"{source_type}:{sanitize_document_name(name)}"
     key_value_store.get_all.return_value = [(source_name, Status.PROCESSING)]
     uploader = DefaultSourceUploader(
-        extractor_api, key_value_store, information_enhancer, chunker, document_deleter, rag_api, information_mapper, settings
+        extractor_api,
+        key_value_store,
+        information_enhancer,
+        chunker,
+        document_deleter,
+        rag_api,
+        information_mapper,
+        settings,
     )
     with pytest.raises(HTTPException):
         # use default timeout
@@ -98,7 +141,16 @@ async def test_upload_source_already_processing_raises_error(mocks):
 
 @pytest.mark.asyncio
 async def test_upload_source_no_timeout(mocks, monkeypatch):
-    extractor_api, key_value_store, information_enhancer, chunker, document_deleter, rag_api, information_mapper, settings = mocks
+    (
+        extractor_api,
+        key_value_store,
+        information_enhancer,
+        chunker,
+        document_deleter,
+        rag_api,
+        information_mapper,
+        settings,
+    ) = mocks
     key_value_store.get_all.return_value = []
     source_type = "typeZ"
     name = "quick"
@@ -106,7 +158,14 @@ async def test_upload_source_no_timeout(mocks, monkeypatch):
     dummy_thread = MagicMock()
     monkeypatch.setattr(default_source_uploader, "Thread", lambda *args, **kwargs: dummy_thread)
     uploader = DefaultSourceUploader(
-        extractor_api, key_value_store, information_enhancer, chunker, document_deleter, rag_api, information_mapper, settings
+        extractor_api,
+        key_value_store,
+        information_enhancer,
+        chunker,
+        document_deleter,
+        rag_api,
+        information_mapper,
+        settings,
     )
     # should not raise
     settings.timeout = 1.0
@@ -119,7 +178,16 @@ async def test_upload_source_no_timeout(mocks, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_upload_source_timeout_error(mocks, monkeypatch):
-    extractor_api, key_value_store, information_enhancer, chunker, document_deleter, rag_api, information_mapper, settings = mocks
+    (
+        extractor_api,
+        key_value_store,
+        information_enhancer,
+        chunker,
+        document_deleter,
+        rag_api,
+        information_mapper,
+        settings,
+    ) = mocks
     key_value_store.get_all.return_value = []
     source_type = "typeTimeout"
     name = "slow"
@@ -145,7 +213,14 @@ async def test_upload_source_timeout_error(mocks, monkeypatch):
 
     monkeypatch.setattr(default_source_uploader, "Thread", FakeThread)
     uploader = DefaultSourceUploader(
-        extractor_api, key_value_store, information_enhancer, chunker, document_deleter, rag_api, information_mapper, settings
+        extractor_api,
+        key_value_store,
+        information_enhancer,
+        chunker,
+        document_deleter,
+        rag_api,
+        information_mapper,
+        settings,
     )
     # no exception should be raised; timeout path sets ERROR status
     settings.timeout = 1.0
