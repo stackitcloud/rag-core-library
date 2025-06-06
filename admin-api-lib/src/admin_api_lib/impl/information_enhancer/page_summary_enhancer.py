@@ -56,8 +56,8 @@ class PageSummaryEnhancer(SummaryEnhancer):
             grouped.append(group)
 
         summary_tasks = [self._asummarize_page(info_group, config) for info_group in tqdm(grouped)]
-        summaries = await gather(*summary_tasks)
-        return information + summaries
+
+        return await gather(*summary_tasks)
 
     async def _asummarize_page(self, page_pieces: list[Document], config: Optional[RunnableConfig]) -> Document:
         full_page_content = " ".join([piece.page_content for piece in page_pieces])
