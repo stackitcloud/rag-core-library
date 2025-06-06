@@ -55,13 +55,9 @@ class PageSummaryEnhancer(SummaryEnhancer):
                 continue
             grouped.append(group)
 
-        summary_tasks = [self._asummarize_page_with_limit(info_group, config) for info_group in tqdm(grouped)]
+        summary_tasks = [self._asummarize_page(info_group, config) for info_group in tqdm(grouped)]
         summaries = await gather(*summary_tasks)
         return information + summaries
-
-    async def _asummarize_page_with_limit(self, page_pieces: list[Document], config: Optional[RunnableConfig]) -> Document:
-        async with self._semaphore:
-            return await self._asummarize_page(page_pieces, config)
 
     async def _asummarize_page(self, page_pieces: list[Document], config: Optional[RunnableConfig]) -> Document:
         full_page_content = " ".join([piece.page_content for piece in page_pieces])
@@ -72,4 +68,3 @@ class PageSummaryEnhancer(SummaryEnhancer):
         meta["type"] = ContentType.SUMMARY.value
 
         return Document(metadata=meta, page_content=summary)
-
