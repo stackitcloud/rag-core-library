@@ -27,21 +27,6 @@ class PageSummaryEnhancer(SummaryEnhancer):
     BASE64_IMAGE_KEY = "base64_image"
     DEFAULT_PAGE_NR = 1
 
-    async def _acreate_summary(self, information: list[Document], config: Optional[RunnableConfig]) -> list[Document]:
-        # group infos by page, defaulting to page 1 if no page metadata
-        if self._chunker_settings:
-            filtered_information = [
-                info for info in information if len(info.page_content) > self._chunker_settings.max_size
-            ]
-        else:
-            filtered_information = information
-        grouped = [
-            [info for info in filtered_information if info.metadata.get("page", self.DEFAULT_PAGE_NR) == page]
-            for page in {info_piece.metadata.get("page", self.DEFAULT_PAGE_NR) for info_piece in filtered_information}
-        ]
-
-        summary_tasks = [self._asummarize_page(info_group, config) for info_group in tqdm(grouped)]
-        return await gather(*summary_tasks)
 
     async def _asummarize_page(self, page_pieces: list[Document], config: Optional[RunnableConfig]) -> Document:
         full_page_content = " ".join([piece.page_content for piece in page_pieces])
@@ -52,3 +37,39 @@ class PageSummaryEnhancer(SummaryEnhancer):
         meta["type"] = ContentType.SUMMARY.value
 
         return Document(metadata=meta, page_content=summary)
+
+
+    async def _acreate_summary(self, information: list[Document], config: Optional[RunnableConfig]) -> list[Document]:
+        distinct_pages = []
+        for info in information:
+            if info.metadata.get("page", self.DEFAULT_PAGE_NR) not in distinct_pages:
+                distinct_pages.append(info.metadata.get("page", self.DEFAULT_PAGE_NR))
+
+        grouped = []
+        for page in distinct_pages:
+            group = []
+            for compare_info in information:
+                if compare_info.metadata.get("page", self.DEFAULT_PAGE_NR) == page:
+                    group.append(compare_info)
+            if self._chunker_settings and len(" ".join([item.page_content for item in group])) < self._chunker_settings.max_size:
+                continue
+            grouped.append(group)
+
+        summary_tasks = [self._asummarize_page_with_limit(info_group, config) for info_group in tqdm(grouped)]
+        summaries = await gather(*summary_tasks)
+        return information + summaries
+
+    async def _asummarize_page_with_limit(self, page_pieces: list[Document], config: Optional[RunnableConfig]) -> Document:
+        async with self._semaphore:
+            return await self._asummarize_page(page_pieces, config)
+
+    async def _asummarize_page(self, page_pieces: list[Document], config: Optional[RunnableConfig]) -> Document:
+        full_page_content = " ".join([piece.page_content for piece in page_pieces])
+        summary = await self._summarizer.ainvoke(full_page_content, config)
+        meta = {key: value for key, value in page_pieces[0].metadata.items() if key != self.BASE64_IMAGE_KEY}
+        meta["id"] = sha256(str.encode(full_page_content)).hexdigest()
+        meta["related"] = meta["related"] + [piece.metadata["id"] for piece in page_pieces]
+        meta["type"] = ContentType.SUMMARY.value
+
+        return Document(metadata=meta, page_content=summary)
+
