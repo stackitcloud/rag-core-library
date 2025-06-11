@@ -31,6 +31,10 @@ class SitemapExtractor(InformationExtractor):
         mapper : SitemapLangchainDocument2InformationPiece
             An instance of SitemapLangchainDocument2InformationPiece used for mapping langchain documents
             to information pieces.
+        parsing_function : Optional[callable], optional
+            A custom parsing function to process the content of the Sitemap, by default None.
+        meta_function : Optional[callable], optional
+            A custom metadata function to process the metadata of the Sitemap, by default None.
         """
         self._mapper = mapper
         self._parsing_function = parsing_function
