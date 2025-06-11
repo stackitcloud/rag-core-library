@@ -9,6 +9,11 @@ description = "Extracts the content of documents, websites, etc and maps it to a
 authors = ["STACKIT Data and AI Consulting <data-ai-consulting@stackit.cloud>"]
 packages = [{ include = "extractor_api_lib", from = "src" }]
 
+[[tool.poetry.source]]
+name = "pytorch_cpu"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
+
 [tool.flake8]
 exclude = [".eggs", "./src/extractor_api_lib/models/*", ".git", ".hg", ".mypy_cache", ".tox", ".venv", ".devcontainer", "venv", "_build", "buck-out", "build", "dist", "**/__init__.py"]
 statistics = true
@@ -93,6 +98,12 @@ langchain-community = "^0.3.23"
 atlassian-python-api = "^4.0.3"
 markdownify = "^1.1.0"
 langchain-core = "0.3.63"
+torch = {version = "^2.7.1+cpu", source = "pytorch_cpu"}
+torchvision = {version = "^0.22.1+cpu", source = "pytorch_cpu"}
+torchaudio = {version = "^2.7.1+cpu", source = "pytorch_cpu"}
+camelot-py = {extras = ["cv"], version = "^1.0.0"}
+tabula = "^1.0.5"
+easyocr = "^1.7.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"
