@@ -22,7 +22,7 @@ from extractor_api_lib.impl.settings.pdf_extractor_settings import PDFExtractorS
 from extractor_api_lib.impl.settings.s3_settings import S3Settings
 from extractor_api_lib.impl.table_converter.dataframe2markdown import DataFrame2Markdown
 from extractor_api_lib.impl.utils.sitemap_extractor_utils import (
-    custom_sitemap_meta_function,
+    custom_sitemap_metadata_parser_function,
     custom_sitemap_parser_function,
 )
 
@@ -35,7 +35,7 @@ class DependencyContainer(DeclarativeContainer):
     settings_pdf_extractor = PDFExtractorSettings()
 
     sitemap_parsing_function = Factory(lambda: custom_sitemap_parser_function)
-    sitemap_meta_function = Factory(lambda: custom_sitemap_meta_function)
+    sitemap_meta_function = Factory(lambda: custom_sitemap_metadata_parser_function)
 
     database_converter = Singleton(DataFrame2Markdown)
     file_service = Singleton(S3Service, settings_s3)

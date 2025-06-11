@@ -6,6 +6,11 @@ def custom_sitemap_parser_function(content: Union[str, BeautifulSoup]) -> str:
     """
     Given HTML content (as a string or BeautifulSoup object), return only the
     concatenated text from all <article> elements.
+
+    Parameters
+    ----------
+    content : Union[str, BeautifulSoup]
+        The HTML content to parse, either as a string or a BeautifulSoup object.
     """
     if isinstance(content, str):
         soup = BeautifulSoup(content, "html.parser")
@@ -20,9 +25,16 @@ def custom_sitemap_parser_function(content: Union[str, BeautifulSoup]) -> str:
     return "\n".join(texts)
 
 
-def custom_sitemap_meta_function(meta: dict, _content: Any) -> dict:
+def custom_sitemap_metadata_parser_function(meta: dict, _content: Any) -> dict:
     """
-    Given metadata and HTML content, extract the title from the first <h1> element
+    Given metadata and HTML content, extract the title from the first article and the first <h1> element
+
+    Parameters
+    ----------
+    meta : dict
+        Metadata dictionary containing the source location and other metadata.
+    _content : Any
+        The HTML content to parse
     """
     if isinstance(_content, str):
         soup = BeautifulSoup(_content, "html.parser")

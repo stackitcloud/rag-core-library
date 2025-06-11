@@ -10,25 +10,11 @@ from extractor_api_lib.impl.types.extractor_types import ExtractorTypes
 from extractor_api_lib.models.extraction_parameters import ExtractionParameters
 from extractor_api_lib.models.key_value_pair import KeyValuePair
 from extractor_api_lib.models.dataclasses.internal_information_piece import InternalInformationPiece
-from extractor_api_lib.impl.mapper.sitemap_document2information_piece import (
-    SitemapLangchainDocument2InformationPiece,
-)
 from extractor_api_lib.impl.types.content_type import ContentType
 
 
 class TestSitemapExtractor:
     """Test class for SitemapExtractor."""
-
-    @pytest.fixture
-    def mock_mapper(self):
-        """Create a mock mapper for testing."""
-        mapper = MagicMock(spec=SitemapLangchainDocument2InformationPiece)
-        mapper.map_document2informationpiece.return_value = InternalInformationPiece(
-            type=ContentType.TEXT,
-            metadata={"document": "test_doc", "id": "test_id", "related": []},
-            page_content="Test content",
-        )
-        return mapper
 
     @pytest.fixture
     def sitemap_extractor(self, mock_mapper):
@@ -146,7 +132,7 @@ class TestSitemapExtractor:
         # Verify SitemapLoader was called with string fallback values
         call_args = mock_sitemap_loader_class.call_args[1]
         assert call_args["filter_urls"] == "invalid-json["
-        assert "header_template" not in call_args  # Should not be set due to invalid JSON
+        assert call_args["header_template"] is None  # Should be None due to invalid JSON
 
     @pytest.mark.asyncio
     @patch("extractor_api_lib.impl.extractors.sitemap_extractor.SitemapLoader")
