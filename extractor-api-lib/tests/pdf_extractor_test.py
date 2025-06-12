@@ -1,12 +1,11 @@
 """Comprehensive test suite for PDFExtractor class."""
 
-import asyncio
-import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import MagicMock, patch
 import pytest
 import pandas as pd
 import numpy as np
+from pdf2image.exceptions import PDFPageCountError
 
 from extractor_api_lib.impl.extractors.file_extractors.pdf_extractor import PDFExtractor
 from extractor_api_lib.impl.settings.pdf_extractor_settings import PDFExtractorSettings
@@ -14,23 +13,17 @@ from extractor_api_lib.impl.types.content_type import ContentType
 from extractor_api_lib.impl.types.file_type import FileType
 from extractor_api_lib.models.dataclasses.internal_information_piece import InternalInformationPiece
 from extractor_api_lib.table_converter.dataframe_converter import DataframeConverter
-from extractor_api_lib.file_services.file_service import FileService
 
 
 class TestPDFExtractor:
     """Test class for PDFExtractor."""
 
-    @pytest.fixture
-    def mock_file_service(self):
-        """Create a mock file service for testing."""
-        service = MagicMock(spec=FileService)
-        return service
+
 
     @pytest.fixture
     def mock_pdf_extractor_settings(self):
         """Create mock PDF extractor settings."""
-        settings = MagicMock(spec=PDFExtractorSettings)
-        return settings
+        return MagicMock(spec=PDFExtractorSettings)
 
     @pytest.fixture
     def mock_dataframe_converter(self):
@@ -87,10 +80,7 @@ class TestPDFExtractor:
         assert piece.metadata["related"] == ["related_1", "related_2"]
         assert piece.metadata["test_key"] == "test_value"
 
-    @patch("pdfplumber.open")
-    @patch("pdf2image.convert_from_path")
-    @patch("tempfile.TemporaryDirectory")
-    def test_is_text_based_threshold(self, mock_temp_dir, mock_convert, mock_pdfplumber, pdf_extractor):
+    def test_is_text_based_threshold(self, pdf_extractor):
         """Test the text-based page classification threshold."""
         # Mock pdfplumber page
         mock_page = MagicMock()
@@ -116,7 +106,11 @@ class TestPDFExtractor:
         # Test English text
         english_text = "This is a sample English text for language detection."
         detected_lang = pdf_extractor._auto_detect_language(english_text)
-        assert detected_lang in ["en", "de"]  # Should detect a language
+        assert detected_lang == "en"  # Should detect a language
+        # Test German text
+        german_text = "Dies ist ein deutscher Beispiel Text für die Spracherkennung"
+        detected_lang = pdf_extractor._auto_detect_language(german_text)
+        assert detected_lang == "de"
 
         # Test with empty text (should default to "en")
         empty_text = ""
@@ -126,9 +120,6 @@ class TestPDFExtractor:
     @pytest.mark.asyncio
     async def test_extract_content_text_based_pdf(self, pdf_extractor, test_pdf_files):
         """Test content extraction from text-based PDF."""
-        if not test_pdf_files["text_based"].exists():
-            pytest.skip("Text-based test PDF not found")
-
         result = await pdf_extractor.aextract_content(
             file_path=test_pdf_files["text_based"], name="text_based_document"
         )
@@ -155,14 +146,9 @@ class TestPDFExtractor:
     @pytest.mark.asyncio
     async def test_extract_content_scanned_pdf(self, pdf_extractor, test_pdf_files):
         """Test content extraction from scanned PDF using OCR."""
-        if not test_pdf_files["scanned"].exists():
-            pytest.skip("Scanned test PDF not found")
-
         result = await pdf_extractor.aextract_content(file_path=test_pdf_files["scanned"], name="scanned_document")
 
         assert isinstance(result, list)
-        # Scanned documents might have fewer extractable elements
-        # but should still extract some content via OCR
 
         for element in result:
             assert element.metadata["document"] == "scanned_document"
@@ -171,9 +157,6 @@ class TestPDFExtractor:
     @pytest.mark.asyncio
     async def test_extract_content_mixed_content_pdf(self, pdf_extractor, test_pdf_files):
         """Test content extraction from mixed content PDF."""
-        if not test_pdf_files["mixed_content"].exists():
-            pytest.skip("Mixed content test PDF not found")
-
         result = await pdf_extractor.aextract_content(
             file_path=test_pdf_files["mixed_content"], name="mixed_content_document"
         )
@@ -181,9 +164,9 @@ class TestPDFExtractor:
         assert isinstance(result, list)
         assert len(result) > 0
 
-        # Should contain both text and table elements
         content_types = {elem.type for elem in result}
         assert ContentType.TEXT in content_types
+        assert ContentType.TABLE in content_types
 
         for element in result:
             assert element.metadata["document"] == "mixed_content_document"
@@ -191,9 +174,6 @@ class TestPDFExtractor:
     @pytest.mark.asyncio
     async def test_extract_content_multi_column_pdf(self, pdf_extractor, test_pdf_files):
         """Test content extraction from multi-column PDF."""
-        if not test_pdf_files["multi_column"].exists():
-            pytest.skip("Multi-column test PDF not found")
-
         result = await pdf_extractor.aextract_content(
             file_path=test_pdf_files["multi_column"], name="multi_column_document"
         )
@@ -214,6 +194,9 @@ It contains multiple sentences and paragraphs.
 This section describes the methodology used in the research.
 It includes detailed explanations of procedures.
 
+3. State of the art
+This section describes the state of the art.
+
 3.1 Data Collection
 This subsection covers data collection procedures.
 """
@@ -223,15 +206,18 @@ This subsection covers data collection procedures.
         )
 
         assert isinstance(result, list)
-        assert len(result) > 0
+        assert len(result) == 4
 
         # Check that titles are properly detected and content is split
-        titles_found = [elem.metadata["title"] for elem in result]
         content_found = [elem.page_content for elem in result]
 
         # Should contain the processed content
-        assert any("Introduction" in content for content in content_found)
-        assert any("Methodology" in content for content in content_found)
+        assert any("1. Introduction" in content for content in content_found)
+        assert any("2. Methodology" in content for content in content_found)
+
+        for elem in result:
+            assert elem.metadata["title"] in ["1. Introduction", "2. Methodology", "3. State of the art", "3.1 Data Collection"]
+
 
     def test_process_text_content_without_titles(self, pdf_extractor):
         """Test text content processing without title patterns."""
@@ -260,8 +246,9 @@ This subsection covers data collection procedures.
         )
         assert result == []
 
-    @patch("pdfplumber.open")
-    def test_extract_text_from_text_page(self, mock_pdfplumber, pdf_extractor):
+    #TODO: hier gehts weiter !!! D:
+
+    def test_extract_text_from_text_page(self, pdf_extractor):
         """Test text extraction from text-based pages."""
         mock_page = MagicMock()
         mock_page.extract_text.return_value = "Sample extracted text"
@@ -274,8 +261,7 @@ This subsection covers data collection procedures.
         result = pdf_extractor._extract_text_from_text_page(mock_page)
         assert result == ""
 
-    @patch("pdfplumber.open")
-    def test_extract_tables_from_text_page(self, mock_pdfplumber, pdf_extractor):
+    def test_extract_tables_from_text_page(self, pdf_extractor):
         """Test table extraction from text-based pages."""
         mock_page = MagicMock()
 
@@ -391,10 +377,10 @@ This is the content of the second section."""
         """Test error handling with invalid PDF file."""
         invalid_path = Path("/nonexistent/file.pdf")
 
-        with pytest.raises(Exception):
+        with pytest.raises(PDFPageCountError):
             await pdf_extractor.aextract_content(file_path=invalid_path, name="invalid_document")
 
-    def test_related_ids_mapping(self, pdf_extractor):
+    def test_related_ids_mapping(self):
         """Test that related IDs are properly set between text and table elements."""
         # This would be tested as part of the integration test
         # with actual PDF processing, but we can test the logic

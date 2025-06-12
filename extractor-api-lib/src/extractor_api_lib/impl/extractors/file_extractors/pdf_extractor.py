@@ -48,7 +48,7 @@ class PDFExtractor(InformationFileExtractor):
 
     TITLE_PATTERN = re.compile(r"(^|\n)(\d+\.[\.\d]*[\t ][a-zA-Z0-9 äöüÄÖÜß\-]+)")
     TITLE_PATTERN_MULTILINE = re.compile(r"(^|\n)(\d+\.[\.\d]*[\t ][a-zA-Z0-9 äöüÄÖÜß\-]+)", re.MULTILINE)
-    TEXT_THRESHOLD = 50  # Minimum characters to consider page as text-based TODO: should be configurable by settings
+    TEXT_THRESHOLD = 50  # Minimum characters to consider page as text-based
 
     def __init__(
         self,
@@ -97,14 +97,14 @@ class PDFExtractor(InformationFileExtractor):
         content_type: ContentType,
         information_id: str,
         additional_meta: Optional[dict] = None,
-        related_ids: list[str] = [],
+        related_ids: list[str] = None,
     ) -> InternalInformationPiece:
         metadata = {
             "document": document_name,
             "page": page,
             "title": title,
             "id": information_id,
-            "related": related_ids,
+            "related": related_ids if related_ids else [],
         }
         if additional_meta:
             metadata = metadata | additional_meta
@@ -312,7 +312,7 @@ class PDFExtractor(InformationFileExtractor):
                                 self._create_information_piece(
                                     document_name,
                                     page_index,
-                                    f"Table {i+1}",
+                                    f"Table {i + 1}",
                                     converted_table,
                                     ContentType.TABLE,
                                     information_id=hash_datetime(),
@@ -324,7 +324,7 @@ class PDFExtractor(InformationFileExtractor):
                                 )
                             )
                     except Exception as e:
-                        logger.warning(f"Failed to convert Camelot table {i+1}: {e}")
+                        logger.warning(f"Failed to convert Camelot table {i + 1}: {e}")
 
         except Exception as e:
             logger.debug(f"Camelot table extraction failed for page {page_index}: {e}")
