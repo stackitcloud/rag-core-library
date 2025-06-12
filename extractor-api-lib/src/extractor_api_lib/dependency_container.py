@@ -6,7 +6,7 @@ from dependency_injector.providers import Factory, List, Singleton  # noqa: WOT0
 from extractor_api_lib.impl.api_endpoints.general_source_extractor import GeneralSourceExtractor
 from extractor_api_lib.impl.extractors.confluence_extractor import ConfluenceExtractor
 from extractor_api_lib.impl.extractors.file_extractors.ms_docs_extractor import MSDocsExtractor
-from extractor_api_lib.impl.extractors.file_extractors.pdf_extractorv2 import PDFExtractor
+from extractor_api_lib.impl.extractors.file_extractors.pdf_extractor import PDFExtractor
 from extractor_api_lib.impl.extractors.file_extractors.xml_extractor import XMLExtractor
 from extractor_api_lib.impl.api_endpoints.general_file_extractor import GeneralFileExtractor
 from extractor_api_lib.impl.extractors.sitemap_extractor import SitemapExtractor
