@@ -74,7 +74,7 @@ class TestPDFExtractor:
             content_type=ContentType.TEXT,
             information_id="test_id",
             additional_meta={"test_key": "test_value"},
-            related_ids=["related_1", "related_2"]
+            related_ids=["related_1", "related_2"],
         )
 
         assert isinstance(piece, InternalInformationPiece)
@@ -87,9 +87,9 @@ class TestPDFExtractor:
         assert piece.metadata["related"] == ["related_1", "related_2"]
         assert piece.metadata["test_key"] == "test_value"
 
-    @patch('pdfplumber.open')
-    @patch('pdf2image.convert_from_path')
-    @patch('tempfile.TemporaryDirectory')
+    @patch("pdfplumber.open")
+    @patch("pdf2image.convert_from_path")
+    @patch("tempfile.TemporaryDirectory")
     def test_is_text_based_threshold(self, mock_temp_dir, mock_convert, mock_pdfplumber, pdf_extractor):
         """Test the text-based page classification threshold."""
         # Mock pdfplumber page
@@ -130,8 +130,7 @@ class TestPDFExtractor:
             pytest.skip("Text-based test PDF not found")
 
         result = await pdf_extractor.aextract_content(
-            file_path=test_pdf_files["text_based"],
-            name="text_based_document"
+            file_path=test_pdf_files["text_based"], name="text_based_document"
         )
 
         assert isinstance(result, list)
@@ -159,10 +158,7 @@ class TestPDFExtractor:
         if not test_pdf_files["scanned"].exists():
             pytest.skip("Scanned test PDF not found")
 
-        result = await pdf_extractor.aextract_content(
-            file_path=test_pdf_files["scanned"],
-            name="scanned_document"
-        )
+        result = await pdf_extractor.aextract_content(file_path=test_pdf_files["scanned"], name="scanned_document")
 
         assert isinstance(result, list)
         # Scanned documents might have fewer extractable elements
@@ -179,8 +175,7 @@ class TestPDFExtractor:
             pytest.skip("Mixed content test PDF not found")
 
         result = await pdf_extractor.aextract_content(
-            file_path=test_pdf_files["mixed_content"],
-            name="mixed_content_document"
+            file_path=test_pdf_files["mixed_content"], name="mixed_content_document"
         )
 
         assert isinstance(result, list)
@@ -200,8 +195,7 @@ class TestPDFExtractor:
             pytest.skip("Multi-column test PDF not found")
 
         result = await pdf_extractor.aextract_content(
-            file_path=test_pdf_files["multi_column"],
-            name="multi_column_document"
+            file_path=test_pdf_files["multi_column"], name="multi_column_document"
         )
 
         assert isinstance(result, list)
@@ -225,10 +219,7 @@ This subsection covers data collection procedures.
 """
 
         result = pdf_extractor._process_text_content(
-            content=content,
-            title="Document Title",
-            page_index=1,
-            document_name="test_document"
+            content=content, title="Document Title", page_index=1, document_name="test_document"
         )
 
         assert isinstance(result, list)
@@ -247,10 +238,7 @@ This subsection covers data collection procedures.
         content = "This is plain text content without any title patterns."
 
         result = pdf_extractor._process_text_content(
-            content=content,
-            title="Current Title",
-            page_index=1,
-            document_name="test_document"
+            content=content, title="Current Title", page_index=1, document_name="test_document"
         )
 
         assert isinstance(result, list)
@@ -262,23 +250,17 @@ This subsection covers data collection procedures.
         """Test processing empty or None text content."""
         # Test empty string
         result = pdf_extractor._process_text_content(
-            content="",
-            title="Title",
-            page_index=1,
-            document_name="test_document"
+            content="", title="Title", page_index=1, document_name="test_document"
         )
         assert result == []
 
         # Test whitespace only
         result = pdf_extractor._process_text_content(
-            content="   \n\t   ",
-            title="Title",
-            page_index=1,
-            document_name="test_document"
+            content="   \n\t   ", title="Title", page_index=1, document_name="test_document"
         )
         assert result == []
 
-    @patch('pdfplumber.open')
+    @patch("pdfplumber.open")
     def test_extract_text_from_text_page(self, mock_pdfplumber, pdf_extractor):
         """Test text extraction from text-based pages."""
         mock_page = MagicMock()
@@ -292,24 +274,18 @@ This subsection covers data collection procedures.
         result = pdf_extractor._extract_text_from_text_page(mock_page)
         assert result == ""
 
-    @patch('pdfplumber.open')
+    @patch("pdfplumber.open")
     def test_extract_tables_from_text_page(self, mock_pdfplumber, pdf_extractor):
         """Test table extraction from text-based pages."""
         mock_page = MagicMock()
 
         # Mock table data
         mock_table = MagicMock()
-        mock_table.extract.return_value = [
-            ["Header 1", "Header 2"],
-            ["Value 1", "Value 2"],
-            ["Value 3", "Value 4"]
-        ]
+        mock_table.extract.return_value = [["Header 1", "Header 2"], ["Value 1", "Value 2"], ["Value 3", "Value 4"]]
         mock_page.find_tables.return_value = [mock_table]
 
         result = pdf_extractor._extract_tables_from_text_page(
-            page=mock_page,
-            page_index=1,
-            document_name="test_document"
+            page=mock_page, page_index=1, document_name="test_document"
         )
 
         assert isinstance(result, list)
@@ -318,9 +294,9 @@ This subsection covers data collection procedures.
         assert result[0].metadata["document"] == "test_document"
         assert result[0].metadata["page"] == 1
 
-    @patch('cv2.imread')
-    @patch('pytesseract.image_to_string')
-    @patch('pytesseract.image_to_pdf_or_hocr')
+    @patch("cv2.imread")
+    @patch("pytesseract.image_to_string")
+    @patch("pytesseract.image_to_pdf_or_hocr")
     def test_extract_text_from_scanned_page(self, mock_pdf_hocr, mock_tesseract, mock_cv2, pdf_extractor):
         """Test text extraction from scanned pages using OCR."""
         # Mock page and image data
@@ -333,13 +309,9 @@ This subsection covers data collection procedures.
         mock_pdf_hocr.return_value = b"PDF bytes"
 
         # Test the case where language detection returns English (should return tuple)
-        with patch.object(pdf_extractor, '_auto_detect_language', return_value='en'):
+        with patch.object(pdf_extractor, "_auto_detect_language", return_value="en"):
             result = pdf_extractor._extract_text_from_scanned_page(
-                page=mock_page,
-                scale_x=1.0,
-                scale_y=1.0,
-                image=mock_image,
-                pdf_page_height=800
+                page=mock_page, scale_x=1.0, scale_y=1.0, image=mock_image, pdf_page_height=800
             )
 
             # Should always return a tuple
@@ -350,13 +322,9 @@ This subsection covers data collection procedures.
             assert isinstance(pdf_bytes, bytes)
 
         # Test the case where language detection returns non-English (should return tuple)
-        with patch.object(pdf_extractor, '_auto_detect_language', return_value='de'):
+        with patch.object(pdf_extractor, "_auto_detect_language", return_value="de"):
             result = pdf_extractor._extract_text_from_scanned_page(
-                page=mock_page,
-                scale_x=1.0,
-                scale_y=1.0,
-                image=mock_image,
-                pdf_page_height=800
+                page=mock_page, scale_x=1.0, scale_y=1.0, image=mock_image, pdf_page_height=800
             )
 
             assert isinstance(result, tuple)
@@ -365,23 +333,18 @@ This subsection covers data collection procedures.
             assert isinstance(text, str)
             assert isinstance(pdf_bytes, bytes)
 
-    @patch('camelot.read_pdf')
-    @patch('tabula.read_pdf')
+    @patch("camelot.read_pdf")
+    @patch("tabula.read_pdf")
     def test_extract_tables_from_scanned_page(self, mock_tabula, mock_camelot, pdf_extractor):
         """Test table extraction from scanned pages."""
         # Mock Camelot table extraction
         mock_camelot_table = MagicMock()
         mock_camelot_table.accuracy = 75
-        mock_camelot_table.df = pd.DataFrame({
-            "Column 1": ["Value 1", "Value 2"],
-            "Column 2": ["Value 3", "Value 4"]
-        })
+        mock_camelot_table.df = pd.DataFrame({"Column 1": ["Value 1", "Value 2"], "Column 2": ["Value 3", "Value 4"]})
         mock_camelot.return_value = [mock_camelot_table]
 
         result = pdf_extractor._extract_tables_from_scanned_page(
-            page_index=1,
-            document_name="test_document",
-            filename="/path/to/test.pdf"
+            page_index=1, document_name="test_document", filename="/path/to/test.pdf"
         )
 
         assert isinstance(result, list)
@@ -398,7 +361,7 @@ This subsection covers data collection procedures.
             "2.1 Methodology",
             "3.1.1 Data Collection",
             "4.\tResults",
-            "5. Discussion and Conclusions"
+            "5. Discussion and Conclusions",
         ]
 
         for test_case in test_cases:
@@ -429,23 +392,14 @@ This is the content of the second section."""
         invalid_path = Path("/nonexistent/file.pdf")
 
         with pytest.raises(Exception):
-            await pdf_extractor.aextract_content(
-                file_path=invalid_path,
-                name="invalid_document"
-            )
+            await pdf_extractor.aextract_content(file_path=invalid_path, name="invalid_document")
 
     def test_related_ids_mapping(self, pdf_extractor):
         """Test that related IDs are properly set between text and table elements."""
         # This would be tested as part of the integration test
         # with actual PDF processing, but we can test the logic
-        text_elements = [
-            MagicMock(metadata={"id": "text_1"}),
-            MagicMock(metadata={"id": "text_2"})
-        ]
-        table_elements = [
-            MagicMock(metadata={"id": "table_1"}),
-            MagicMock(metadata={"id": "table_2"})
-        ]
+        text_elements = [MagicMock(metadata={"id": "text_1"}), MagicMock(metadata={"id": "text_2"})]
+        table_elements = [MagicMock(metadata={"id": "table_1"}), MagicMock(metadata={"id": "table_2"})]
 
         # Simulate the relationship mapping logic
         text_ids = [elem.metadata["id"] for elem in text_elements]
@@ -476,12 +430,10 @@ This is the content of the second section."""
             pytest.skip("No test PDF files available")
 
         import time
+
         start_time = time.time()
 
-        result = await pdf_extractor.aextract_content(
-            file_path=test_file,
-            name="performance_test"
-        )
+        result = await pdf_extractor.aextract_content(file_path=test_file, name="performance_test")
 
         end_time = time.time()
         processing_time = end_time - start_time
@@ -497,8 +449,8 @@ This is the content of the second section."""
 
         # Test fallback for unknown language
         unknown_lang = "unknown"
-        tesseract_lang = pdf_extractor._lang_map.get(unknown_lang, 'eng')
-        assert tesseract_lang == 'eng'
+        tesseract_lang = pdf_extractor._lang_map.get(unknown_lang, "eng")
+        assert tesseract_lang == "eng"
 
     @pytest.mark.integration
     @pytest.mark.asyncio
@@ -510,10 +462,7 @@ This is the content of the second section."""
 
             print(f"\nTesting {pdf_name} PDF: {pdf_path}")
 
-            result = await pdf_extractor.aextract_content(
-                file_path=pdf_path,
-                name=pdf_name
-            )
+            result = await pdf_extractor.aextract_content(file_path=pdf_path, name=pdf_name)
 
             assert isinstance(result, list), f"Result should be a list for {pdf_name}"
             print(f"  Extracted {len(result)} elements")
@@ -554,7 +503,7 @@ if __name__ == "__main__":
         "text_based_document.pdf",
         "scanned_document.pdf",
         "mixed_content_document.pdf",
-        "multi_column_document.pdf"
+        "multi_column_document.pdf",
     ]
 
     missing_files = [f for f in required_files if not (test_data_dir / f).exists()]

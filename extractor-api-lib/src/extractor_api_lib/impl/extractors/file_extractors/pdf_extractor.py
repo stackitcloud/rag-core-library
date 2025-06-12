@@ -29,6 +29,7 @@ from extractor_api_lib.extractors.information_file_extractor import InformationF
 logger = logging.getLogger(__name__)
 logging.getLogger("pdfminer").setLevel(logging.WARNING)
 
+
 class PDFExtractor(InformationFileExtractor):
     """PDFExtractor is a class responsible for extracting information from PDF files.
 
@@ -48,7 +49,6 @@ class PDFExtractor(InformationFileExtractor):
     TITLE_PATTERN = re.compile(r"(^|\n)(\d+\.[\.\d]*[\t ][a-zA-Z0-9 äöüÄÖÜß\-]+)")
     TITLE_PATTERN_MULTILINE = re.compile(r"(^|\n)(\d+\.[\.\d]*[\t ][a-zA-Z0-9 äöüÄÖÜß\-]+)", re.MULTILINE)
     TEXT_THRESHOLD = 50  # Minimum characters to consider page as text-based TODO: should be configurable by settings
-
 
     def __init__(
         self,
@@ -174,7 +174,7 @@ class PDFExtractor(InformationFileExtractor):
         extractable_text = page.extract_text() or ""
 
         # Clean and count meaningful text
-        meaningful_text = re.sub(r'\s+', ' ', extractable_text.strip())
+        meaningful_text = re.sub(r"\s+", " ", extractable_text.strip())
 
         if len(meaningful_text) >= self.TEXT_THRESHOLD:
             return True
@@ -233,8 +233,8 @@ class PDFExtractor(InformationFileExtractor):
         scale_y: int,
         image: np.ndarray,
         pdf_page_height: int,
-        with_image_masking: Optional[bool] = True
-    ) -> tuple[str,bytes]:
+        with_image_masking: Optional[bool] = True,
+    ) -> tuple[str, bytes]:
         thickness = -1
         color = (255, 255, 255)
         original_image = image.copy()
@@ -265,16 +265,20 @@ class PDFExtractor(InformationFileExtractor):
 
         rough_text = pytesseract.image_to_string(image, lang="eng")
         if not rough_text and with_image_masking:
-            return self._extract_text_from_scanned_page(page, scale_x, scale_y, original_image, pdf_page_height, with_image_masking=False)
+            return self._extract_text_from_scanned_page(
+                page, scale_x, scale_y, original_image, pdf_page_height, with_image_masking=False
+            )
         lang_code = self._auto_detect_language(rough_text)
-        tesseract_lang = self._lang_map.get(lang_code, 'eng')
+        tesseract_lang = self._lang_map.get(lang_code, "eng")
         pdf_bytes = pytesseract.image_to_pdf_or_hocr(original_image, extension="pdf", lang=tesseract_lang)
         if lang_code == "en":
             return (rough_text, pdf_bytes)
 
-        return (pytesseract.image_to_string(image, lang=tesseract_lang),pdf_bytes)
+        return (pytesseract.image_to_string(image, lang=tesseract_lang), pdf_bytes)
 
-    def _extract_tables_from_scanned_page(self, page_index: int, document_name: str, filename: str) -> list[InternalInformationPiece]:
+    def _extract_tables_from_scanned_page(
+        self, page_index: int, document_name: str, filename: str
+    ) -> list[InternalInformationPiece]:
         """Extract tables from scanned page using multiple methods.
 
         Parameters
@@ -312,7 +316,11 @@ class PDFExtractor(InformationFileExtractor):
                                     converted_table,
                                     ContentType.TABLE,
                                     information_id=hash_datetime(),
-                                    additional_meta={"table_method": "camelot", "accuracy": table.accuracy, "table_index": i}
+                                    additional_meta={
+                                        "table_method": "camelot",
+                                        "accuracy": table.accuracy,
+                                        "table_index": i,
+                                    },
                                 )
                             )
                     except Exception as e:
@@ -352,9 +360,11 @@ class PDFExtractor(InformationFileExtractor):
         table_elements = []
         if is_text_based:
             content = self._extract_text_from_text_page(page)
-            table_elements = self._extract_tables_from_text_page(page=page, page_index=page_index, document_name=document_name)
+            table_elements = self._extract_tables_from_text_page(
+                page=page, page_index=page_index, document_name=document_name
+            )
         else:
-            content,pdf_bytes = self._extract_text_from_scanned_page(
+            content, pdf_bytes = self._extract_text_from_scanned_page(
                 page=page,
                 scale_x=scale_x,
                 scale_y=scale_y,
@@ -390,13 +400,13 @@ class PDFExtractor(InformationFileExtractor):
                 element.metadata["related"] = table_element_ids
                 tmp_pdf_elements.append(element)
 
-            pdf_elements = tmp_pdf_elements+tmp_table_elements
-
-
+            pdf_elements = tmp_pdf_elements + tmp_table_elements
 
         return pdf_elements, title
 
-    def _process_text_content(self, content: str, title: str, page_index: int, document_name: str) -> list[InternalInformationPiece]:
+    def _process_text_content(
+        self, content: str, title: str, page_index: int, document_name: str
+    ) -> list[InternalInformationPiece]:
         """Process text content and split by titles.
 
         Parameters
