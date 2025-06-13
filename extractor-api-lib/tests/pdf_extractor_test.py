@@ -564,31 +564,3 @@ More content here."""
             # Verify content is not empty
             non_empty_content = [elem for elem in result if elem.page_content.strip()]
             assert len(non_empty_content) > 0, f"No non-empty content extracted from {pdf_name}"
-
-    def test_text_threshold_configuration(self, pdf_extractor):
-        """Test that the text threshold is configurable."""
-        # Check default threshold
-        assert pdf_extractor.TEXT_THRESHOLD == 50
-
-        # The threshold should be configurable through settings
-        # This is mentioned in the TODO comment in the code
-
-
-if __name__ == "__main__":
-    # Generate test PDFs if they don't exist
-    from test_data.generate_test_pdfs import main as generate_pdfs
-
-    test_data_dir = Path(__file__).parent / "test_data"
-    required_files = [
-        "text_based_document.pdf",
-        "scanned_document.pdf",
-        "mixed_content_document.pdf",
-        "multi_column_document.pdf",
-    ]
-
-    missing_files = [f for f in required_files if not (test_data_dir / f).exists()]
-    if missing_files:
-        print(f"Generating missing test files: {missing_files}")
-        generate_pdfs()
-
-    pytest.main([__file__, "-v"])
