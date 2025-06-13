@@ -20,6 +20,7 @@ def mock_mapper():
     )
     return mapper
 
+
 @pytest.fixture
 def mock_file_service():
     """Create a mock file service for testing."""

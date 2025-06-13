@@ -283,14 +283,12 @@ class PDFExtractor(InformationFileExtractor):
 
         Parameters
         ----------
-        page : Page
-            The pdfplumber page object.
         page_index : int
             The page number.
         document_name : str
             Name of the document.
-        file_path : Path
-            Path to the PDF file.
+        filename: str
+            Path to the PDF file including the filename.
 
         Returns
         -------

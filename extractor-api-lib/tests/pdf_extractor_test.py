@@ -1,11 +1,16 @@
 """Comprehensive test suite for PDFExtractor class."""
 
+import time
+import logging
+
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 import pytest
 import pandas as pd
 import numpy as np
 from pdf2image.exceptions import PDFPageCountError
+import pdfplumber
+from pdf2image import convert_from_path
 
 from extractor_api_lib.impl.extractors.file_extractors.pdf_extractor import PDFExtractor
 from extractor_api_lib.impl.settings.pdf_extractor_settings import PDFExtractorSettings
@@ -14,11 +19,11 @@ from extractor_api_lib.impl.types.file_type import FileType
 from extractor_api_lib.models.dataclasses.internal_information_piece import InternalInformationPiece
 from extractor_api_lib.table_converter.dataframe_converter import DataframeConverter
 
+logger = logging.getLogger(__name__)
+
 
 class TestPDFExtractor:
     """Test class for PDFExtractor."""
-
-
 
     @pytest.fixture
     def mock_pdf_extractor_settings(self):
@@ -216,8 +221,12 @@ This subsection covers data collection procedures.
         assert any("2. Methodology" in content for content in content_found)
 
         for elem in result:
-            assert elem.metadata["title"] in ["1. Introduction", "2. Methodology", "3. State of the art", "3.1 Data Collection"]
-
+            assert elem.metadata["title"] in [
+                "1. Introduction",
+                "2. Methodology",
+                "3. State of the art",
+                "3.1 Data Collection",
+            ]
 
     def test_process_text_content_without_titles(self, pdf_extractor):
         """Test text content processing without title patterns."""
@@ -246,7 +255,7 @@ This subsection covers data collection procedures.
         )
         assert result == []
 
-    #TODO: hier gehts weiter !!! D:
+    # TODO: hier gehts weiter !!! D:
 
     def test_extract_text_from_text_page(self, pdf_extractor):
         """Test text extraction from text-based pages."""
@@ -280,48 +289,72 @@ This subsection covers data collection procedures.
         assert result[0].metadata["document"] == "test_document"
         assert result[0].metadata["page"] == 1
 
-    @patch("cv2.imread")
-    @patch("pytesseract.image_to_string")
-    @patch("pytesseract.image_to_pdf_or_hocr")
-    def test_extract_text_from_scanned_page(self, mock_pdf_hocr, mock_tesseract, mock_cv2, pdf_extractor):
-        """Test text extraction from scanned pages using OCR."""
-        # Mock page and image data
-        mock_page = MagicMock()
-        mock_page.find_tables.return_value = []
-        mock_page.images = []
+    @pytest.mark.integration
+    def test_extract_text_from_scanned_page(self, pdf_extractor, test_pdf_files):
+        """Test text extraction from scanned pages using OCR with real PDF."""
 
-        mock_image = np.zeros((800, 600, 3), dtype=np.uint8)
-        mock_tesseract.return_value = "OCR extracted text"
-        mock_pdf_hocr.return_value = b"PDF bytes"
+        # Use the actual scanned test PDF
+        scanned_pdf_path = test_pdf_files["scanned"]
 
-        # Test the case where language detection returns English (should return tuple)
-        with patch.object(pdf_extractor, "_auto_detect_language", return_value="en"):
+        # Open the real PDF and get the first page
+        with pdfplumber.open(scanned_pdf_path) as pdf:
+
+            page = pdf.pages[0]
+
+            # Convert PDF page to image for OCR
+            images = convert_from_path(scanned_pdf_path, first_page=1, last_page=1)
+
+            # Convert PIL image to numpy array
+            image_array = np.array(images[0])
+
+            # Test the actual OCR extraction
             result = pdf_extractor._extract_text_from_scanned_page(
-                page=mock_page, scale_x=1.0, scale_y=1.0, image=mock_image, pdf_page_height=800
-            )
-
-            # Should always return a tuple
-            assert isinstance(result, tuple)
-            assert len(result) == 2
-            text, pdf_bytes = result
-            assert isinstance(text, str)
-            assert isinstance(pdf_bytes, bytes)
-
-        # Test the case where language detection returns non-English (should return tuple)
-        with patch.object(pdf_extractor, "_auto_detect_language", return_value="de"):
-            result = pdf_extractor._extract_text_from_scanned_page(
-                page=mock_page, scale_x=1.0, scale_y=1.0, image=mock_image, pdf_page_height=800
+                page=page, scale_x=1.0, scale_y=1.0, image=image_array, pdf_page_height=images[0].height
             )
 
             assert isinstance(result, tuple)
             assert len(result) == 2
             text, pdf_bytes = result
+
             assert isinstance(text, str)
             assert isinstance(pdf_bytes, bytes)
+
+            # The OCR should extract some text (even if not perfect)
+            assert len(text.strip()) > 0, "OCR should extract some text from scanned page"
+
+            # PDF bytes should be generated
+            assert len(pdf_bytes) > 0, "Should generate PDF bytes from OCR"
+
+            # Verify specific content from the scanned PDF
+            expected_content = [
+                "SCANNED DOCUMENT",
+                "This document appears to be scanned from a physical paper",
+                "text extraction capabilities are limited",
+                "Key characteristics of scanned documents",
+                "OCR is required for text extraction",
+                "testing purposes",
+            ]
+
+            # Check that the main content elements are extracted
+            text_upper = text.upper()
+            for expected_phrase in expected_content:
+                assert (
+                    expected_phrase.upper() in text_upper
+                ), f"Expected phrase '{expected_phrase}' not found in OCR text"
+
+            with patch.object(pdf_extractor, "_auto_detect_language", return_value="de"):
+                result = pdf_extractor._extract_text_from_scanned_page(
+                    page=page, scale_x=1.0, scale_y=1.0, image=image_array, pdf_page_height=images[0].height
+                )
+
+                assert isinstance(result, tuple)
+                assert len(result) == 2
+                text, pdf_bytes = result
+                assert isinstance(text, str)
+                assert isinstance(pdf_bytes, bytes)
 
     @patch("camelot.read_pdf")
-    @patch("tabula.read_pdf")
-    def test_extract_tables_from_scanned_page(self, mock_tabula, mock_camelot, pdf_extractor):
+    def test_extract_tables_from_scanned_page(self, mock_camelot, pdf_extractor):
         """Test table extraction from scanned pages."""
         # Mock Camelot table extraction
         mock_camelot_table = MagicMock()
@@ -340,37 +373,76 @@ This subsection covers data collection procedures.
             assert result[0].metadata["accuracy"] == 75
 
     def test_title_pattern_detection(self, pdf_extractor):
-        """Test title pattern regular expressions."""
-        # Test single line titles
+        """Test title pattern regular expressions with precise assertions."""
+        # Test single line titles with TITLE_PATTERN.search()
         test_cases = [
             "1. Introduction",
             "2.1 Methodology",
             "3.1.1 Data Collection",
             "4.\tResults",
             "5. Discussion and Conclusions",
+            "1.2.3.4.5 Many dots",
         ]
 
         for test_case in test_cases:
             match = pdf_extractor.TITLE_PATTERN.search(test_case)
-            assert match is not None, f"Should match title pattern: {test_case}"
+            assert match is not None, f"TITLE_PATTERN should match: '{test_case}'"
 
-        # Test multiline title detection
+            assert match.group(1) == "", f"Group 1 should be empty for start-of-string match, got: '{match.group(1)}'"
+
+            extracted_title = match.group(2)
+            assert extracted_title == test_case, f"Expected title '{test_case}', but extracted '{extracted_title}'"
+
+        # Test titles that should NOT match (edge cases)
+        non_matching_cases = [
+            "Introduction without number",
+            "A. Section with letter",
+            "1.",  # No text after number
+            "1 Missing dot",
+        ]
+
+        for non_match_case in non_matching_cases:
+            match = pdf_extractor.TITLE_PATTERN.search(non_match_case)
+            assert match is None, f"TITLE_PATTERN should NOT match: '{non_match_case}'"
+
+        # Test multiline title detection with TITLE_PATTERN_MULTILINE.findall()
         multiline_text = """Some content here.
 
 1. First Section
 This is the content of the first section.
 
 2. Second Section
-This is the content of the second section."""
+This is the content of the second section.
+
+3.1 Subsection Example
+More content here."""
 
         matches = pdf_extractor.TITLE_PATTERN_MULTILINE.findall(multiline_text)
-        # The regex returns tuples with groups, so we need to check the structure
-        assert len(matches) >= 2, f"Should find at least 2 title patterns, found: {matches}"
+        expected_titles = ["1. First Section", "2. Second Section", "3.1 Subsection Example"]
 
-        # Test that the pattern actually matches what we expect
-        simple_test = "\n1. Test Title"
-        simple_matches = pdf_extractor.TITLE_PATTERN_MULTILINE.findall(simple_test)
-        assert len(simple_matches) >= 1, f"Should match simple title pattern, found: {simple_matches}"
+        # Verify we found the expected number of matches
+        assert len(matches) == 3, f"Should find 3 title patterns, found {len(matches)}: {matches}"
+
+        # Each match is a tuple: (line_start_group, title_text_group)
+        # Extract just the title text (group 2) from each match tuple
+        found_titles = [match[1] for match in matches]
+
+        # Compare the exact titles found vs expected
+        assert found_titles == expected_titles, f"Expected titles {expected_titles}, but found {found_titles}"
+
+        # Verify that group 1 contains newlines for multiline matches
+        line_starts = [match[0] for match in matches]
+        expected_line_starts = ["\n", "\n", "\n"]  # All should have newline since they're after content
+        assert (
+            line_starts == expected_line_starts
+        ), f"Expected line starts {expected_line_starts}, but found {line_starts}"
+
+        # Test edge case: title at very beginning of text
+        text_with_title_at_start = "1. Starting Title\nSome content follows."
+        start_matches = pdf_extractor.TITLE_PATTERN_MULTILINE.findall(text_with_title_at_start)
+        assert len(start_matches) == 1, f"Should find 1 title at start, found: {start_matches}"
+        assert start_matches[0][0] == "", f"Group 1 should be empty for start-of-text, got: '{start_matches[0][0]}'"
+        assert start_matches[0][1] == "1. Starting Title", f"Should extract correct title, got: '{start_matches[0][1]}'"
 
     @pytest.mark.asyncio
     async def test_error_handling_invalid_file(self, pdf_extractor):
@@ -380,27 +452,58 @@ This is the content of the second section."""
         with pytest.raises(PDFPageCountError):
             await pdf_extractor.aextract_content(file_path=invalid_path, name="invalid_document")
 
-    def test_related_ids_mapping(self):
-        """Test that related IDs are properly set between text and table elements."""
-        # This would be tested as part of the integration test
-        # with actual PDF processing, but we can test the logic
-        text_elements = [MagicMock(metadata={"id": "text_1"}), MagicMock(metadata={"id": "text_2"})]
-        table_elements = [MagicMock(metadata={"id": "table_1"}), MagicMock(metadata={"id": "table_2"})]
+    @pytest.mark.asyncio
+    async def test_related_ids_mapping(self, pdf_extractor, test_pdf_files):
+        """Test that related IDs are properly set between text and table elements using actual extractor."""
+        # Use the actual PDF extractor with a real test file
+        for test_file in test_pdf_files.values():
 
-        # Simulate the relationship mapping logic
-        text_ids = [elem.metadata["id"] for elem in text_elements]
-        table_ids = [elem.metadata["id"] for elem in table_elements]
+            # Extract content using the actual extractor
+            result = await pdf_extractor.aextract_content(file_path=test_file, name="test_document")
 
-        # Set related IDs
-        for table_elem in table_elements:
-            table_elem.metadata["related"] = text_ids
+            # Filter text and table elements
+            text_elements = [elem for elem in result if elem.type == ContentType.TEXT]
+            table_elements = [elem for elem in result if elem.type == ContentType.TABLE]
 
-        for text_elem in text_elements:
-            text_elem.metadata["related"] = table_ids
+            # Test only if we have both text and table elements from the same page
+            if len(text_elements) > 0 and len(table_elements) > 0:
+                # Check that text elements have table IDs in their related field
+                text_element = text_elements[0]
+                table_element = table_elements[0]
 
-        # Verify relationships
-        assert table_elements[0].metadata["related"] == ["text_1", "text_2"]
-        assert text_elements[0].metadata["related"] == ["table_1", "table_2"]
+                # If elements are from the same page, they should reference each other
+                same_page_text = [
+                    elem for elem in text_elements if elem.metadata["page"] == table_element.metadata["page"]
+                ]
+                same_page_tables = [
+                    elem for elem in table_elements if elem.metadata["page"] == text_element.metadata["page"]
+                ]
+
+                if same_page_text and same_page_tables:
+                    # Get IDs from same page elements
+                    same_page_text_ids = [elem.metadata["id"] for elem in same_page_text]
+                    same_page_table_ids = [elem.metadata["id"] for elem in same_page_tables]
+
+                    # Verify that table elements reference text elements from the same page
+                    for table_elem in same_page_tables:
+                        assert "related" in table_elem.metadata
+                        related_ids = table_elem.metadata["related"]
+                        # The related IDs should contain text element IDs from the same page
+                        for text_id in same_page_text_ids:
+                            assert text_id in related_ids, f"Table element should reference text element {text_id}"
+
+                    # Verify that text elements reference table elements from the same page
+                    for text_elem in same_page_text:
+                        assert "related" in text_elem.metadata
+                        related_ids = text_elem.metadata["related"]
+                        # The related IDs should contain table element IDs from the same page
+                        for table_id in same_page_table_ids:
+                            assert table_id in related_ids, f"Text element should reference table element {table_id}"
+
+            # Verify all elements have the related field (even if empty)
+            for element in result:
+                assert "related" in element.metadata, "All elements should have 'related' field in metadata"
+                assert isinstance(element.metadata["related"], list), "'related' field should be a list"
 
     @pytest.mark.asyncio
     async def test_performance_with_large_pdf(self, pdf_extractor, test_pdf_files):
@@ -411,11 +514,6 @@ This is the content of the second section."""
             if file_path.exists():
                 test_file = file_path
                 break
-
-        if test_file is None:
-            pytest.skip("No test PDF files available")
-
-        import time
 
         start_time = time.time()
 
@@ -446,19 +544,15 @@ This is the content of the second section."""
             if not pdf_path.exists():
                 continue
 
-            print(f"\nTesting {pdf_name} PDF: {pdf_path}")
-
             result = await pdf_extractor.aextract_content(file_path=pdf_path, name=pdf_name)
 
             assert isinstance(result, list), f"Result should be a list for {pdf_name}"
-            print(f"  Extracted {len(result)} elements")
-
             # Analyze results
             text_count = sum(1 for elem in result if elem.type == ContentType.TEXT)
             table_count = sum(1 for elem in result if elem.type == ContentType.TABLE)
 
-            print(f"  Text elements: {text_count}")
-            print(f"  Table elements: {table_count}")
+            logger.info(f"  Text elements: {text_count}")
+            logger.info(f"  Table elements: {table_count}")
 
             # Verify metadata completeness
             for i, element in enumerate(result):
