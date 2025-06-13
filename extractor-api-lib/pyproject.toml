@@ -99,8 +99,6 @@ atlassian-python-api = "^4.0.3"
 markdownify = "^1.1.0"
 langchain-core = "0.3.63"
 camelot-py = {extras = ["cv"], version = "^1.0.0"}
-tabula = "^1.0.5"
-easyocr = "^1.7.2"
 fake-useragent = "^2.2.0"
 
 [tool.poetry.group.dev.dependencies]
